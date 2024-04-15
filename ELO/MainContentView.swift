@@ -12,8 +12,8 @@ import Charts
 struct MainContentView: View {
     @ObservedObject var model: ELOViewModel
     @State private var epochs: String = "1"
-    @State private var aItems: String = "0.05"
-    @State private var aSubjects: String = "0.5"
+    @State private var aItems: String = "0.005"
+    @State private var aSubjects: String = "0.05"
     var body: some View {
         VStack {
             HStack {

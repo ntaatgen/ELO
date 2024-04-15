@@ -52,8 +52,8 @@ class ELOlogic {
     
     let nSkills = 4
     var nEpochs = 1
-    var alphaItems = 0.05
-    var alphaStudents = 0.5
+    var alphaItems = 0.005
+    var alphaStudents = 0.05
     let nItems = 16
     let nStudents = 2000
     var students: [String:Student] = [:]
@@ -174,11 +174,12 @@ class ELOlogic {
             p = p * skillP // worst case
             pmax = min(pmax, skillP) // best case
         }
-        p = (p + pmax)/2
+//        p = (p + pmax)/2
+//        p = pmax
         for i in 0..<nSkills {
 //            if score.score > p {
-            s.skills[i] = s.skills[i] + alphaS * (1.1 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
-            it.skills[i] = it.skills[i] + alphaI * (1.1 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
+            s.skills[i] = s.skills[i] + alphaS * (1.5 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
+            it.skills[i] = it.skills[i] + alphaI * (1.5 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
 //            } else {
 //                s.skills[i] = s.skills[i] + alphaS   * (score.score - p)
 //                it.skills[i] = it.skills[i] + alphaI  * (p - score.score)

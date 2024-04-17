@@ -36,15 +36,21 @@ struct MainContentView: View {
             if model.selected != nil && model.selected! < model.sortedKeys.count {
                 Text(model.sortedKeys[model.selected!])
             }
-            Chart(model.results) {
-                LineMark(x: .value("Training", $0.x),
-                         y: .value("Score",$0.y),
-                         series: .value("Index",$0.z)
-                )
-                .foregroundStyle(model.colors[$0.z])
-//                .foregroundStyle(by: .value("Index", $0.z + 1))
+            HStack {
+                Chart(model.results) {
+                    LineMark(x: .value("Training", $0.x),
+                             y: .value("Score",$0.y),
+                             series: .value("Index",$0.z)
+                    )
+                    .foregroundStyle(model.colors[$0.z])
+                    //                .foregroundStyle(by: .value("Index", $0.z + 1))
+                }
+                .chartYScale(domain: 0...1)
+
             }
-            .chartYScale(domain: 0...1)
+            PrimGraphView(model: model)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
         }
         .padding()
     }

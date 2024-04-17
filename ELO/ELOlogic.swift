@@ -54,6 +54,7 @@ class ELOlogic {
     var nEpochs = 1
     var alphaItems = 0.005
     var alphaStudents = 0.05
+    var skillThreshold = 0.5
     let nItems = 16
     let nStudents = 2000
     var students: [String:Student] = [:]

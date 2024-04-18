@@ -18,10 +18,10 @@ struct MainContentView: View {
         VStack {
             HStack {
                 Button(action: { model.back() }) {
-                    Label("Back", systemImage: "play")
+                    Label("Back", systemImage: "arrowshape.left")
                 }
                 Button(action: { model.forward() }) {
-                    Label("Forward", systemImage: "play")
+                    Label("Forward", systemImage: "arrowshape.right")
                 }
                 Text("Epochs:")
                 TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})

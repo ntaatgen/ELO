@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PrimGraphEdge: Shape {
     var edge: ViewEdge
-    let lineWidth:CGFloat = 1
+    let lineWidth:CGFloat = 3
     let vertexSize: CGFloat = 20
     let arrowSize: CGFloat = 10
     func path(in rect: CGRect) -> Path {

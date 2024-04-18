@@ -106,7 +106,7 @@ class ELOlogic {
             let newScore = Score(student: students[student]!, item: items[item]!, score: score)
             scores.append(newScore)
         }
-        testRun()
+//        testRun()
     }
     
     func integerToBinaryArray(_ number: Int, length: Int) -> [Double] {
@@ -157,7 +157,7 @@ class ELOlogic {
                 scores.append(score)
             }
         }
-        testRun()
+//        testRun()
     }
 
     func calcProb(studentDifficulty: Double, itemDifficulty: Double) -> Double {
@@ -175,7 +175,7 @@ class ELOlogic {
             p = p * skillP // worst case
             pmax = min(pmax, skillP) // best case
         }
-//        p = (p + pmax)/2
+        p = (p + pmax)/2
 //        p = pmax
         for i in 0..<nSkills {
 //            if score.score > p {
@@ -227,12 +227,12 @@ class ELOlogic {
                 }
             }
         }
-        for (_,item) in items {
-            item.skills = item.skills.map { round($0 * 10)/10 }
-        }
-        for (_,student) in students {
-            student.skills = student.skills.map { round($0 * 10)/10 }
-        }
+//        for (_,item) in items {
+//            item.skills = item.skills.map { round($0 * 10)/10 }
+//        }
+//        for (_,student) in students {
+//            student.skills = student.skills.map { round($0 * 10)/10 }
+//        }
         for key in sortedKeys {
             print(key,items[key]!.skills[0],items[key]!.skills[1],items[key]!.skills[2],items[key]!.skills[3] )
         }
@@ -249,6 +249,6 @@ class ELOlogic {
             guard filename != nil else {return}
             loadDataWithString(filename!)
         }
-        
+        testRun()
     }
 }

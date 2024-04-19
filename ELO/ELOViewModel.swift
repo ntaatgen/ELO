@@ -54,6 +54,13 @@ class ELOViewModel: ObservableObject {
             model.setASubjects(value: numval)
         }
     }
+    
+    func changeTreshold(_ value:String) {
+        if let numval = Double(value) {
+            model.setThreshold(value: numval)
+        }
+    }
+    
     func rerun() {
         model.rerun()
         primViewCalculateGraph()

@@ -43,6 +43,11 @@ struct ELOmodel {
     func setASubjects(value: Double) {
         logic.alphaStudents = value
     }
+    
+    func setThreshold(value: Double) {
+        logic.skillThreshold = value
+    }
+    
     mutating func rerun() {
         logic.rerun()
         update()

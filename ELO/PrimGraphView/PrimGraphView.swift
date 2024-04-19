@@ -12,6 +12,7 @@ struct PrimGraphView: View {
     let vertexSize: CGFloat = 20
     @State var selectedItem = 2
     @State var closestNodeIndex: Int? = nil
+    @State private var thresh: String = "0.5"
     var body: some View {
         if model.graphData != nil {
             VStack {
@@ -19,6 +20,9 @@ struct PrimGraphView: View {
                     Button("Refresh"){
                         model.primViewCalculateGraph()
                     }
+                    Text("Threshold:")
+                    TextField("Threshold", text: $thresh, onEditingChanged: {changed in model.changeTreshold(thresh)})
+                    Spacer()
                 }
                 GeometryReader { geometry in
                     ZStack {

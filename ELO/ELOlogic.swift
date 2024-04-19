@@ -181,11 +181,7 @@ class ELOlogic {
 //            if score.score > p {
             s.skills[i] = s.skills[i] + alphaS * (1.5 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
             it.skills[i] = it.skills[i] + alphaI * (1.5 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
-//            } else {
-//                s.skills[i] = s.skills[i] + alphaS   * (score.score - p)
-//                it.skills[i] = it.skills[i] + alphaI  * (p - score.score)
-//            }
-//            it.skills[i] = it.skills[i] + alphaI * (1 / log(Double(it.experiences))) * (1 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
+
             it.experiences += 1
             if s.skills[i] < 0 {s.skills[i] = 0}
             if it.skills[i] < 0 {it.skills[i] = 0}

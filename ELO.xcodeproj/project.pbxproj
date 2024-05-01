@@ -38,7 +38,6 @@
 		B89E07132B987B0F00B52111 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B89E07152B987B0F00B52111 /* ELO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ELO.entitlements; sourceTree = "<group>"; };
 		B89E071B2B987C0100B52111 /* ELOViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOViewModel.swift; sourceTree = "<group>"; };
-		B8CD2FF22BD04F2500F7F161 /* ToolTip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolTip.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,7 +59,6 @@
 				B84754F82BCFF6690048ADD6 /* PrimGraphNode.swift */,
 				B84754F92BCFF6690048ADD6 /* PrimGraphNodeShape.swift */,
 				B84754FA2BCFF6690048ADD6 /* PrimGraphView.swift */,
-				B8CD2FF22BD04F2500F7F161 /* ToolTip.swift */,
 			);
 			name = PrimGraphView;
 			path = ELO/PrimGraphView;

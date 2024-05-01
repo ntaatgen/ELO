@@ -7,13 +7,31 @@
 
 import Foundation
 
+enum SelectedGraph {
+    case items
+    case students
+    case errors
+    func next() -> SelectedGraph {
+        switch self {
+        case .errors: return .items
+        case .students: return .errors
+        case .items: return .students
+        }
+    }
+}
+
 struct ELOmodel {
     internal var logic = ELOlogic()
     
     var results: [ModelData] = []
+
+    var studentResults: [ModelData] = []
+    var errorResults: [ModelData] = []
     var sortedKeys: [String] = []
+    var studentKeys: [String] = []
     var selected: Int? = nil
-    
+    var selectedG: SelectedGraph = .items
+//    var studentSelected: Bool = false
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
 
@@ -29,6 +47,9 @@ struct ELOmodel {
     
     mutating func update() {
         results = logic.results
+        studentResults = logic.studentResults
+        errorResults = logic.errors
+        studentKeys = logic.studentKeys
         sortedKeys = logic.sortedKeys
     }
     
@@ -40,6 +61,10 @@ struct ELOmodel {
         logic.alphaItems = value
     }
     
+    func setOffsetParameter(value: Double) {
+        logic.offsetParameter = value
+    }
+    
     func setASubjects(value: Double) {
         logic.alphaStudents = value
     }
@@ -48,6 +73,7 @@ struct ELOmodel {
         logic.skillThreshold = value
     }
     
+
     mutating func rerun() {
         logic.rerun()
         update()

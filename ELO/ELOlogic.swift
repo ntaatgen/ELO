@@ -54,6 +54,7 @@ class ELOlogic {
     var nEpochs = 1
     var alphaItems = 0.005
     var alphaStudents = 0.05
+    var offsetParameter = 2.0
     var skillThreshold = 0.5
     let nItems = 16
     let nStudents = 2000
@@ -61,9 +62,10 @@ class ELOlogic {
     var items: [String:Item] = [:]
     var scores: [Score] = []
     var sortedKeys: [String] { Array(items.keys).sorted(by: <) }
-
+    var studentKeys: [String] = []
     var results: [ModelData] = []
-    
+    var errors: [ModelData] = []
+    var studentResults: [ModelData] = []
     var filename: URL? = nil
     
     var synthetic = false
@@ -143,8 +145,10 @@ class ELOlogic {
         }
         for i in 0..<nStudents {
             let s = Student(name: String(format: "%04d",i))
-            s.realSkills = integerToBinaryArray(Int.random(in: 0..<nItems), length: nSkills)
+            let realSkill = Int.random(in: 0..<nItems)
+            s.realSkills = integerToBinaryArray(realSkill, length: nSkills)
             s.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+            s.name +=  "s" + String(realSkill)
             students[s.name] = s
         }
         for (_,s) in students {
@@ -154,6 +158,7 @@ class ELOlogic {
                     result = result && (s.realSkills[i] == 1 || it.realSkills[i] == 0)
                 }
                 let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.4...1.0) : Double.random(in: 0.0...0.6)))
+//                let score = Score(student: s, item: it, score: (result ? 1.0 : 0.0))
                 scores.append(score)
             }
         }
@@ -163,24 +168,27 @@ class ELOlogic {
     func calcProb(studentDifficulty: Double, itemDifficulty: Double) -> Double {
         return 1 - itemDifficulty + itemDifficulty * studentDifficulty
     }
+    
+    func expectedScore(s: Student, it: Item) -> Double {
+        var p: Double = 1
+        var pmin: Double = 1
+        for i in 0..<nSkills {
+            let skillP = calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])
+            p = p * skillP // worst case
+            pmin = min(pmin, skillP) // best case
+        }
+        p = (p + pmin)/2
+        return p
+    }
 
     
     func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
         let s = score.student
         let it = score.item
-        var p: Double = 1
-        var pmax: Double = 1
+        let p = expectedScore(s: s, it: it)
         for i in 0..<nSkills {
-            let skillP = calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])
-            p = p * skillP // worst case
-            pmax = min(pmax, skillP) // best case
-        }
-        p = (p + pmax)/2
-//        p = pmax
-        for i in 0..<nSkills {
-//            if score.score > p {
-            s.skills[i] = s.skills[i] + alphaS * (1.5 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
-            it.skills[i] = it.skills[i] + alphaI * (1.5 - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
+            s.skills[i] = s.skills[i] + alphaS * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
+            it.skills[i] = it.skills[i] + alphaI * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
 
             it.experiences += 1
             if s.skills[i] < 0 {s.skills[i] = 0}
@@ -190,45 +198,133 @@ class ELOlogic {
         }
     }
     
+    func twoItems(scoreIndex1: Int, scoreIndex2: Int, alpha: Double = 0.01) {
+        // TODO: Find a better way to get two scores from the same student
+        let item1 = scores[scoreIndex1]
+        let item2 = scores[scoreIndex2]
+        guard item1.student.name == item2.student.name else {
+            print("Illegal call of twoItems")
+            return
+        }
+//        var item2index: Int? = nil
+//        var i = scoreIndex + 1
+//        while item2index == nil && i < scores.count {
+//            if item1.student.name == scores[i].student.name {
+//                item2index = i
+//            }
+//            i += 1
+//        }
+//        if item2index == nil { return }
+//        let item2 = scores[item2index!]
+        let expected1 = expectedScore(s: item1.student, it: item1.item)
+        let expected2 = expectedScore(s: item2.student, it: item2.item)
+        if item1.score > expected1 && item2.score < expected2 { // item1 is easier than expected and item2 harder
+            for i in 0..<nSkills {
+//                if item1.item.skills[i] < item2.item.skills[i] { // was  >
+                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease
+                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase
+//                }
+            }
+        } else if item1.score < expected1 && item2.score > expected2 { // item1 is harder than expected and item2 easier
+            for i in 0..<nSkills {
+                if item1.item.skills[i] > item2.item.skills[i] { // was <
+                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase
+                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease
+                }
+            }
+        } 
+        else if item1.score > expected1 && item2.score > expected2 { // both easier than expected
+            for i in 0..<nSkills {
+                if item1.item.skills[i] < item2.item.skills[i] {
+                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease item2
+                } else {
+                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease item1
+                }
+            }
+        } else if item1.score < expected1 && item2.score < expected2 { // both harder than expected
+            for i in 0..<nSkills {
+                if item1.item.skills[i] > item2.item.skills[i] {
+                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase item2
+                } else {
+                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase item1
+                }
+            }
+        }
+    }
+    
+    func calculateError() -> Double {
+        var error: Double = 0
+        for score in scores {
+            error += abs(score.score - expectedScore(s: score.student, it: score.item))
+        }
+        return error
+    }
+    
     
     func testRun() {
-        let sortedKeys = Array(items.keys).sorted(by: <)
+//        let sortedKeys = Array(items.keys).sorted(by: <)
+        studentKeys = Array(Array<String>(students.keys).shuffled().prefix(20))
         var lineCounter = 0
         var counter = 0
+        errors = []
         for j in 1...nEpochs {
             print("epoch", j)
             var order = Array(0..<scores.count)
             order.shuffle()
+//            order.sort { scores[$0].student.name < scores[$1].student.name }
+//            for i in 0..<(scores.count / 2) {
+//                let j = Int.random(in: 0..<(scores.count / 2))
+//                let tmp1 = order[i * 2]
+//                order[i * 2] = order[j * 2]
+//                order[j * 2] = tmp1
+//                let tmp2 = order[i * 2 + 1]
+//                order[i * 2 + 1] = order[j * 2 + 1]
+//                order[j * 2 + 1] = tmp2
+//            }
+//            for i in 0..<scores.count {
+//                print(scores[order[i]].student.name)
+//            }
             for key in sortedKeys {
-//                print(lineCounter,key,items[key]!.skills[0],items[key]!.skills[1],items[key]!.skills[2],items[key]!.skills[3] )
-                lineCounter += 1
                 for skills in 0..<nSkills {
                     let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
                     results.append(dp)
                 }
             }
-            for i in order {
-                oneItem(score: scores[i], alphaS: alphaStudents, alphaI: alphaItems)
+            for key in studentKeys {
+                for skills in 0..<nSkills {
+                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                    studentResults.append(dp)
+                }
+            }
+            lineCounter += 1
+            for i in 0..<order.count {
+                oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+//                if i < order.count - 1 && scores[order[i]].student.name == scores[order[i+1]].student.name {
+//                    twoItems(scoreIndex1: order[i], scoreIndex2: order[i+1])
+//                }
                 counter += 1
                 if counter == 1000 * nEpochs {
                     for key in sortedKeys {
-//                        print(lineCounter,key,items[key]!.skills[0],items[key]!.skills[1],items[key]!.skills[2],items[key]!.skills[3] )
                         for skills in 0..<nSkills {
                             let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
                             results.append(dp)
                         }
                     }
+                    for key in studentKeys {
+                        for skills in 0..<nSkills {
+                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                            studentResults.append(dp)
+                        }
+                    }
+                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                    errors.append(dp)
                     lineCounter += 1
                     counter = 0
+//                    print(calculateError())
                 }
             }
         }
-//        for (_,item) in items {
-//            item.skills = item.skills.map { round($0 * 10)/10 }
-//        }
-//        for (_,student) in students {
-//            student.skills = student.skills.map { round($0 * 10)/10 }
-//        }
+
         for key in sortedKeys {
             print(key,items[key]!.skills[0],items[key]!.skills[1],items[key]!.skills[2],items[key]!.skills[3] )
         }

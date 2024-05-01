@@ -16,6 +16,24 @@ class ELOViewModel: ObservableObject {
         model.graphData
     }
     
+    var resultsLWB: Double {
+        var lowest = 10000000.0
+        for res in results {
+            lowest = min(lowest,res.y)
+        }
+        print("Lowest ",lowest)
+        return lowest
+    }
+
+    var resultsUPB: Double {
+        var highest = -10000000.0
+        for res in results {
+            highest = max(highest,res.y)
+        }
+        print("Highest ",highest)
+        return highest
+    }
+    
     init() {
         model = ELOmodel()
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updatePrimsGraph(_:)), name: NSNotification.Name(rawValue: "UpdatePrimsGraph"), object: nil)
@@ -55,6 +73,12 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    func changeOffsetParameter(_ value:String) {
+        if let numval = Double(value) {
+            model.setOffsetParameter(value: numval)
+        }
+    }
+    
     func changeTreshold(_ value:String) {
         if let numval = Double(value) {
             model.setThreshold(value: numval)
@@ -68,8 +92,21 @@ class ELOViewModel: ObservableObject {
     
     var results: [ModelData] {
         guard selected != nil else {return []}
-        
-        return model.results.filter{ $0.item == sortedKeys[selected!]}
+        switch model.selectedG { 
+        case .students: return model.studentResults.filter{ $0.item == studentKeys[selected!] }
+        case .items: return model.results.filter{ $0.item == sortedKeys[selected!]}
+        case .errors: return model.errorResults
+        }
+    }
+    
+    func switchGraphs() {
+        guard selected != nil else { return }
+        model.selectedG = model.selectedG.next()
+        model.selected = 0
+    }
+    
+    var graphSelected: SelectedGraph {
+        model.selectedG
     }
 
     var selected: Int? {
@@ -78,6 +115,10 @@ class ELOViewModel: ObservableObject {
     
     var sortedKeys: [String] {
         model.sortedKeys
+    }
+    
+    var studentKeys: [String] {
+        model.studentKeys
     }
     
     let colors: [Color] = [
@@ -113,9 +154,9 @@ class ELOViewModel: ObservableObject {
     }
     
     func forward() {
-        if selected == nil  {
+        if selected == nil || model.selectedG == .errors  {
             model.selected = 0
-        } else if model.selected! != sortedKeys.count - 1 {
+        } else if (model.selectedG == .items && model.selected! != sortedKeys.count - 1) || (model.selectedG == .students && model.selected != studentKeys.count - 1) {
             model.selected = model.selected! + 1
         }
         model.update()

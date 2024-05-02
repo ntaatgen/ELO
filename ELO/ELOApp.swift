@@ -12,7 +12,7 @@ struct ELOApp: App {
     let model = ELOViewModel()
     var body: some Scene {
         WindowGroup {
-            MainContentView(model: model)
+            ELOMainView(model: model)
         }
         .commands {
             CommandGroup(replacing: CommandGroupPlacement.newItem) {

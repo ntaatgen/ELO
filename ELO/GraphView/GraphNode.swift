@@ -1,5 +1,5 @@
 //
-//  PrimGraphNode.swift
+//  GraphNode.swift
 //  PRIMs
 //
 //  Created by Niels Taatgen on 3/15/23.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PrimGraphNode: View {
+struct GraphNode: View {
 //    @ObservedObject var model: PRIMsViewModel
     var node: ViewNode
     let vertexSize: CGFloat = 20
@@ -15,12 +15,12 @@ struct PrimGraphNode: View {
     var body: some View {
         ZStack {
             if node.halo {
-                PrimGraphHalo(node: node)
+                GraphHalo(node: node)
                     .foregroundColor(Color.yellow)
             }
-            PrimGraphNodeShape(node: node)
+            GraphNodeShape(node: node)
                 .strokeBorder(Color.black, lineWidth: node.skillNode == false && node.taskNode == false ? 1 : 3)
-                .background(PrimGraphNodeShape(node: node).foregroundColor(numberToColor(node.taskNumber)))
+                .background(GraphNodeShape(node: node).foregroundColor(numberToColor(node.taskNumber)))
             Text(node.name)
                 .font(node.skillNode == false && node.taskNode == false ? .caption2 : .title2)
                 .position(x: CGFloat(node.x)/300 * geometry.size.width,

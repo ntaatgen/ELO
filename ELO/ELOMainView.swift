@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  ELOMainView.swift
 //  ELO
 //
 //  Created by Niels Taatgen on 3/6/24.
@@ -9,7 +9,7 @@ import SwiftUI
 import Charts
 @available(macOS 13.0,*)
 
-struct MainContentView: View {
+struct ELOMainView: View {
     @ObservedObject var model: ELOViewModel
     @State private var epochs: String = "1"
     @State private var aItems: String = "0.005"
@@ -83,7 +83,7 @@ struct MainContentView: View {
                     .chartYScale(domain: 0...1)
                 }
             }
-            PrimGraphView(model: model)
+            GraphView(model: model)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
         }

@@ -1,5 +1,5 @@
 //
-//  PrimGraphHalo.swift
+//  GraphHalo.swift
 //  PRIMs
 //
 //  Created by Niels Taatgen on 3/16/23.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PrimGraphHalo: Shape {
+struct GraphHalo: Shape {
     
     var node: ViewNode
     let haloSize: CGFloat = 10

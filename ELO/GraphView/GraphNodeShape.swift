@@ -1,5 +1,5 @@
 //
-//  PrimGraphNodeShape.swift
+//  GraphNodeShape.swift
 //  PRIMs
 //
 //  Created by Niels Taatgen on 3/15/23.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PrimGraphNodeShape: InsettableShape {
+struct GraphNodeShape: InsettableShape {
     
 //    @ObservedObject var model: PRIMsViewModel
     var node: ViewNode

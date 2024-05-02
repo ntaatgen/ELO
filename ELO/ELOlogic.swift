@@ -210,23 +210,7 @@ class ELOlogic {
         else { return s }
     }
     
-    func oneItemAltOld(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
-        let s = score.student
-        let it = score.item
-        let error = expectedScore(s: s, it: it) - score.score
-        var deltaItem: [Double] = []
-        var deltaStudent: [Double] = []
-        for i in 0..<nSkills {
-            let expectedWithoutThisSkill = expectedScore(s: s, it: it, leaveOut: i)
-            deltaItem.append(alphaI * expectedWithoutThisSkill * error * (1 - s.skills[i]))
-            deltaStudent.append(-alphaS * expectedWithoutThisSkill * error * it.skills[i])
-
-        }
-        it.experiences += 1
-        s.skills = zip(s.skills,deltaStudent).map(boundedAdd)
-        it.skills = zip(it.skills,deltaItem).map(boundedAdd)
-    }
-    
+ 
     func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
         let s = score.student
         let it = score.item
@@ -243,50 +227,49 @@ class ELOlogic {
     }
             
     
-    func twoItems(scoreIndex1: Int, scoreIndex2: Int, alpha: Double = 0.01) {
-        // TODO: Find a better way to get two scores from the same student
-        let item1 = scores[scoreIndex1]
-        let item2 = scores[scoreIndex2]
-        guard item1.student.name == item2.student.name else {
-            print("Illegal call of twoItems")
-            return
-        }
-
-        let expected1 = expectedScore(s: item1.student, it: item1.item)
-        let expected2 = expectedScore(s: item2.student, it: item2.item)
-        if item1.score > expected1 && item2.score < expected2 { // item1 is easier than expected and item2 harder
-            for i in 0..<nSkills {
-//                if item1.item.skills[i] < item2.item.skills[i] { // was  >
-                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease
-                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase
+//    func twoItems(scoreIndex1: Int, scoreIndex2: Int, alpha: Double = 0.01) {
+//        let item1 = scores[scoreIndex1]
+//        let item2 = scores[scoreIndex2]
+//        guard item1.student.name == item2.student.name else {
+//            print("Illegal call of twoItems")
+//            return
+//        }
+//
+//        let expected1 = expectedScore(s: item1.student, it: item1.item)
+//        let expected2 = expectedScore(s: item2.student, it: item2.item)
+//        if item1.score > expected1 && item2.score < expected2 { // item1 is easier than expected and item2 harder
+//            for i in 0..<nSkills {
+////                if item1.item.skills[i] < item2.item.skills[i] { // was  >
+//                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease
+//                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase
+////                }
+//            }
+//        } else if item1.score < expected1 && item2.score > expected2 { // item1 is harder than expected and item2 easier
+//            for i in 0..<nSkills {
+//                if item1.item.skills[i] > item2.item.skills[i] { // was <
+//                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase
+//                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease
 //                }
-            }
-        } else if item1.score < expected1 && item2.score > expected2 { // item1 is harder than expected and item2 easier
-            for i in 0..<nSkills {
-                if item1.item.skills[i] > item2.item.skills[i] { // was <
-                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase
-                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease
-                }
-            }
-        } 
-        else if item1.score > expected1 && item2.score > expected2 { // both easier than expected
-            for i in 0..<nSkills {
-                if item1.item.skills[i] < item2.item.skills[i] {
-                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease item2
-                } else {
-                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease item1
-                }
-            }
-        } else if item1.score < expected1 && item2.score < expected2 { // both harder than expected
-            for i in 0..<nSkills {
-                if item1.item.skills[i] > item2.item.skills[i] {
-                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase item2
-                } else {
-                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase item1
-                }
-            }
-        }
-    }
+//            }
+//        } 
+//        else if item1.score > expected1 && item2.score > expected2 { // both easier than expected
+//            for i in 0..<nSkills {
+//                if item1.item.skills[i] < item2.item.skills[i] {
+//                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease item2
+//                } else {
+//                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease item1
+//                }
+//            }
+//        } else if item1.score < expected1 && item2.score < expected2 { // both harder than expected
+//            for i in 0..<nSkills {
+//                if item1.item.skills[i] > item2.item.skills[i] {
+//                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase item2
+//                } else {
+//                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase item1
+//                }
+//            }
+//        }
+//    }
     
     func calculateError() -> Double {
         var error: Double = 0
@@ -297,8 +280,7 @@ class ELOlogic {
     }
     
     
-    func testRun() {
-//        let sortedKeys = Array(items.keys).sorted(by: <)
+    func calculateModel() {
         studentKeys = Array(Array<String>(students.keys).shuffled().prefix(20))
         var lineCounter = 0
         var counter = 0
@@ -376,6 +358,6 @@ class ELOlogic {
             guard filename != nil else {return}
             loadDataWithString(filename!)
         }
-        testRun()
+        calculateModel()
     }
 }

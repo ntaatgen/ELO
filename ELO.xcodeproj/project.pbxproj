@@ -7,33 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B84754FC2BCFF6690048ADD6 /* PrimGraphEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F62BCFF6690048ADD6 /* PrimGraphEdge.swift */; };
-		B84754FD2BCFF6690048ADD6 /* PrimGraphHalo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F72BCFF6690048ADD6 /* PrimGraphHalo.swift */; };
-		B84754FE2BCFF6690048ADD6 /* PrimGraphNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F82BCFF6690048ADD6 /* PrimGraphNode.swift */; };
-		B84754FF2BCFF6690048ADD6 /* PrimGraphNodeShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F92BCFF6690048ADD6 /* PrimGraphNodeShape.swift */; };
-		B84755002BCFF6690048ADD6 /* PrimGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754FA2BCFF6690048ADD6 /* PrimGraphView.swift */; };
+		B84754FC2BCFF6690048ADD6 /* GraphEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F62BCFF6690048ADD6 /* GraphEdge.swift */; };
+		B84754FD2BCFF6690048ADD6 /* GraphHalo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F72BCFF6690048ADD6 /* GraphHalo.swift */; };
+		B84754FE2BCFF6690048ADD6 /* GraphNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F82BCFF6690048ADD6 /* GraphNode.swift */; };
+		B84754FF2BCFF6690048ADD6 /* GraphNodeShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F92BCFF6690048ADD6 /* GraphNodeShape.swift */; };
+		B84755002BCFF6690048ADD6 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754FA2BCFF6690048ADD6 /* GraphView.swift */; };
 		B84755022BCFF9180048ADD6 /* FruchtermanReingold.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */; };
 		B84A06502B99EC95003C06A8 /* ELOmodel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84A064F2B99EC95003C06A8 /* ELOmodel.swift */; };
 		B84A06522B99ECC3003C06A8 /* ELOlogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84A06512B99ECC3003C06A8 /* ELOlogic.swift */; };
 		B89E070D2B987B0E00B52111 /* ELOApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E070C2B987B0E00B52111 /* ELOApp.swift */; };
-		B89E070F2B987B0E00B52111 /* MainContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E070E2B987B0E00B52111 /* MainContentView.swift */; };
+		B89E070F2B987B0E00B52111 /* ELOMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E070E2B987B0E00B52111 /* ELOMainView.swift */; };
 		B89E07112B987B0F00B52111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B89E07102B987B0F00B52111 /* Assets.xcassets */; };
 		B89E07142B987B0F00B52111 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B89E07132B987B0F00B52111 /* Preview Assets.xcassets */; };
 		B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E071B2B987C0100B52111 /* ELOViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		B84754F62BCFF6690048ADD6 /* PrimGraphEdge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrimGraphEdge.swift; sourceTree = "<group>"; };
-		B84754F72BCFF6690048ADD6 /* PrimGraphHalo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrimGraphHalo.swift; sourceTree = "<group>"; };
-		B84754F82BCFF6690048ADD6 /* PrimGraphNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrimGraphNode.swift; sourceTree = "<group>"; };
-		B84754F92BCFF6690048ADD6 /* PrimGraphNodeShape.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrimGraphNodeShape.swift; sourceTree = "<group>"; };
-		B84754FA2BCFF6690048ADD6 /* PrimGraphView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrimGraphView.swift; sourceTree = "<group>"; };
+		B84754F62BCFF6690048ADD6 /* GraphEdge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphEdge.swift; sourceTree = "<group>"; };
+		B84754F72BCFF6690048ADD6 /* GraphHalo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphHalo.swift; sourceTree = "<group>"; };
+		B84754F82BCFF6690048ADD6 /* GraphNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphNode.swift; sourceTree = "<group>"; };
+		B84754F92BCFF6690048ADD6 /* GraphNodeShape.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphNodeShape.swift; sourceTree = "<group>"; };
+		B84754FA2BCFF6690048ADD6 /* GraphView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FruchtermanReingold.swift; path = ELO/FruchtermanReingold.swift; sourceTree = "<group>"; };
 		B84A064F2B99EC95003C06A8 /* ELOmodel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOmodel.swift; sourceTree = "<group>"; };
 		B84A06512B99ECC3003C06A8 /* ELOlogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOlogic.swift; sourceTree = "<group>"; };
 		B89E07092B987B0E00B52111 /* ELO.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ELO.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B89E070C2B987B0E00B52111 /* ELOApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOApp.swift; sourceTree = "<group>"; };
-		B89E070E2B987B0E00B52111 /* MainContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainContentView.swift; sourceTree = "<group>"; };
+		B89E070E2B987B0E00B52111 /* ELOMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOMainView.swift; sourceTree = "<group>"; };
 		B89E07102B987B0F00B52111 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B89E07132B987B0F00B52111 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B89E07152B987B0F00B52111 /* ELO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ELO.entitlements; sourceTree = "<group>"; };
@@ -51,24 +51,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		B84754FB2BCFF6690048ADD6 /* PrimGraphView */ = {
+		B84754FB2BCFF6690048ADD6 /* GraphView */ = {
 			isa = PBXGroup;
 			children = (
-				B84754F62BCFF6690048ADD6 /* PrimGraphEdge.swift */,
-				B84754F72BCFF6690048ADD6 /* PrimGraphHalo.swift */,
-				B84754F82BCFF6690048ADD6 /* PrimGraphNode.swift */,
-				B84754F92BCFF6690048ADD6 /* PrimGraphNodeShape.swift */,
-				B84754FA2BCFF6690048ADD6 /* PrimGraphView.swift */,
+				B84754F62BCFF6690048ADD6 /* GraphEdge.swift */,
+				B84754F72BCFF6690048ADD6 /* GraphHalo.swift */,
+				B84754F82BCFF6690048ADD6 /* GraphNode.swift */,
+				B84754F92BCFF6690048ADD6 /* GraphNodeShape.swift */,
+				B84754FA2BCFF6690048ADD6 /* GraphView.swift */,
 			);
-			name = PrimGraphView;
-			path = ELO/PrimGraphView;
+			name = GraphView;
+			path = ELO/GraphView;
 			sourceTree = "<group>";
 		};
 		B89E07002B987B0E00B52111 = {
 			isa = PBXGroup;
 			children = (
 				B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */,
-				B84754FB2BCFF6690048ADD6 /* PrimGraphView */,
+				B84754FB2BCFF6690048ADD6 /* GraphView */,
 				B89E070B2B987B0E00B52111 /* ELO */,
 				B89E070A2B987B0E00B52111 /* Products */,
 			);
@@ -85,7 +85,7 @@
 		B89E070B2B987B0E00B52111 /* ELO */ = {
 			isa = PBXGroup;
 			children = (
-				B89E070E2B987B0E00B52111 /* MainContentView.swift */,
+				B89E070E2B987B0E00B52111 /* ELOMainView.swift */,
 				B89E071B2B987C0100B52111 /* ELOViewModel.swift */,
 				B84A064F2B99EC95003C06A8 /* ELOmodel.swift */,
 				B89E070C2B987B0E00B52111 /* ELOApp.swift */,
@@ -176,16 +176,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				B84A06522B99ECC3003C06A8 /* ELOlogic.swift in Sources */,
-				B84755002BCFF6690048ADD6 /* PrimGraphView.swift in Sources */,
-				B84754FD2BCFF6690048ADD6 /* PrimGraphHalo.swift in Sources */,
-				B84754FF2BCFF6690048ADD6 /* PrimGraphNodeShape.swift in Sources */,
-				B89E070F2B987B0E00B52111 /* MainContentView.swift in Sources */,
+				B84755002BCFF6690048ADD6 /* GraphView.swift in Sources */,
+				B84754FD2BCFF6690048ADD6 /* GraphHalo.swift in Sources */,
+				B84754FF2BCFF6690048ADD6 /* GraphNodeShape.swift in Sources */,
+				B89E070F2B987B0E00B52111 /* ELOMainView.swift in Sources */,
 				B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */,
 				B84A06502B99EC95003C06A8 /* ELOmodel.swift in Sources */,
 				B84755022BCFF9180048ADD6 /* FruchtermanReingold.swift in Sources */,
 				B89E070D2B987B0E00B52111 /* ELOApp.swift in Sources */,
-				B84754FE2BCFF6690048ADD6 /* PrimGraphNode.swift in Sources */,
-				B84754FC2BCFF6690048ADD6 /* PrimGraphEdge.swift in Sources */,
+				B84754FE2BCFF6690048ADD6 /* GraphNode.swift in Sources */,
+				B84754FC2BCFF6690048ADD6 /* GraphEdge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

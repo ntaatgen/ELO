@@ -1,5 +1,5 @@
 //
-//  PrimGraphEdge.swift
+//  GraphEdge.swift
 //  PRIMs
 //
 //  Created by Niels Taatgen on 3/16/23.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PrimGraphEdge: Shape {
+struct GraphEdge: Shape {
     var edge: ViewEdge
     let lineWidth:CGFloat = 3
     let vertexSize: CGFloat = 20

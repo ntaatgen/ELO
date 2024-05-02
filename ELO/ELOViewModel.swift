@@ -73,9 +73,15 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-    func changeOffsetParameter(_ value:String) {
-        if let numval = Double(value) {
-            model.setOffsetParameter(value: numval)
+//    func changeOffsetParameter(_ value:String) {
+//        if let numval = Double(value) {
+//            model.setOffsetParameter(value: numval)
+//        }
+//    }
+    
+    func changeNSkills(_ value:String) {
+        if let numval = Int(value) {
+            model.setSkills(value: numval)
         }
     }
     
@@ -128,7 +134,10 @@ class ELOViewModel: ObservableObject {
         Color.orange,
         Color.yellow,
         Color.cyan,
-        Color.indigo
+        Color.indigo,
+        Color.black,
+        Color.gray,
+        Color.pink
     ]
     
     func primViewCalculateGraph() {

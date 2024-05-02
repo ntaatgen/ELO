@@ -73,6 +73,12 @@ struct ELOmodel {
         logic.skillThreshold = value
     }
     
+    func setSkills(value: Int) {
+        if value > 0 && value <= logic.maxSkills {
+            logic.nSkills = value
+        }
+    }
+    
 
     mutating func rerun() {
         logic.rerun()

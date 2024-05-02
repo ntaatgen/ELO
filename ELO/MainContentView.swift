@@ -14,7 +14,7 @@ struct MainContentView: View {
     @State private var epochs: String = "1"
     @State private var aItems: String = "0.005"
     @State private var aSubjects: String = "0.05"
-    @State private var offsetParameter: String = "2.0"
+    @State private var nSkills: String = "4"
     var body: some View {
         VStack {
             HStack {
@@ -41,8 +41,8 @@ struct MainContentView: View {
                 TextField("aItems", text: $aItems, onEditingChanged: {changed in model.changeAItems(aItems)})
                 Text("alphaSubjects:")
                 TextField("aSubs", text: $aSubjects, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
-                Text("Offset:")
-                TextField("offset", text: $offsetParameter, onEditingChanged: {changed in model.changeOffsetParameter(offsetParameter)})
+                Text("# Skills:")
+                TextField("nSkills", text: $nSkills, onEditingChanged: {changed in model.changeNSkills(nSkills)})
                 Button(action: { model.rerun() }){
                     Label("Run", systemImage: "play")
                 }

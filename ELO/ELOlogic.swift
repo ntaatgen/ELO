@@ -50,7 +50,8 @@ struct ModelData: Identifiable {
 
 class ELOlogic {
     
-    let nSkills = 4
+    var nSkills = 4
+    let maxSkills = 8
     var nEpochs = 1
     var alphaItems = 0.005
     var alphaStudents = 0.05
@@ -162,6 +163,7 @@ class ELOlogic {
                 scores.append(score)
             }
         }
+        nSkills = 4
 //        testRun()
     }
 
@@ -208,7 +210,7 @@ class ELOlogic {
         else { return s }
     }
     
-    func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+    func oneItemAltOld(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
         let s = score.student
         let it = score.item
         let error = expectedScore(s: s, it: it) - score.score
@@ -223,6 +225,21 @@ class ELOlogic {
         it.experiences += 1
         s.skills = zip(s.skills,deltaStudent).map(boundedAdd)
         it.skills = zip(it.skills,deltaItem).map(boundedAdd)
+    }
+    
+    func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+        let s = score.student
+        let it = score.item
+        let error = expectedScore(s: s, it: it) - score.score
+        var expectedWithoutSkill: [Double] = []
+        for i in 0..<nSkills {
+            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+        }
+        for i in 0..<nSkills {
+            it.skills[i] = boundedAdd(it.skills[i],alphaI * expectedWithoutSkill[i] * error * (1 - s.skills[i]))
+            s.skills[i] = boundedAdd(s.skills[i], -alphaS * expectedWithoutSkill[i] * error * it.skills[i])
+        }
+        it.experiences += 1
     }
             
     
@@ -344,7 +361,7 @@ class ELOlogic {
         }
 
         for key in sortedKeys {
-            print(key,items[key]!.skills[0],items[key]!.skills[1],items[key]!.skills[2],items[key]!.skills[3] )
+            print(key,items[key]!.skills)
         }
         for _ in 1...20 {
             let student = scores[Int.random(in: 0..<scores.count)].student

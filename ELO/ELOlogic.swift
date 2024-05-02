@@ -169,15 +169,17 @@ class ELOlogic {
         return 1 - itemDifficulty + itemDifficulty * studentDifficulty
     }
     
-    func expectedScore(s: Student, it: Item) -> Double {
+    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
         var p: Double = 1
         var pmin: Double = 1
         for i in 0..<nSkills {
-            let skillP = calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])
-            p = p * skillP // worst case
-            pmin = min(pmin, skillP) // best case
+            if leaveOut == nil || leaveOut! != i {
+                let skillP = calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])
+                p = p * skillP // worst case
+                pmin = min(pmin, skillP) // best case
+            }
         }
-        p = (p + pmin)/2
+//        p = (p + pmin)/2
         return p
     }
 
@@ -187,16 +189,42 @@ class ELOlogic {
         let it = score.item
         let p = expectedScore(s: s, it: it)
         for i in 0..<nSkills {
+
             s.skills[i] = s.skills[i] + alphaS * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
             it.skills[i] = it.skills[i] + alphaI * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
 
-            it.experiences += 1
             if s.skills[i] < 0 {s.skills[i] = 0}
             if it.skills[i] < 0 {it.skills[i] = 0}
             if s.skills[i] > 1 {s.skills[i] = 1}
             if it.skills[i] > 1 {it.skills[i] = 1}
         }
+        it.experiences += 1
     }
+    
+    func boundedAdd(_ num1: Double, _ num2: Double) -> Double{
+        let s = num1 + num2
+        if s < 0 { return 0 }
+        else if s > 1 { return 1}
+        else { return s }
+    }
+    
+    func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+        let s = score.student
+        let it = score.item
+        let error = expectedScore(s: s, it: it) - score.score
+        var deltaItem: [Double] = []
+        var deltaStudent: [Double] = []
+        for i in 0..<nSkills {
+            let expectedWithoutThisSkill = expectedScore(s: s, it: it, leaveOut: i)
+            deltaItem.append(alphaI * expectedWithoutThisSkill * error * (1 - s.skills[i]))
+            deltaStudent.append(-alphaS * expectedWithoutThisSkill * error * it.skills[i])
+
+        }
+        it.experiences += 1
+        s.skills = zip(s.skills,deltaStudent).map(boundedAdd)
+        it.skills = zip(it.skills,deltaItem).map(boundedAdd)
+    }
+            
     
     func twoItems(scoreIndex1: Int, scoreIndex2: Int, alpha: Double = 0.01) {
         // TODO: Find a better way to get two scores from the same student
@@ -206,16 +234,7 @@ class ELOlogic {
             print("Illegal call of twoItems")
             return
         }
-//        var item2index: Int? = nil
-//        var i = scoreIndex + 1
-//        while item2index == nil && i < scores.count {
-//            if item1.student.name == scores[i].student.name {
-//                item2index = i
-//            }
-//            i += 1
-//        }
-//        if item2index == nil { return }
-//        let item2 = scores[item2index!]
+
         let expected1 = expectedScore(s: item1.student, it: item1.item)
         let expected2 = expectedScore(s: item2.student, it: item2.item)
         if item1.score > expected1 && item2.score < expected2 { // item1 is easier than expected and item2 harder
@@ -281,9 +300,7 @@ class ELOlogic {
 //                order[i * 2 + 1] = order[j * 2 + 1]
 //                order[j * 2 + 1] = tmp2
 //            }
-//            for i in 0..<scores.count {
-//                print(scores[order[i]].student.name)
-//            }
+
             for key in sortedKeys {
                 for skills in 0..<nSkills {
                     let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
@@ -298,7 +315,8 @@ class ELOlogic {
             }
             lineCounter += 1
             for i in 0..<order.count {
-                oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+//                oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+                oneItemAlt(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
 //                if i < order.count - 1 && scores[order[i]].student.name == scores[order[i+1]].student.name {
 //                    twoItems(scoreIndex1: order[i], scoreIndex2: order[i+1])
 //                }

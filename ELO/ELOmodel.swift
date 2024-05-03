@@ -100,6 +100,18 @@ struct ELOmodel {
         primGraphData!.calculate(randomInit: true)
     }
     
+    func averageScore(s: Student, items: [Item]) -> Double {
+        var score = 0.0
+        var count = 0.0
+        for result in logic.scores {
+            if result.student === s && items.contains(where: {$0.name == result.item.name}) {
+                score += result.score
+                count += 1
+            }
+        }
+        return count != 0 ? score/count : 0.0
+    }
+    
     mutating func updatePrimViewData() {
         guard primGraphData != nil else { return }
         graphData = GraphData()
@@ -112,9 +124,14 @@ struct ELOmodel {
                     s = s + "\n" + item.name
                 }
             }
+            var nodeScore = 0.0
+            if selectedG == .students && selected != nil {
+                nodeScore = averageScore(s: logic.students[studentKeys[selected!]]!, items: node.items)
+            }
             graphData!.nodes.append(
                 ViewNode(x: node.x,
                          y: node.y,
+                         z: selectedG == .students ? nodeScore : nil,
                          taskNumber: node.taskNumber,
                          halo: node.halo,
                          name: node.shortName,
@@ -141,9 +158,6 @@ struct ELOmodel {
         graphData!.nodes[node].y = newY
     }
     
-//    func runTest() {
-//        logic.testLogic()
-//    }
     
 }
 
@@ -151,6 +165,7 @@ struct ViewNode: Identifiable {
     var id = UUID()
     var x: Double
     var y: Double
+    var z: Double? = nil
     var taskNumber: Int
     var halo: Bool
     var name: String

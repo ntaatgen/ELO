@@ -109,6 +109,9 @@ class ELOViewModel: ObservableObject {
         guard selected != nil else { return }
         model.selectedG = model.selectedG.next()
         model.selected = 0
+        if model.selectedG == .students {
+            updatePrimViewData()
+        }
     }
     
     var graphSelected: SelectedGraph {
@@ -140,6 +143,8 @@ class ELOViewModel: ObservableObject {
         Color.pink
     ]
     
+
+    
     func primViewCalculateGraph() {
         model.primViewCalculateGraph()
         model.updatePrimViewData()
@@ -159,6 +164,9 @@ class ELOViewModel: ObservableObject {
         } else {
             model.selected = model.selected! - 1
         }
+        if model.selectedG == .students {
+            updatePrimViewData()
+        }
         model.update()
     }
     
@@ -167,6 +175,9 @@ class ELOViewModel: ObservableObject {
             model.selected = 0
         } else if (model.selectedG == .items && model.selected! != sortedKeys.count - 1) || (model.selectedG == .students && model.selected != studentKeys.count - 1) {
             model.selected = model.selected! + 1
+        }
+        if model.selectedG == .students {
+            updatePrimViewData()
         }
         model.update()
     }
@@ -201,3 +212,7 @@ func numberToColor(_ i: Int) -> Color {
     }
 }
 
+func gradientColor(value: Double) -> Color {
+    let color = NSColor(red: 1 - value, green: value, blue: 0, alpha: 1)
+    return Color(color)
+   }

@@ -68,7 +68,7 @@ class ELOlogic {
     var errors: [ModelData] = []
     var studentResults: [ModelData] = []
     var filename: URL? = nil
-    
+    let studentSampleSize = 50
     var synthetic = false
     
     func loadDataWithString(_ filePath: URL) {
@@ -186,22 +186,22 @@ class ELOlogic {
     }
 
     
-    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
-        let s = score.student
-        let it = score.item
-        let p = expectedScore(s: s, it: it)
-        for i in 0..<nSkills {
-
-            s.skills[i] = s.skills[i] + alphaS * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
-            it.skills[i] = it.skills[i] + alphaI * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
-
-            if s.skills[i] < 0 {s.skills[i] = 0}
-            if it.skills[i] < 0 {it.skills[i] = 0}
-            if s.skills[i] > 1 {s.skills[i] = 1}
-            if it.skills[i] > 1 {it.skills[i] = 1}
-        }
-        it.experiences += 1
-    }
+//    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+//        let s = score.student
+//        let it = score.item
+//        let p = expectedScore(s: s, it: it)
+//        for i in 0..<nSkills {
+//
+//            s.skills[i] = s.skills[i] + alphaS * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
+//            it.skills[i] = it.skills[i] + alphaI * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
+//
+//            if s.skills[i] < 0 {s.skills[i] = 0}
+//            if it.skills[i] < 0 {it.skills[i] = 0}
+//            if s.skills[i] > 1 {s.skills[i] = 1}
+//            if it.skills[i] > 1 {it.skills[i] = 1}
+//        }
+//        it.experiences += 1
+//    }
     
     func boundedAdd(_ num1: Double, _ num2: Double) -> Double{
         let s = num1 + num2
@@ -281,7 +281,7 @@ class ELOlogic {
     
     
     func calculateModel() {
-        studentKeys = Array(Array<String>(students.keys).shuffled().prefix(20))
+        studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
         var lineCounter = 0
         var counter = 0
         errors = []
@@ -345,7 +345,7 @@ class ELOlogic {
         for key in sortedKeys {
             print(key,items[key]!.skills)
         }
-        for _ in 1...20 {
+        for _ in 1...studentSampleSize {
             let student = scores[Int.random(in: 0..<scores.count)].student
             print(student.name, student.skills)
         }

@@ -20,7 +20,7 @@ struct GraphNode: View {
             }
             GraphNodeShape(node: node)
                 .strokeBorder(Color.black, lineWidth: node.skillNode == false && node.taskNode == false ? 1 : 3)
-                .background(GraphNodeShape(node: node).foregroundColor(numberToColor(node.taskNumber)))
+                .background(GraphNodeShape(node: node).foregroundColor(node.z != nil ? gradientColor(value: node.z!) : .gray))
             Text(node.name)
                 .font(node.skillNode == false && node.taskNode == false ? .caption2 : .title2)
                 .position(x: CGFloat(node.x)/300 * geometry.size.width,

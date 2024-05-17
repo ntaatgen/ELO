@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Student {
+class Student: Codable {
     var name: String
     var realSkills: [Double] = []
     var skills: [Double] = []
@@ -17,7 +17,7 @@ class Student {
     }
 }
 
-class Item {
+class Item: Codable {
     var name: String
     var realSkills: [Double] = []
     var skills: [Double] = []
@@ -28,19 +28,19 @@ class Item {
     }
 }
 
-class Score {
-    var student: Student
-    var item: Item
+class Score: Codable {
+    var student: String
+    var item: String
     var score: Double
     
     init(student: Student, item: Item, score: Double) {
-        self.student = student
-        self.item = item
+        self.student = student.name
+        self.item = item.name
         self.score = score
     }
 }
 
-struct ModelData: Identifiable {
+struct ModelData: Identifiable, Codable {
     var id = UUID()
     var item: String
     var z: Int
@@ -48,17 +48,17 @@ struct ModelData: Identifiable {
     var y: Double
 }
 
-class ELOlogic {
+class ELOlogic: Codable {
     
     var nSkills = 4
-    let maxSkills = 8
+    static let maxSkills = 8
     var nEpochs = 1
     var alphaItems = 0.005
     var alphaStudents = 0.05
     var offsetParameter = 2.0
     var skillThreshold = 0.5
-    let nItems = 16
-    let nStudents = 2000
+    static let nItems = 16
+    static let nStudents = 2000
     var students: [String:Student] = [:]
     var items: [String:Item] = [:]
     var scores: [Score] = []
@@ -68,7 +68,7 @@ class ELOlogic {
     var errors: [ModelData] = []
     var studentResults: [ModelData] = []
     var filename: URL? = nil
-    let studentSampleSize = 50
+    var studentSampleSize = 50
     var synthetic = false
     
     func loadDataWithString(_ filePath: URL) {
@@ -86,6 +86,9 @@ class ELOlogic {
         let lines:[String] = dataFileContents!.components(separatedBy: "\n")
         for line in lines {
             let parts = line.components(separatedBy: ",")
+            if parts.count == 0 {
+                continue
+            }
             if parts.count != 3 {
                 print("line with fewer than three items")
                 return
@@ -136,7 +139,7 @@ class ELOlogic {
         scores = []
         results = []
         synthetic = true
-        for i in 0..<nItems {
+        for i in 0..<ELOlogic.nItems {
 
             let j = Item(name: String(format: "%03d", i))
             j.realSkills = integerToBinaryArray(i, length: nSkills)
@@ -144,9 +147,9 @@ class ELOlogic {
             j.experiences = 5
             items[j.name] = j
         }
-        for i in 0..<nStudents {
+        for i in 0..<ELOlogic.nStudents {
             let s = Student(name: String(format: "%04d",i))
-            let realSkill = Int.random(in: 0..<nItems)
+            let realSkill = Int.random(in: 0..<ELOlogic.nItems)
             s.realSkills = integerToBinaryArray(realSkill, length: nSkills)
             s.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
             s.name +=  "s" + String(realSkill)
@@ -212,8 +215,8 @@ class ELOlogic {
     
  
     func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
-        let s = score.student
-        let it = score.item
+        let s = students[score.student]!
+        let it = items[score.item]!
         let error = expectedScore(s: s, it: it) - score.score
         var expectedWithoutSkill: [Double] = []
         for i in 0..<nSkills {
@@ -274,7 +277,7 @@ class ELOlogic {
     func calculateError() -> Double {
         var error: Double = 0
         for score in scores {
-            error += abs(score.score - expectedScore(s: score.student, it: score.item))
+            error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
         }
         return error
     }
@@ -344,10 +347,6 @@ class ELOlogic {
 
         for key in sortedKeys {
             print(key,items[key]!.skills)
-        }
-        for _ in 1...studentSampleSize {
-            let student = scores[Int.random(in: 0..<scores.count)].student
-            print(student.name, student.skills)
         }
     }
     

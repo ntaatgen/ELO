@@ -22,6 +22,13 @@ struct ELOApp: App {
                 Button("Synthetic data") {
                     model.generateData()
                 }
+                Divider()
+                Button("Save model...") {
+                    model.saveModel()
+                }
+                Button("Load model...") {
+                    model.loadModel()
+                }
             }
         }
     }

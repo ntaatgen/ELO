@@ -74,7 +74,7 @@ struct ELOmodel {
     }
     
     func setSkills(value: Int) {
-        if value > 0 && value <= logic.maxSkills {
+        if value > 0 && value <= ELOlogic.maxSkills {
             logic.nSkills = value
         }
     }
@@ -104,11 +104,13 @@ struct ELOmodel {
         var score = 0.0
         var count = 0.0
         for result in logic.scores {
-            if result.student === s && items.contains(where: {$0.name == result.item.name}) {
+            if result.student == s.name && items.contains(where: {$0.name == result.item}) {
                 score += result.score
                 count += 1
             }
         }
+        
+        print(count)
         return count != 0 ? score/count : 0.0
     }
     

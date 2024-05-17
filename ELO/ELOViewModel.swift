@@ -51,6 +51,47 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    func saveModel() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Save model"
+        savePanel.nameFieldLabel = "File Name:"
+        savePanel.begin { (result: NSApplication.ModalResponse) -> Void in
+            if result == NSApplication.ModalResponse.OK {
+                    if let panelURL = savePanel.url {
+                        do {
+                            try JSONEncoder().encode(self.model.logic)
+                                .write(to: panelURL)
+                        }
+                        catch let error as NSError {
+                            print("Ooops! Something went wrong: \(error)")
+                            return
+                        }
+                    }
+                }
+            
+        }
+    }
+    
+    func loadModel() {
+        do {
+            let panel = NSOpenPanel()
+            panel.allowsMultipleSelection = false
+            panel.canChooseDirectories = false
+            if panel.runModal() == .OK {
+                if let panelURL = panel.url {
+                    let data = try Data(contentsOf: panelURL)
+                    model.logic = try JSONDecoder().decode(ELOlogic.self, from: data)
+                    model.selected = 0
+                    model.update()
+                    model.primViewCalculateGraph()
+                }
+            }
+        }
+        catch {
+            return
+        }
+    }
+    
     func generateData() {
         model.generateData()
     }

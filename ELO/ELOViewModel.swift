@@ -51,6 +51,42 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    func writeDataFile() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Write Data File"
+        savePanel.nameFieldLabel = "File Name:"
+        savePanel.begin { (result: NSApplication.ModalResponse) -> Void in
+            if result == NSApplication.ModalResponse.OK {
+                    if let panelURL = savePanel.url {
+                        var output = ""
+                        for i in 0..<self.model.logic.sortedKeys.count {
+                            let item = self.model.logic.items[self.model.logic.sortedKeys[i]]!
+                            output += "item, " + item.name
+                            for j in 0..<item.skills.count {
+                                output += ", " + String(item.skills[j])
+                            }
+                            output += "\n"
+                        }
+                        for (_, student) in self.model.logic.students {
+                            output += "student, " + student.name
+                            for j in 0..<student.skills.count {
+                                output += ", " + String(student.skills[j])
+                            }
+                            output += "\n"
+                        }
+                        do {
+                            try output.write(to: panelURL, atomically: true, encoding: .utf8)
+                        }
+                        catch let error as NSError {
+                            print("Ooops! Something went wrong: \(error)")
+                            return
+                        }
+                    }
+                }
+            
+        }
+    }
+    
     func saveModel() {
         let savePanel = NSSavePanel()
         savePanel.title = "Save model"

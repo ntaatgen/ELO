@@ -29,6 +29,10 @@ struct ELOApp: App {
                 Button("Load model...") {
                     model.loadModel()
                 }
+                Divider()
+                Button("Write output file...") {
+                    model.writeDataFile()
+                }
             }
         }
     }

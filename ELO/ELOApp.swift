@@ -19,8 +19,15 @@ struct ELOApp: App {
                 Button("Load data...") {
                     model.loadData()
                 }
-                Button("Synthetic data") {
-                    model.generateData()
+                Button("Add data...") {
+                    model.loadData(add: true)
+                }
+                Divider()
+                Button("Synthetic data full graph") {
+                    model.generateData(set: 0)
+                }
+                Button("Synthetic data reduced graph") {
+                    model.generateData(set: 1)
                 }
                 Divider()
                 Button("Save model...") {

@@ -34,14 +34,23 @@ struct ELOmodel {
 //    var studentSelected: Bool = false
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
+    var timeList: [Int] = [0]
 
-
-    func loadData(filePath: URL) {
-        logic.loadDataWithString(filePath)
+    mutating func loadData(filePath: URL, add: Bool) {
+        if add {
+            logic.addDataWithString(filePath)
+        } else {
+            logic.loadDataWithString(filePath)
+        }
+        update()
     }
     
-    mutating func generateData() {
-        logic.generateData()
+    mutating func generateData(set: Int) {
+        if set == 0 {
+            logic.generateDataFull()
+        } else if set == 1 {
+            logic.generateData()
+        }
         update()
     }
     
@@ -51,6 +60,7 @@ struct ELOmodel {
         errorResults = logic.errors
         studentKeys = logic.studentKeys
         sortedKeys = logic.sortedKeys
+        timeList = logic.timeList
     }
     
     func setEpochs(value: Int) {
@@ -79,9 +89,14 @@ struct ELOmodel {
         }
     }
     
-
-    mutating func rerun() {
-        logic.rerun()
+    mutating func reset() {
+        logic.resetModel()
+        update()
+        selected = 0
+    }
+    
+    mutating func run(time: Int) {
+        logic.run(time: time)
         update()
         selected = 0
     }

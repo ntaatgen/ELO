@@ -32,11 +32,13 @@ class Score: Codable {
     var student: String
     var item: String
     var score: Double
+    var time: Int
     
-    init(student: Student, item: Item, score: Double) {
+    init(student: Student, item: Item, score: Double, time: Int = 0) {
         self.student = student.name
         self.item = item.name
         self.score = score
+        self.time = time
     }
 }
 
@@ -70,6 +72,10 @@ class ELOlogic: Codable {
     var filename: URL? = nil
     var studentSampleSize = 50
     var synthetic = false
+    var regression = [[Double]]()
+    var timeList: [Int] = [0]
+    var lineCounter = 0
+    var counter = 0
     
     func loadDataWithString(_ filePath: URL) {
         filename = filePath
@@ -77,7 +83,16 @@ class ELOlogic: Codable {
         items = [:]
         scores = []
         results = []
+        studentResults = []
+        errors = []
+        lineCounter = 0
+        counter = 0
         synthetic = false
+        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
+        addDataWithString(filePath)
+    }
+    
+    func addDataWithString(_ filePath: URL) {
         let dataFileContents = try? String(contentsOf: filePath, encoding: String.Encoding.utf8)
         guard dataFileContents != nil else {
             print("failed to load data")
@@ -89,8 +104,8 @@ class ELOlogic: Codable {
             if parts.count == 0 {
                 continue
             }
-            if parts.count != 3 {
-                print("line with fewer than three items")
+            if parts.count != 3 && parts.count != 4 {
+                print("line with wrong number of items: \(parts)")
                 return
             }
             let student = parts[0].replacingOccurrences(of: "\"", with: "")
@@ -108,11 +123,37 @@ class ELOlogic: Codable {
                 let newItem = Item(name: item)
                 newItem.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
                 items[item] = newItem
+                print("Adding \(item)")
             }
             let newScore = Score(student: students[student]!, item: items[item]!, score: score)
+            if parts.count == 4 {
+                if let time = Int(parts[3]) {
+                    newScore.time = time
+                    if !timeList.contains(time) {
+                        timeList.append(time)
+                    }
+                }
+            }
+            print(parts.count,newScore.time)
             scores.append(newScore)
         }
-//        testRun()
+    }
+    
+    func resetModel() {
+        for (_,student) in students {
+            student.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+        }
+        for (_,item) in items {
+            item.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+        }
+        results = []
+        studentResults = []
+        errors = []
+        synthetic = false
+        lineCounter = 0
+        counter = 0
+        errors = []
+        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
     }
     
     func integerToBinaryArray(_ number: Int, length: Int) -> [Double] {
@@ -131,16 +172,17 @@ class ELOlogic: Codable {
         
         return binaryArray
     }
-
-
-    func generateData() {
+    
+    
+    func generateDataFull() {
         students = [:]
         items = [:]
         scores = []
         results = []
         synthetic = true
+        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
         for i in 0..<ELOlogic.nItems {
-
+            
             let j = Item(name: String(format: "%03d", i))
             j.realSkills = integerToBinaryArray(i, length: nSkills)
             j.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
@@ -162,59 +204,93 @@ class ELOlogic: Codable {
                     result = result && (s.realSkills[i] == 1 || it.realSkills[i] == 0)
                 }
                 let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.4...1.0) : Double.random(in: 0.0...0.6)))
-//                let score = Score(student: s, item: it, score: (result ? 1.0 : 0.0))
+                //                let score = Score(student: s, item: it, score: (result ? 1.0 : 0.0))
                 scores.append(score)
             }
         }
         nSkills = 4
-//        testRun()
+        //        testRun()
     }
-
+    
+    func generateData() {
+        students = [:]
+        items = [:]
+        scores = []
+        results = []
+        synthetic = true
+        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
+        let itemSet = [0, 0, 0, 2, 2, 2, 2, 6, 6, 10, 10, 14, 14, 14, 11, 11, 15, 15, 15]
+        for i in 0..<itemSet.count {
+            let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]))
+            j.realSkills = integerToBinaryArray(itemSet[i], length: nSkills)
+            j.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+            j.experiences = 5
+            items[j.name] = j
+        }
+        for i in 0..<ELOlogic.nStudents {
+            let s = Student(name: String(format: "%04d",i))
+            let realSkill = itemSet[Int.random(in: 0..<itemSet.count)]
+            s.realSkills = integerToBinaryArray(realSkill, length: nSkills)
+            s.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+            s.name +=  "s" + String(realSkill)
+            students[s.name] = s
+        }
+        for (_,s) in students {
+            for (_,it) in items {
+                var result = true
+                for i in 0..<nSkills {
+                    result = result && (s.realSkills[i] == 1 || it.realSkills[i] == 0)
+                }
+                let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.4...1.0) : Double.random(in: 0.0...0.6)))
+                //                let score = Score(student: s, item: it, score: (result ? 1.0 : 0.0))
+                scores.append(score)
+            }
+        }
+        nSkills = 4
+        //        testRun()
+    }
     func calcProb(studentDifficulty: Double, itemDifficulty: Double) -> Double {
         return 1 - itemDifficulty + itemDifficulty * studentDifficulty
     }
     
+    
     func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
         var p: Double = 1
-        var pmin: Double = 1
         for i in 0..<nSkills {
             if leaveOut == nil || leaveOut! != i {
                 let skillP = calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])
-                p = p * skillP // worst case
-                pmin = min(pmin, skillP) // best case
+                p = p * skillP
             }
         }
-//        p = (p + pmin)/2
         return p
     }
-
     
-//    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
-//        let s = score.student
-//        let it = score.item
-//        let p = expectedScore(s: s, it: it)
-//        for i in 0..<nSkills {
-//
-//            s.skills[i] = s.skills[i] + alphaS * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (score.score - p)
-//            it.skills[i] = it.skills[i] + alphaI * (offsetParameter - calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])) * (p - score.score)
-//
-//            if s.skills[i] < 0 {s.skills[i] = 0}
-//            if it.skills[i] < 0 {it.skills[i] = 0}
-//            if s.skills[i] > 1 {s.skills[i] = 1}
-//            if it.skills[i] > 1 {it.skills[i] = 1}
-//        }
-//        it.experiences += 1
-//    }
     
-    func boundedAdd(_ num1: Double, _ num2: Double) -> Double{
+    func boundedAdd(_ num1: Double, _ num2: Double) -> Double {
         let s = num1 + num2
         if s < 0 { return 0 }
         else if s > 1 { return 1}
         else { return s }
     }
     
- 
-    func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+    func relu(_ x:Double) -> Double {
+        return x > 0 ? x : 0
+    }
+    
+//    func correctForRegression(skills: [Double]) -> [Double] {
+//        var newSkills = skills
+//        for i in 0..<skills.count {
+//            for j in 0..<skills.count {
+//                if i != j {
+//                    newSkills[i] -= relu(10 * regression[i][j] * skills[j])
+//                }
+//            }
+//            newSkills[i] = boundedAdd(newSkills[i], 0)
+//        }
+//        return newSkills
+//    }
+    
+    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
         let s = students[score.student]!
         let it = items[score.item]!
         let error = expectedScore(s: s, it: it) - score.score
@@ -222,58 +298,43 @@ class ELOlogic: Codable {
         for i in 0..<nSkills {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
         }
+//        let correctedStudentSkills = correctForRegression(skills: s.skills)
         for i in 0..<nSkills {
             it.skills[i] = boundedAdd(it.skills[i],alphaI * expectedWithoutSkill[i] * error * (1 - s.skills[i]))
             s.skills[i] = boundedAdd(s.skills[i], -alphaS * expectedWithoutSkill[i] * error * it.skills[i])
         }
         it.experiences += 1
+        updateRegression(s: s)
     }
             
+    func updateRegressionOld(s: Student, alpha: Double = 0.01) {
+        for i in 0..<nSkills {
+            var expected = regression[i][i]
+            for j in 0..<nSkills {
+                if i != j {
+                    expected += regression[i][j] * s.skills[j]
+                }
+            }
+            let error = s.skills[i] - expected
+            regression[i][i] += alpha * error
+            for j in 0..<nSkills {
+                if i != j {
+                    regression[i][j] += alpha * error * s.skills[j]
+                }
+            }
+        }
+    }
     
-//    func twoItems(scoreIndex1: Int, scoreIndex2: Int, alpha: Double = 0.01) {
-//        let item1 = scores[scoreIndex1]
-//        let item2 = scores[scoreIndex2]
-//        guard item1.student.name == item2.student.name else {
-//            print("Illegal call of twoItems")
-//            return
-//        }
-//
-//        let expected1 = expectedScore(s: item1.student, it: item1.item)
-//        let expected2 = expectedScore(s: item2.student, it: item2.item)
-//        if item1.score > expected1 && item2.score < expected2 { // item1 is easier than expected and item2 harder
-//            for i in 0..<nSkills {
-////                if item1.item.skills[i] < item2.item.skills[i] { // was  >
-//                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease
-//                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase
-////                }
-//            }
-//        } else if item1.score < expected1 && item2.score > expected2 { // item1 is harder than expected and item2 easier
-//            for i in 0..<nSkills {
-//                if item1.item.skills[i] > item2.item.skills[i] { // was <
-//                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase
-//                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease
-//                }
-//            }
-//        } 
-//        else if item1.score > expected1 && item2.score > expected2 { // both easier than expected
-//            for i in 0..<nSkills {
-//                if item1.item.skills[i] < item2.item.skills[i] {
-//                    item2.item.skills[i] -= alpha * (item2.score - expected2) // decrease item2
-//                } else {
-//                    item1.item.skills[i] -= alpha * (item1.score - expected1) // decrease item1
-//                }
-//            }
-//        } else if item1.score < expected1 && item2.score < expected2 { // both harder than expected
-//            for i in 0..<nSkills {
-//                if item1.item.skills[i] > item2.item.skills[i] {
-//                    item2.item.skills[i] += alpha * (expected2 - item2.score) // increase item2
-//                } else {
-//                    item1.item.skills[i] += alpha * (expected1 - item1.score) // increase item1
-//                }
-//            }
-//        }
-//    }
-    
+    func updateRegression(s: Student, alpha: Double = 0.01) {
+        for i in 0..<nSkills {
+            for j in 0..<nSkills {
+                if i != j {
+                    regression[i][j] += alpha * ( (s.skills[i] - s.skills[j]) - regression[i][j])
+                }
+            }
+        }
+    }
+       
     func calculateError() -> Double {
         var error: Double = 0
         for score in scores {
@@ -283,25 +344,12 @@ class ELOlogic: Codable {
     }
     
     
-    func calculateModel() {
+    func calculateModel(time: Int) {
         studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
-        var lineCounter = 0
-        var counter = 0
-        errors = []
         for j in 1...nEpochs {
             print("epoch", j)
             var order = Array(0..<scores.count)
             order.shuffle()
-//            order.sort { scores[$0].student.name < scores[$1].student.name }
-//            for i in 0..<(scores.count / 2) {
-//                let j = Int.random(in: 0..<(scores.count / 2))
-//                let tmp1 = order[i * 2]
-//                order[i * 2] = order[j * 2]
-//                order[j * 2] = tmp1
-//                let tmp2 = order[i * 2 + 1]
-//                order[i * 2 + 1] = order[j * 2 + 1]
-//                order[j * 2 + 1] = tmp2
-//            }
 
             for key in sortedKeys {
                 for skills in 0..<nSkills {
@@ -317,30 +365,29 @@ class ELOlogic: Codable {
             }
             lineCounter += 1
             for i in 0..<order.count {
-//                oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
-                oneItemAlt(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
-//                if i < order.count - 1 && scores[order[i]].student.name == scores[order[i+1]].student.name {
-//                    twoItems(scoreIndex1: order[i], scoreIndex2: order[i+1])
-//                }
-                counter += 1
-                if counter == 1000 * nEpochs {
-                    for key in sortedKeys {
-                        for skills in 0..<nSkills {
-                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                            results.append(dp)
+                if scores[order[i]].time == time {
+                    oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+                    
+                    counter += 1
+                    if counter == 1000 * nEpochs {
+                        for key in sortedKeys {
+                            for skills in 0..<nSkills {
+                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                                results.append(dp)
+                            }
                         }
-                    }
-                    for key in studentKeys {
-                        for skills in 0..<nSkills {
-                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                            studentResults.append(dp)
+                        for key in studentKeys {
+                            for skills in 0..<nSkills {
+                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                                studentResults.append(dp)
+                            }
                         }
+                        let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                        errors.append(dp)
+                        lineCounter += 1
+                        counter = 0
+                        //                    print(calculateError())
                     }
-                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-                    errors.append(dp)
-                    lineCounter += 1
-                    counter = 0
-//                    print(calculateError())
                 }
             }
         }
@@ -350,13 +397,16 @@ class ELOlogic: Codable {
         }
     }
     
-    func rerun() {
-        if synthetic {
-            generateData()
-        } else {
-            guard filename != nil else {return}
-            loadDataWithString(filename!)
-        }
-        calculateModel()
+    
+    func run(time: Int) {
+//        if synthetic {
+//            generateData()
+//        } else {
+//            guard filename != nil else {return}
+//            loadDataWithString(filename!)
+//        }
+//        resetModel()
+        calculateModel(time: time)
+        print(regression)
     }
 }

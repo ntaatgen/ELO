@@ -40,16 +40,18 @@ class ELOViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updateAll(_:)), name: NSNotification.Name(rawValue: "UpdateAll"), object: nil)
     }
     
-    func loadData() {
+    func loadData(add: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = true
         if panel.runModal() == .OK {
             for url in panel.urls {
-                model.loadData(filePath: url)
+                model.loadData(filePath: url, add: add)
             }
         }
     }
+    
+
     
     func writeDataFile() {
         let savePanel = NSSavePanel()
@@ -71,6 +73,15 @@ class ELOViewModel: ObservableObject {
                             output += "student, " + student.name
                             for j in 0..<student.skills.count {
                                 output += ", " + String(student.skills[j])
+                            }
+                            output += "\n"
+                        }
+                        for i in 0..<self.model.logic.regression.count {
+                            for j in 0..<self.model.logic.regression.count {
+                                output += String(self.model.logic.regression[i][j])
+                                if j != self.model.logic.regression.count - 1 {
+                                    output += ", "
+                                }
                             }
                             output += "\n"
                         }
@@ -128,8 +139,9 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-    func generateData() {
-        model.generateData()
+
+    func generateData(set: Int) {
+            model.generateData(set: set)
     }
     
     func changeEpochs(_ epochs: String) {
@@ -168,8 +180,13 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-    func rerun() {
-        model.rerun()
+    func reset() {
+        model.reset()
+        primViewCalculateGraph()
+    }
+    
+    func run(time: Int) {
+        model.run(time: time)
         primViewCalculateGraph()
     }
     
@@ -205,6 +222,10 @@ class ELOViewModel: ObservableObject {
     
     var studentKeys: [String] {
         model.studentKeys
+    }
+    
+    var timeList: [Int] {
+        model.timeList
     }
     
     let colors: [Color] = [

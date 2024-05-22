@@ -15,6 +15,13 @@ struct ELOMainView: View {
     @State private var aItems: String = "0.005"
     @State private var aSubjects: String = "0.05"
     @State private var nSkills: String = "4"
+    @State private var pickedTime: Int = 0
+    func pickerContent() -> some View {
+        ForEach(model.timeList, id:\.self) {
+            Text(String($0))
+        }
+    }
+    
     var body: some View {
         VStack {
             HStack {
@@ -43,7 +50,14 @@ struct ELOMainView: View {
                 TextField("aSubs", text: $aSubjects, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
                 Text("# Skills:")
                 TextField("nSkills", text: $nSkills, onEditingChanged: {changed in model.changeNSkills(nSkills)})
-                Button(action: { model.rerun() }){
+                Button(action: { model.reset()}) {
+                    Label("Reset", systemImage: "eraser")
+                }
+                Picker("Time: ", selection: $pickedTime) {
+                    pickerContent()
+                }
+                .pickerStyle(.automatic)
+                Button(action: { model.run(time: pickedTime) }){
                     Label("Run", systemImage: "play")
                 }
             }

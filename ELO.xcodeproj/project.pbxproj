@@ -31,6 +31,7 @@
 		B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FruchtermanReingold.swift; path = ELO/FruchtermanReingold.swift; sourceTree = "<group>"; };
 		B84A064F2B99EC95003C06A8 /* ELOmodel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOmodel.swift; sourceTree = "<group>"; };
 		B84A06512B99ECC3003C06A8 /* ELOlogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOlogic.swift; sourceTree = "<group>"; };
+		B87EFC772BFDF99300165F1E /* oldcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = oldcode.swift; sourceTree = "<group>"; };
 		B89E07092B987B0E00B52111 /* ELO.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ELO.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B89E070C2B987B0E00B52111 /* ELOApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOApp.swift; sourceTree = "<group>"; };
 		B89E070E2B987B0E00B52111 /* ELOMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOMainView.swift; sourceTree = "<group>"; };
@@ -90,6 +91,7 @@
 				B84A064F2B99EC95003C06A8 /* ELOmodel.swift */,
 				B89E070C2B987B0E00B52111 /* ELOApp.swift */,
 				B84A06512B99ECC3003C06A8 /* ELOlogic.swift */,
+				B87EFC772BFDF99300165F1E /* oldcode.swift */,
 				B89E07102B987B0F00B52111 /* Assets.xcassets */,
 				B89E07152B987B0F00B52111 /* ELO.entitlements */,
 				B89E07122B987B0F00B52111 /* Preview Content */,

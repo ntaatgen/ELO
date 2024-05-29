@@ -77,7 +77,7 @@ class ELOlogic: Codable {
     var lineCounter = 0
     var counter = 0
     
-    func loadDataWithString(_ filePath: URL) {
+    func loadDataWithURL(_ filePath: URL) {
         filename = filePath
         students = [:]
         items = [:]
@@ -89,10 +89,10 @@ class ELOlogic: Codable {
         counter = 0
         synthetic = false
         regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
-        addDataWithString(filePath)
+        addDataWithURL(filePath)
     }
     
-    func addDataWithString(_ filePath: URL) {
+    func addDataWithURL(_ filePath: URL) {
         let dataFileContents = try? String(contentsOf: filePath, encoding: String.Encoding.utf8)
         guard dataFileContents != nil else {
             print("failed to load data")
@@ -254,7 +254,7 @@ class ELOlogic: Codable {
     }
     
     
-    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
+    func expectedScoreOrg(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
         var p: Double = 1
         for i in 0..<nSkills {
             if leaveOut == nil || leaveOut! != i {
@@ -265,6 +265,19 @@ class ELOlogic: Codable {
         return p
     }
     
+    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
+        var p: Double = 1
+        for i in 0..<nSkills {
+            if leaveOut == nil || leaveOut! != i {
+                var skillP = calcProb(studentDifficulty: s.skills[i], itemDifficulty: it.skills[i])
+                for j in 0..<nSkills {
+                    skillP = boundedAdd(skillP, j != i ? regression[i][j] * s.skills[j] : 0)
+                }
+                p = p * skillP
+            }
+        }
+        return p
+    }
     
     func boundedAdd(_ num1: Double, _ num2: Double) -> Double {
         let s = num1 + num2
@@ -276,36 +289,102 @@ class ELOlogic: Codable {
     func relu(_ x:Double) -> Double {
         return x > 0 ? x : 0
     }
+
+//    func correctForRegression(skills: [Double], index: Int) -> Double {
+//        var result = skills[index]
+//        for j in 0..<skills.count {
+//            if index != j {
+//                result += relu(regression[index][j] * skills[j])
+//            }
+//        }
+//        result = boundedAdd(result, 0)
+//        return result
+//    }
     
 //    func correctForRegression(skills: [Double]) -> [Double] {
 //        var newSkills = skills
 //        for i in 0..<skills.count {
 //            for j in 0..<skills.count {
 //                if i != j {
-//                    newSkills[i] -= relu(10 * regression[i][j] * skills[j])
+//                    newSkills[i] += relu(regression[i][j] * skills[j])
 //                }
 //            }
 //            newSkills[i] = boundedAdd(newSkills[i], 0)
 //        }
 //        return newSkills
 //    }
-    
-    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+    func oneItemOrg(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
         let s = students[score.student]!
         let it = items[score.item]!
-        let error = expectedScore(s: s, it: it) - score.score
+        let error = score.score - expectedScore(s: s, it: it)
         var expectedWithoutSkill: [Double] = []
         for i in 0..<nSkills {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
         }
 //        let correctedStudentSkills = correctForRegression(skills: s.skills)
         for i in 0..<nSkills {
-            it.skills[i] = boundedAdd(it.skills[i],alphaI * expectedWithoutSkill[i] * error * (1 - s.skills[i]))
-            s.skills[i] = boundedAdd(s.skills[i], -alphaS * expectedWithoutSkill[i] * error * it.skills[i])
+            it.skills[i] = boundedAdd(it.skills[i], alphaI * expectedWithoutSkill[i] * error * (s.skills[i] - 1))
+            s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i])
         }
         it.experiences += 1
-        updateRegression(s: s)
+        updateRegressionItem(it: it)
     }
+    
+    func calcDeltaRegression(i: Int, j: Int, s: Student, it: Item) -> Double {
+        let delta = 0.01
+        var x = 1.0
+        for k in 0..<nSkills {
+            x *= expectedScore(s: s, it: it, leaveOut: k)
+        }
+        regression[i][j] += delta
+        var xPlusDelta = 1.0
+        for k in 0..<nSkills {
+            xPlusDelta *= expectedScore(s: s, it: it, leaveOut: k)
+        }
+        regression[i][j] -= delta
+        return (xPlusDelta - x) / delta
+    }
+    
+    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+        let s = students[score.student]!
+        let it = items[score.item]!
+        let error = score.score - expectedScore(s: s, it: it)
+        var expectedWithoutSkill: [Double] = []
+        for i in 0..<nSkills {
+            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+        }
+        for i in 0..<nSkills {
+            it.skills[i] = boundedAdd(it.skills[i], alphaI * expectedWithoutSkill[i] * error * (s.skills[i] - 1))
+            s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i])
+        }
+        it.experiences += 1
+        let alpha = 0.00001
+        for i in 0..<nSkills {
+            for j in 0..<nSkills {
+                regression[i][j] = boundedAdd(regression[i][j], alpha * error * calcDeltaRegression(i: i, j: j, s: s, it: it))
+            }
+        }
+//        updateRegressionItem(it: it)
+    }
+    
+    
+    
+//    func oneItemOrg(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+//        let s = students[score.student]!
+//        let it = items[score.item]!
+//        let error = expectedScore(s: s, it: it) - score.score
+//        var expectedWithoutSkill: [Double] = []
+//        for i in 0..<nSkills {
+//            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+//        }
+////        let correctedStudentSkills = correctForRegression(skills: s.skills)
+//        for i in 0..<nSkills {
+//            it.skills[i] = boundedAdd(it.skills[i],alphaI * expectedWithoutSkill[i] * error * (1 - s.skills[i]))
+//            s.skills[i] = boundedAdd(s.skills[i], -alphaS * expectedWithoutSkill[i] * error * it.skills[i])
+//        }
+//        it.experiences += 1
+//        updateRegressionItem(it: it)
+//    }
             
     func updateRegressionOld(s: Student, alpha: Double = 0.01) {
         for i in 0..<nSkills {
@@ -330,6 +409,16 @@ class ELOlogic: Codable {
             for j in 0..<nSkills {
                 if i != j {
                     regression[i][j] += alpha * ( (s.skills[i] - s.skills[j]) - regression[i][j])
+                }
+            }
+        }
+    }
+    
+    func updateRegressionItem(it: Item, alpha: Double = 0.01) {
+        for i in 0..<nSkills {
+            for j in 0..<nSkills {
+                if i != j {
+                    regression[i][j] += alpha * ( (it.skills[i] - it.skills[j]) - regression[i][j])
                 }
             }
         }
@@ -399,13 +488,6 @@ class ELOlogic: Codable {
     
     
     func run(time: Int) {
-//        if synthetic {
-//            generateData()
-//        } else {
-//            guard filename != nil else {return}
-//            loadDataWithString(filename!)
-//        }
-//        resetModel()
         calculateModel(time: time)
         print(regression)
     }

@@ -38,9 +38,9 @@ struct ELOmodel {
 
     mutating func loadData(filePath: URL, add: Bool) {
         if add {
-            logic.addDataWithString(filePath)
+            logic.addDataWithURL(filePath)
         } else {
-            logic.loadDataWithString(filePath)
+            logic.loadDataWithURL(filePath)
         }
         update()
     }

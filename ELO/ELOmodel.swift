@@ -49,7 +49,7 @@ struct ELOmodel {
         if set == 0 {
             logic.generateDataFull()
         } else if set == 1 {
-            logic.generateData()
+            logic.generateDataReduced()
         }
         update()
     }
@@ -77,6 +77,10 @@ struct ELOmodel {
     
     func setASubjects(value: Double) {
         logic.alphaStudents = value
+    }
+    
+    func setAHebb(value: Double) {
+        logic.alphaHebb = value
     }
     
     func setThreshold(value: Double) {

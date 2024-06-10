@@ -162,6 +162,12 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    func changeAHebb(_ value:String) {
+        if let numval = Double(value) {
+            model.setAHebb(value: numval)
+        }
+    }
+    
 //    func changeOffsetParameter(_ value:String) {
 //        if let numval = Double(value) {
 //            model.setOffsetParameter(value: numval)

@@ -11,11 +11,13 @@ import Charts
 
 struct ELOMainView: View {
     @ObservedObject var model: ELOViewModel
-    @State private var epochs: String = "1"
+    @State private var epochs: String = "1000"
     @State private var aItems: String = "0.005"
     @State private var aSubjects: String = "0.05"
+    @State private var aHebb: String = "0.015"
     @State private var nSkills: String = "4"
     @State private var pickedTime: Int = 0
+
     func pickerContent() -> some View {
         ForEach(model.timeList, id:\.self) {
             Text(String($0))
@@ -42,14 +44,8 @@ struct ELOMainView: View {
                 case .errors:
                     Text("Showing Errors")
                 }
-                Text("Epochs:")
-                TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
-                Text("alphaItems:")
-                TextField("aItems", text: $aItems, onEditingChanged: {changed in model.changeAItems(aItems)})
-                Text("alphaSubjects:")
-                TextField("aSubs", text: $aSubjects, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
-                Text("# Skills:")
-                TextField("nSkills", text: $nSkills, onEditingChanged: {changed in model.changeNSkills(nSkills)})
+                Spacer()
+
                 Button(action: { model.reset()}) {
                     Label("Reset", systemImage: "eraser")
                 }
@@ -60,6 +56,19 @@ struct ELOMainView: View {
                 Button(action: { model.run(time: pickedTime) }){
                     Label("Run", systemImage: "play")
                 }
+            }
+            HStack {
+                Text("Epochs:")
+                TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
+                Text("alphaItems:")
+                TextField("aItems", text: $aItems, onEditingChanged: {changed in model.changeAItems(aItems)})
+                Text("alphaSubjects:")
+                TextField("aSubs", text: $aSubjects, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
+                Text("alphaHebb:")
+                TextField("aHebb", text: $aHebb, onEditingChanged: {changed in model.changeAHebb(aHebb)})
+                Text("# Skills:")
+                TextField("nSkills", text: $nSkills, onEditingChanged: {changed in model.changeNSkills(nSkills)})
+                Spacer()
             }
             if model.selected != nil {
                 switch model.graphSelected {

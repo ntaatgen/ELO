@@ -94,3 +94,152 @@ import Foundation
 ////        p = (p + pmin)/2
 //    return p
 //}
+
+func relu(_ x:Double) -> Double {
+    return x > 0 ? x : 0
+}
+
+//    func correctForRegression(skills: [Double], index: Int) -> Double {
+//        var result = skills[index]
+//        for j in 0..<skills.count {
+//            if index != j {
+//                result += relu(regression[index][j] * skills[j])
+//            }
+//        }
+//        result = boundedAdd(result, 0)
+//        return result
+//    }
+
+//    func correctForRegression(skills: [Double]) -> [Double] {
+//        var newSkills = skills
+//        for i in 0..<skills.count {
+//            for j in 0..<skills.count {
+//                if i != j {
+//                    newSkills[i] += relu(regression[i][j] * skills[j])
+//                }
+//            }
+//            newSkills[i] = boundedAdd(newSkills[i], 0)
+//        }
+//        return newSkills
+//    }
+
+
+func sigmoid(_ x: Double) -> Double {
+    return 1 / (1 + exp(-x*10))
+}
+
+func derivativeOfSigmoid(_ x: Double) -> Double {
+    return sigmoid(x) * (1 - sigmoid(x))
+}
+
+func oneItemAlt2(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+    let s = students[score.student]!
+    let it = items[score.item]!
+    let error = score.score - expectedScore(s: s, it: it)
+    var expectedWithoutSkill: [Double] = []
+    for i in 0..<nSkills {
+        expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+    }
+    for i in 0..<nSkills {
+        it.skills[i] = boundedAdd(it.skills[i], alphaI * derivativeOfSigmoid((it.skills[i] - 0.5) * 5) * expectedWithoutSkill[i] * error * (s.skills[i] - 1), upb: 0.9)
+        s.skills[i] = boundedAdd(s.skills[i], alphaS * derivativeOfSigmoid((s.skills[i] - 0.5) * 5) * expectedWithoutSkill[i] * error *  it.skills[i], lwb: 0.1)
+    }
+    it.experiences += 1
+//        if false {
+//            let alpha = 0.00001
+//            for i in 0..<nSkills {
+//                for j in 0..<nSkills {
+//                    regression[i][j] = boundedAdd(regression[i][j], alpha * error * calcDeltaRegression(i: i, j: j, s: s, it: it))
+//                }
+//            }
+//        }
+//        updateRegressionItem(it: it)
+}
+
+func oneItemAlt(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+    let s = students[score.student]!
+    let it = items[score.item]!
+    let error = score.score - expectedScore(s: s, it: it)
+//        print(expectedScore(s: s, it: it))
+    var expectedWithoutSkill: [Double] = []
+    for i in 0..<nSkills {
+        expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+    }
+    for i in 0..<nSkills {
+        it.skills[i] = boundedAdd(it.skills[i], -alphaI * expectedWithoutSkill[i] * error * derivativeOfSigmoid(s.skills[i] - it.skills[i]))
+        s.skills[i] = boundedAdd(s.skills[i], alphaS  * expectedWithoutSkill[i] * error *  derivativeOfSigmoid(s.skills[i] - it.skills[i]))
+    }
+    it.experiences += 1
+//        if false {
+//            let alpha = 0.00001
+//            for i in 0..<nSkills {
+//                for j in 0..<nSkills {
+//                    regression[i][j] = boundedAdd(regression[i][j], alpha * error * calcDeltaRegression(i: i, j: j, s: s, it: it))
+//                }
+//            }
+//        }
+//        updateRegressionItem(it: it)
+}
+        
+func updateRegressionOld(s: Student, alpha: Double = 0.01) {
+    for i in 0..<nSkills {
+        var expected = regression[i][i]
+        for j in 0..<nSkills {
+            if i != j {
+                expected += regression[i][j] * s.skills[j]
+            }
+        }
+        let error = s.skills[i] - expected
+        regression[i][i] += alpha * error
+        for j in 0..<nSkills {
+            if i != j {
+                regression[i][j] += alpha * error * s.skills[j]
+            }
+        }
+    }
+}
+
+func updateRegression(s: Student, alpha: Double = 0.01) {
+    for i in 0..<nSkills {
+        for j in 0..<nSkills {
+            if i != j {
+                regression[i][j] += alpha * ( (s.skills[i] - s.skills[j]) - regression[i][j])
+            }
+        }
+    }
+}
+
+func updateRegressionItem(it: Item, alpha: Double = 0.01) {
+    for i in 0..<nSkills {
+        for j in 0..<nSkills {
+            if i != j {
+                regression[i][j] += alpha * ( (it.skills[i] - it.skills[j]) - regression[i][j])
+            }
+        }
+    }
+}
+
+func calcDeltaRegression(i: Int, j: Int, s: Student, it: Item) -> Double {
+    let delta = 0.01
+    var x = 1.0
+    for k in 0..<nSkills {
+        x *= expectedScore(s: s, it: it, leaveOut: k)
+    }
+    regression[i][j] += delta
+    var xPlusDelta = 1.0
+    for k in 0..<nSkills {
+        xPlusDelta *= expectedScore(s: s, it: it, leaveOut: k)
+    }
+    regression[i][j] -= delta
+    return (xPlusDelta - x) / delta
+}
+func expectedScoreAlt(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
+    var p: Double = 1
+    for i in 0..<nSkills {
+        if leaveOut == nil || leaveOut! != i {
+            let skillP = sigmoid(s.skills[i] - it.skills[i])
+            p = p * skillP
+        }
+    }
+    return p
+}

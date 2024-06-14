@@ -35,7 +35,7 @@ struct ELOmodel {
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
     var timeList: [Int] = [0]
-
+    var trace: String = "Starting ELO         \n"
     mutating func loadData(filePath: URL, add: Bool) {
         if add {
             logic.addDataWithURL(filePath)
@@ -61,6 +61,10 @@ struct ELOmodel {
         studentKeys = logic.studentKeys
         sortedKeys = logic.sortedKeys
         timeList = logic.timeList
+    }
+    
+    mutating func addToTrace(s: String) {
+        trace += s + "\n"
     }
     
     func setEpochs(value: Int) {
@@ -100,9 +104,10 @@ struct ELOmodel {
     }
     
     mutating func run(time: Int) {
-        logic.run(time: time)
-        update()
-        selected = 0
+            logic.run(time: time)
+//            update()
+            selected = 0
+        
     }
     
     mutating func resetGraph() {

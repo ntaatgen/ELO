@@ -34,10 +34,15 @@ class ELOViewModel: ObservableObject {
         return highest
     }
     
+    var trace: String {
+        model.trace
+    }
+    
     init() {
         model = ELOmodel()
-        NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updatePrimsGraph(_:)), name: NSNotification.Name(rawValue: "UpdatePrimsGraph"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updateAll(_:)), name: NSNotification.Name(rawValue: "UpdateAll"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updateGraph(_:)), name: NSNotification.Name(rawValue: "updateGraph"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updatePrimsGraph(_:)), name: NSNotification.Name(rawValue: "updatePrimsGraph"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.runDone(_:)), name: NSNotification.Name(rawValue: "runDone"), object: nil)
     }
     
     func loadData(add: Bool = false) {
@@ -47,6 +52,7 @@ class ELOViewModel: ObservableObject {
         if panel.runModal() == .OK {
             for url in panel.urls {
                 model.loadData(filePath: url, add: add)
+                model.addToTrace(s: "Loading data \(String(describing: url.pathComponents.last))")
             }
         }
     }
@@ -73,15 +79,6 @@ class ELOViewModel: ObservableObject {
                             output += "student, " + student.name
                             for j in 0..<student.skills.count {
                                 output += ", " + String(student.skills[j])
-                            }
-                            output += "\n"
-                        }
-                        for i in 0..<self.model.logic.regression.count {
-                            for j in 0..<self.model.logic.regression.count {
-                                output += String(self.model.logic.regression[i][j])
-                                if j != self.model.logic.regression.count - 1 {
-                                    output += ", "
-                                }
                             }
                             output += "\n"
                         }
@@ -142,11 +139,15 @@ class ELOViewModel: ObservableObject {
 
     func generateData(set: Int) {
             model.generateData(set: set)
+        model.addToTrace(s: "Generating data")
     }
     
     func changeEpochs(_ epochs: String) {
         if let numval = Int(epochs) {
             model.setEpochs(value: numval)
+            model.addToTrace(s: "Changing epochs to \(epochs)")
+        } else {
+            model.addToTrace(s: "Illegal value for epochs")
         }
     }
     
@@ -194,6 +195,16 @@ class ELOViewModel: ObservableObject {
     func run(time: Int) {
         model.run(time: time)
         primViewCalculateGraph()
+        model.addToTrace(s: "Running model at time \(time) for \(model.logic.nEpochs) epochs")
+    }
+    
+    @objc func runDone(_ notification: Notification) {
+        model.update()
+    }
+    
+    @objc func updateGraph(_ notification: Notification) {
+        primViewCalculateGraph()
+        model.update()
     }
     
     var results: [ModelData] {

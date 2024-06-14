@@ -57,7 +57,7 @@ class ELOlogic: Codable {
     var nEpochs = 1000
     var alphaItems = 0.005
     var alphaStudents = 0.05
-    var alphaHebb = 0.015
+    var alphaHebb = 0.025
     var offsetParameter = 2.0
     var skillThreshold = 0.5
     static let nItems = 16
@@ -307,12 +307,12 @@ class ELOlogic: Codable {
             s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i],lwb: 0.0)
         }
         /// Add some "Hebbian" learning
-//        if score.score > 0.5 {
+        if score.score > 0.7 {
             for i in 0..<nSkills {
-//                if it.skills[i] < s.skills[i] {
-                    it.skills[i] += alphaI * alphaHebb * (s.skills[i] - it.skills[i])
-//                }
-//            }
+                if it.skills[i] < s.skills[i] {
+                    it.skills[i] += alphaI * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5) * 2
+                }
+            }
         }
         
         it.experiences += 1
@@ -330,60 +330,82 @@ class ELOlogic: Codable {
     
     
     func calculateModel(time: Int) {
-        studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
-        for j in 1...nEpochs {
-            print("epoch", j)
-            var order = Array(0..<scores.count)
-            order.shuffle()
-
-            for key in sortedKeys {
-                for skills in 0..<nSkills {
-                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                    results.append(dp)
-                }
-            }
-            for key in studentKeys {
-                for skills in 0..<nSkills {
-                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                    studentResults.append(dp)
-                }
-            }
-            lineCounter += 1
-            for i in 0..<order.count {
-                if scores[order[i]].time == time {
-                    oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
-                    
-                    counter += 1
-                    if counter == 1000 * nEpochs {
-                        for key in sortedKeys {
-                            for skills in 0..<nSkills {
-                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                                results.append(dp)
-                            }
-                        }
-                        for key in studentKeys {
-                            for skills in 0..<nSkills {
-                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                                studentResults.append(dp)
-                            }
-                        }
-                        let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-                        errors.append(dp)
-                        lineCounter += 1
-                        counter = 0
-                        //                    print(calculateError())
+        DispatchQueue.global().async { [self] () -> Void in
+            
+            studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
+            for j in 1...nEpochs {
+                print("epoch", j)
+                var order = Array(0..<scores.count)
+                order.shuffle()
+                
+                for key in sortedKeys {
+                    for skills in 0..<nSkills {
+                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                        results.append(dp)
                     }
                 }
+                for key in studentKeys {
+                    for skills in 0..<nSkills {
+                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                        studentResults.append(dp)
+                    }
+                }
+                lineCounter += 1
+                for i in 0..<order.count {
+                    if scores[order[i]].time == time {
+                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+                        
+                        counter += 1
+                        if counter == 1000 * nEpochs {
+                            for key in sortedKeys {
+                                for skills in 0..<nSkills {
+                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                                    results.append(dp)
+                                }
+                            }
+                            for key in studentKeys {
+                                for skills in 0..<nSkills {
+                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                                    studentResults.append(dp)
+                                }
+                            }
+                            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                            errors.append(dp)
+                            lineCounter += 1
+                            counter = 0
+                            //                    print(calculateError())
+                        }
+                    }
+                }
+                if j % 100 == 0 {
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
+                    }
+                } else {
+                    
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name(rawValue: "runDone"), object: nil)
+                    }
+                }
+                
+            }
+            
+            for key in sortedKeys {
+                print(key,items[key]!.skills)
             }
         }
-
-        for key in sortedKeys {
-            print(key,items[key]!.skills)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
         }
     }
     
     
     func run(time: Int) {
-        calculateModel(time: time)
+//        DispatchQueue.global().async { () -> Void in
+            self.calculateModel(time: time)
+//            DispatchQueue.main.async {
+//                NotificationCenter.default.post(name: Notification.Name(rawValue: "runDone"), object: nil)
+//            }
+//        }
     }
 }

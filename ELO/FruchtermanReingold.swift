@@ -94,7 +94,7 @@ class FruchtermanReingold {
     }
     
     func calculate(randomInit: Bool) {
-        DispatchQueue.global().async { () -> Void in
+//        DispatchQueue.global().async { () -> Void in
             var maxRank = 0.0
             if randomInit {
                 for (_,node) in self.nodes {
@@ -159,11 +159,11 @@ class FruchtermanReingold {
                         }
                     }
                 }
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: Notification.Name(rawValue: "UpdatePrimsGraph"), object: nil)
-                }
+//                DispatchQueue.main.async {
+//                    NotificationCenter.default.post(name: Notification.Name(rawValue: "UpdatePrimsGraph"), object: nil)
+//                }
                 
-            }
+//            }
             
         }
     }

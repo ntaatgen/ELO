@@ -21,7 +21,7 @@ class Item: Codable {
     var name: String
     var realSkills: [Double] = []
     var skills: [Double] = []
-    var experiences = 2
+    var experiences = 0
     
     init(name: String) {
         self.name = name
@@ -63,6 +63,7 @@ class ELOlogic: Codable {
     static let nItems = 16
     static let nStudents = 2000
     var students: [String:Student] = [:]
+    var lastLoadedStudents: [String] = []
     var items: [String:Item] = [:]
     var scores: [Score] = []
     var sortedKeys: [String] { Array(items.keys).sorted(by: <) }
@@ -100,6 +101,7 @@ class ELOlogic: Codable {
             print("failed to load data")
             return
         }
+        lastLoadedStudents = []
         let lines:[String] = dataFileContents!.components(separatedBy: "\n")
         for line in lines {
             let parts = line.components(separatedBy: ",")
@@ -120,6 +122,7 @@ class ELOlogic: Codable {
                 let newStudent = Student(name: student)
                 newStudent.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
                 students[student] = newStudent
+                lastLoadedStudents.append(student)
             }
             if items[item] == nil {
                 let newItem = Item(name: item)
@@ -139,6 +142,7 @@ class ELOlogic: Codable {
             print(parts.count,newScore.time)
             scores.append(newScore)
         }
+        studentKeys = Array(Array<String>(lastLoadedStudents).shuffled().prefix(studentSampleSize))
     }
     
     func resetModel() {
@@ -200,7 +204,7 @@ class ELOlogic: Codable {
             let j = Item(name: String(format: "%03d", i))
             j.realSkills = integerToBinaryArray(i, length: nSkills)
             j.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-            j.experiences = 5
+            j.experiences = 0
             items[j.name] = j
         }
         for i in 0..<ELOlogic.nStudents {
@@ -243,7 +247,7 @@ class ELOlogic: Codable {
             let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]))
             j.realSkills = integerToBinaryArray(itemSet[i], length: nSkills)
             j.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-            j.experiences = 5
+            j.experiences = 0
             items[j.name] = j
         }
         for i in 0..<ELOlogic.nStudents {
@@ -332,49 +336,54 @@ class ELOlogic: Codable {
     func calculateModel(time: Int) {
         DispatchQueue.global().async { [self] () -> Void in
             
-            studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
-            for j in 1...nEpochs {
+            for j in 0..<nEpochs {
                 print("epoch", j)
                 var order = Array(0..<scores.count)
                 order.shuffle()
-                
-                for key in sortedKeys {
-                    for skills in 0..<nSkills {
-                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                        results.append(dp)
+                if j % (nEpochs/10) == 0 {
+                    for key in sortedKeys {
+                        if items[key]!.experiences > 0 {
+                            for skills in 0..<nSkills {
+                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                                results.append(dp)
+                            }
+                        }
                     }
-                }
-                for key in studentKeys {
-                    for skills in 0..<nSkills {
-                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                        studentResults.append(dp)
+                    for key in studentKeys {
+                        for skills in 0..<nSkills {
+                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                            studentResults.append(dp)
+                        }
                     }
+                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                    errors.append(dp)
+                    lineCounter += (nEpochs/10)
                 }
-                lineCounter += 1
+
                 for i in 0..<order.count {
                     if scores[order[i]].time == time {
                         oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                         
-                        counter += 1
-                        if counter == 1000 * nEpochs {
-                            for key in sortedKeys {
-                                for skills in 0..<nSkills {
-                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                                    results.append(dp)
-                                }
-                            }
-                            for key in studentKeys {
-                                for skills in 0..<nSkills {
-                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                                    studentResults.append(dp)
-                                }
-                            }
-                            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-                            errors.append(dp)
-                            lineCounter += 1
-                            counter = 0
-                            //                    print(calculateError())
-                        }
+//                        counter += 1
+//                        if counter == 1000 * nEpochs {
+//                            for key in sortedKeys {
+//                                for skills in 0..<nSkills {
+//                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+//                                    results.append(dp)
+//                                }
+//                            }
+//                            for key in studentKeys {
+//                                for skills in 0..<nSkills {
+//                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+//                                    studentResults.append(dp)
+//                                }
+//                            }
+//                            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+//                            errors.append(dp)
+//                            lineCounter += 1
+//                            counter = 0
+//                            //                    print(calculateError())
+//                        }
                     }
                 }
                 if j % 100 == 0 {

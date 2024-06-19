@@ -59,7 +59,7 @@ class ELOViewModel: ObservableObject {
     
 
     
-    func writeDataFile() {
+    func writeDataFile(lastonly: Bool = false) {
         let savePanel = NSSavePanel()
         savePanel.title = "Write Data File"
         savePanel.nameFieldLabel = "File Name:"
@@ -75,12 +75,23 @@ class ELOViewModel: ObservableObject {
                             }
                             output += "\n"
                         }
-                        for (_, student) in self.model.logic.students {
-                            output += "student, " + student.name
-                            for j in 0..<student.skills.count {
-                                output += ", " + String(student.skills[j])
+                        if lastonly {
+                            for studentName in self.model.logic.lastLoadedStudents {
+                                let student = self.model.logic.students[studentName]!
+                                output += "student, " + student.name
+                                for j in 0..<student.skills.count {
+                                    output += ", " + String(student.skills[j])
+                                }
+                                output += "\n"
                             }
-                            output += "\n"
+                        } else {
+                            for (_, student) in self.model.logic.students {
+                                output += "student, " + student.name
+                                for j in 0..<student.skills.count {
+                                    output += ", " + String(student.skills[j])
+                                }
+                                output += "\n"
+                            }
                         }
                         do {
                             try output.write(to: panelURL, atomically: true, encoding: .utf8)
@@ -209,7 +220,7 @@ class ELOViewModel: ObservableObject {
     
     var results: [ModelData] {
         guard selected != nil else {return []}
-        switch model.selectedG { 
+        switch model.selectedGroup { 
         case .students: return model.studentResults.filter{ $0.item == studentKeys[selected!] }
         case .items: return model.results.filter{ $0.item == sortedKeys[selected!]}
         case .errors: return model.errorResults
@@ -218,15 +229,15 @@ class ELOViewModel: ObservableObject {
     
     func switchGraphs() {
         guard selected != nil else { return }
-        model.selectedG = model.selectedG.next()
+        model.selectedGroup = model.selectedGroup.next()
         model.selected = 0
-        if model.selectedG == .students {
+        if model.selectedGroup == .students {
             updatePrimViewData()
         }
     }
     
     var graphSelected: SelectedGraph {
-        model.selectedG
+        model.selectedGroup
     }
 
     var selected: Int? {
@@ -279,19 +290,19 @@ class ELOViewModel: ObservableObject {
         } else {
             model.selected = model.selected! - 1
         }
-        if model.selectedG == .students {
+        if model.selectedGroup == .students {
             updatePrimViewData()
         }
         model.update()
     }
     
     func forward() {
-        if selected == nil || model.selectedG == .errors  {
+        if selected == nil || model.selectedGroup == .errors  {
             model.selected = 0
-        } else if (model.selectedG == .items && model.selected! != sortedKeys.count - 1) || (model.selectedG == .students && model.selected != studentKeys.count - 1) {
+        } else if (model.selectedGroup == .items && model.selected! != sortedKeys.count - 1) || (model.selectedGroup == .students && model.selected != studentKeys.count - 1) {
             model.selected = model.selected! + 1
         }
-        if model.selectedG == .students {
+        if model.selectedGroup == .students {
             updatePrimViewData()
         }
         model.update()

@@ -40,6 +40,9 @@ struct ELOApp: App {
                 Button("Write output file...") {
                     model.writeDataFile()
                 }
+                Button("Write output file, last only...") {
+                    model.writeDataFile(lastonly: true)
+                }
             }
         }
     }

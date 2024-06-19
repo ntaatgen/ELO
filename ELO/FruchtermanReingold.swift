@@ -107,7 +107,8 @@ class FruchtermanReingold {
             }
             let rankStep = (self.H - 30) / (maxRank - 1)
             for i in 0..<self.iterations {
-                let temperature = 0.1 * max(self.W,self.H) * Double(self.iterations - i)/Double(self.iterations)
+                let temperature = randomInit ? 0.1 * max(self.W,self.H) * Double(self.iterations - i)/Double(self.iterations) :
+                0.01 * max(self.W,self.H) * Double(self.iterations - i)/Double(self.iterations)
                 // Calculate repulsive forces
                 for (_,node) in self.nodes {
                     node.dx = 0
@@ -228,6 +229,9 @@ class FruchtermanReingold {
         constantC = 1.0
         for key in model.sortedKeys {
             let item = model.items[key]!
+            if item.experiences == 0 {
+                continue
+            }
             let s = itemToSkillString(item: item, model: model)
             if let node = nodes[s] {
                 node.items.append(item)

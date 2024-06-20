@@ -136,6 +136,7 @@ class ELOlogic: Codable {
                     newScore.time = time
                     if !timeList.contains(time) {
                         timeList.append(time)
+                        timeList.sort { $0 < $1 }
                     }
                 }
             }

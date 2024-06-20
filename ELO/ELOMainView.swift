@@ -83,7 +83,8 @@ struct ELOMainView: View {
                         
                     }
                 }
-                HStack {
+                VSplitView {
+                    //                HStack {
                     if model.graphSelected == .errors {
                         Chart(model.results) {
                             LineMark(x: .value("Training", $0.x),
@@ -94,6 +95,7 @@ struct ELOMainView: View {
                             //                .foregroundStyle(by: .value("Index", $0.z + 1))
                         }
                         .chartYScale(domain: model.resultsLWB...model.resultsUPB)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                         
                     } else {
                         Chart(model.results) {
@@ -105,17 +107,17 @@ struct ELOMainView: View {
                             //                .foregroundStyle(by: .value("Index", $0.z + 1))
                         }
                         .chartYScale(domain: 0...1)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    //                }
+                    GraphView(model: model)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                GraphView(model: model)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding()
             }
-            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             ScrollView {
                 Text(model.trace)
             }
-            Spacer()
         }
     }
 }

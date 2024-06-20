@@ -60,15 +60,21 @@ struct ELOMainView: View {
                 }
                 HStack {
                     Text("Epochs:")
-                    TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
+//                    TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
+                    TextField("Epochs", text: $epochs)
+                        .onChange(of: epochs) { model.changeEpochs(epochs) }
                     Text("alphaItems:")
-                    TextField("aItems", text: $aItems, onEditingChanged: {changed in model.changeAItems(aItems)})
+                    TextField("aItems", text: $aItems) //, onEditingChanged: {changed in model.changeAItems(aItems)})
+                        .onChange(of: aItems) { model.changeAItems(aItems) }
                     Text("alphaSubjects:")
-                    TextField("aSubs", text: $aSubjects, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
+                    TextField("aSubs", text: $aSubjects) //, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
+                        .onChange(of: aSubjects) { model.changeASubjects(aSubjects)}
                     Text("alphaHebb:")
-                    TextField("aHebb", text: $aHebb, onEditingChanged: {changed in model.changeAHebb(aHebb)})
+                    TextField("aHebb", text: $aHebb) //, onEditingChanged: {changed in model.changeAHebb(aHebb)})
+                        .onChange(of: aHebb) { model.changeAHebb(aHebb)}
                     Text("# Skills:")
-                    TextField("nSkills", text: $nSkills, onEditingChanged: {changed in model.changeNSkills(nSkills)})
+                    TextField("nSkills", text: $nSkills) // , onEditingChanged: {changed in model.changeNSkills(nSkills)})
+                        .onChange(of: nSkills) { model.changeNSkills(nSkills)}
                     Spacer()
                 }
                 if model.selected != nil {

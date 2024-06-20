@@ -52,7 +52,7 @@ class ELOViewModel: ObservableObject {
         if panel.runModal() == .OK {
             for url in panel.urls {
                 model.loadData(filePath: url, add: add)
-                model.addToTrace(s: "Loading data \(String(describing: url.pathComponents.last))")
+                model.addToTrace(s: "Loading data \(url.pathComponents.last!)")
             }
         }
     }
@@ -165,18 +165,27 @@ class ELOViewModel: ObservableObject {
     func changeAItems(_ value:String) {
         if let numval = Double(value) {
             model.setAItems(value: numval)
+            model.addToTrace(s: "Changing Alpha items to \(numval)")
+        } else {
+            model.addToTrace(s: "Illegal value for Alpha items")
         }
     }
     
     func changeASubjects(_ value:String) {
         if let numval = Double(value) {
             model.setASubjects(value: numval)
+            model.addToTrace(s: "Changing Alpha subjects to \(numval)")
+        } else {
+            model.addToTrace(s: "Illegal value for Alpha subjects")
         }
     }
     
     func changeAHebb(_ value:String) {
         if let numval = Double(value) {
             model.setAHebb(value: numval)
+            model.addToTrace(s: "Changing Alpha Hebb to \(numval)")
+        } else {
+            model.addToTrace(s: "Illegal value for Alpha Hebb")
         }
     }
     
@@ -189,6 +198,9 @@ class ELOViewModel: ObservableObject {
     func changeNSkills(_ value:String) {
         if let numval = Int(value) {
             model.setSkills(value: numval)
+            model.addToTrace(s: "Changing skill number to \(numval)")
+        } else {
+            model.addToTrace(s: "Illegal value for skill number")
         }
     }
     

@@ -21,7 +21,8 @@ struct GraphView: View {
                         model.primViewCalculateGraph()
                     }
                     Text("Threshold:")
-                    TextField("Threshold", text: $thresh, onEditingChanged: {changed in model.changeTreshold(thresh)})
+                    TextField("Threshold", text: $thresh) //, onEditingChanged: {changed in model.changeTreshold(thresh)})
+                        .onChange(of: thresh) { model.changeTreshold(thresh) }
                     Spacer()
                 }
                 GeometryReader { geometry in

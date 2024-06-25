@@ -12,6 +12,12 @@ class ELOViewModel: ObservableObject {
     
     @Published private var model: ELOmodel
     
+    @Published var alphaItemsV = String(ELOlogic.alphaItemsDefault)
+    @Published var nSkillsV = String(ELOlogic.nSkillsDefault)
+    @Published var alphaStudentV = String(ELOlogic.alphaStudentsDefault)
+    @Published var alphaHebbV = String(ELOlogic.alphaHebbDefault)
+    @Published var nEpochsV = String(ELOlogic.epochsDefault)
+    
     var graphData: GraphData? {
         model.graphData
     }
@@ -38,11 +44,16 @@ class ELOViewModel: ObservableObject {
         model.trace
     }
     
+    var alphaItems: Double {
+        model.alphaItems
+    }
+    
     init() {
         model = ELOmodel()
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updateGraph(_:)), name: NSNotification.Name(rawValue: "updateGraph"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updatePrimsGraph(_:)), name: NSNotification.Name(rawValue: "updatePrimsGraph"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.runDone(_:)), name: NSNotification.Name(rawValue: "runDone"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.endRun(_:)), name: NSNotification.Name(rawValue: "endRun"), object: nil)
     }
     
     func loadData(add: Bool = false) {
@@ -52,7 +63,7 @@ class ELOViewModel: ObservableObject {
         if panel.runModal() == .OK {
             for url in panel.urls {
                 model.loadData(filePath: url, add: add)
-                model.addToTrace(s: "Loading data \(url.pathComponents.last!)")
+                model.addToTrace(s: add ? "Adding data \(url.pathComponents.last!)" : "Loading data \(url.pathComponents.last!)")
             }
         }
     }
@@ -95,6 +106,7 @@ class ELOViewModel: ObservableObject {
                         }
                         do {
                             try output.write(to: panelURL, atomically: true, encoding: .utf8)
+                            self.model.addToTrace(s: "Saving data to file \(panelURL.pathComponents.last!)")
                         }
                         catch let error as NSError {
                             print("Ooops! Something went wrong: \(error)")
@@ -116,6 +128,7 @@ class ELOViewModel: ObservableObject {
                         do {
                             try JSONEncoder().encode(self.model.logic)
                                 .write(to: panelURL)
+                            self.model.addToTrace(s: "Saving model to file \(panelURL.pathComponents.last!)")
                         }
                         catch let error as NSError {
                             print("Ooops! Something went wrong: \(error)")
@@ -136,9 +149,12 @@ class ELOViewModel: ObservableObject {
                 if let panelURL = panel.url {
                     let data = try Data(contentsOf: panelURL)
                     model.logic = try JSONDecoder().decode(ELOlogic.self, from: data)
+                    model.addToTrace(s: "Loading model from \(panelURL.pathComponents.last!)")
                     model.selected = 0
-                    model.update()
                     model.primViewCalculateGraph()
+                    model.updatePrimViewData()
+                    model.update()
+                    updateParameters()
                 }
             }
         }
@@ -153,54 +169,67 @@ class ELOViewModel: ObservableObject {
         model.addToTrace(s: "Generating data")
     }
     
-    func changeEpochs(_ epochs: String) {
+    func changeEpochs(_ epochs: String) -> String {
         if let numval = Int(epochs) {
             model.setEpochs(value: numval)
             model.addToTrace(s: "Changing epochs to \(epochs)")
+            return epochs
         } else {
             model.addToTrace(s: "Illegal value for epochs")
+            return String(model.logic.nEpochs)
         }
     }
     
-    func changeAItems(_ value:String) {
+    func changeAItems(_ value:String) -> String {
         if let numval = Double(value) {
             model.setAItems(value: numval)
             model.addToTrace(s: "Changing Alpha items to \(numval)")
+            return value
         } else {
             model.addToTrace(s: "Illegal value for Alpha items")
+            return String(model.alphaItems)
         }
     }
     
-    func changeASubjects(_ value:String) {
+    func changeASubjects(_ value:String) -> String {
         if let numval = Double(value) {
             model.setASubjects(value: numval)
             model.addToTrace(s: "Changing Alpha subjects to \(numval)")
+            return value
         } else {
             model.addToTrace(s: "Illegal value for Alpha subjects")
+            return String(model.logic.alphaStudents)
         }
     }
     
-    func changeAHebb(_ value:String) {
+    func changeAHebb(_ value:String) -> String {
         if let numval = Double(value) {
             model.setAHebb(value: numval)
             model.addToTrace(s: "Changing Alpha Hebb to \(numval)")
+            return value
         } else {
             model.addToTrace(s: "Illegal value for Alpha Hebb")
+            return String(model.logic.alphaHebb)
         }
     }
     
-//    func changeOffsetParameter(_ value:String) {
-//        if let numval = Double(value) {
-//            model.setOffsetParameter(value: numval)
-//        }
-//    }
     
-    func changeNSkills(_ value:String) {
+    func changeNSkills(_ value:String) -> String {
         if let numval = Int(value) {
-            model.setSkills(value: numval)
-            model.addToTrace(s: "Changing skill number to \(numval)")
+            if model.logic.students.isEmpty && model.logic.items.isEmpty && numval <= ELOlogic.maxSkills {
+                model.setSkills(value: numval)
+                model.addToTrace(s: "Changing skill number to \(numval)")
+                return value
+            } else if numval > ELOlogic.maxSkills {
+                model.addToTrace(s: "Too many skills, max is \(ELOlogic.maxSkills)")
+                return(String(model.logic.nSkills))
+            } else {
+                 model.addToTrace(s: "Cannot change nSkills after loading data")
+                return(String(model.logic.nSkills))
+            }
         } else {
             model.addToTrace(s: "Illegal value for skill number")
+            return(String(model.logic.nSkills))
         }
     }
     
@@ -213,6 +242,7 @@ class ELOViewModel: ObservableObject {
     func reset() {
         model.reset()
         primViewCalculateGraph()
+        updateParameters()
     }
     
     func run(time: Int) {
@@ -226,8 +256,14 @@ class ELOViewModel: ObservableObject {
     }
     
     @objc func updateGraph(_ notification: Notification) {
+        model.addToTrace(s: "Epoch \(model.logic.counter)")
         primViewCalculateGraph()
         model.update()
+    }
+    
+    @objc func endRun(_ notification: Notification) {
+        model.addToTrace(s: "Done running")
+        model.addToTrace(s: "Avg. error = \(model.logic.calculateErrorOnLastAdd())")
     }
     
     var results: [ModelData] {
@@ -318,6 +354,14 @@ class ELOViewModel: ObservableObject {
             updatePrimViewData()
         }
         model.update()
+    }
+    
+    func updateParameters() {
+        alphaItemsV = String(model.logic.alphaItems)
+        nSkillsV = String(model.logic.nSkills)
+        alphaStudentV = String(model.logic.alphaStudents)
+        alphaHebbV = String(model.logic.alphaHebb)
+        nEpochsV = String(model.logic.nEpochs)
     }
     
     @objc func updatePrimsGraph(_ notification: Notification) {

@@ -51,14 +51,17 @@ struct ModelData: Identifiable, Codable {
 }
 
 class ELOlogic: Codable {
-    
-    var nSkills = 4
+    static let alphaItemsDefault = 0.005
+    static let nSkillsDefault = 4
+    static let alphaStudentsDefault = 0.05
+    static let alphaHebbDefault = 0.025
+    static let epochsDefault = 1000
+    var nSkills = ELOlogic.nSkillsDefault
     static let maxSkills = 8
-    var nEpochs = 1000
-    var alphaItems = 0.005
-    var alphaStudents = 0.05
-    var alphaHebb = 0.025
-    var offsetParameter = 2.0
+    var nEpochs = ELOlogic.epochsDefault
+    var alphaItems = ELOlogic.alphaItemsDefault
+    var alphaStudents = ELOlogic.alphaStudentsDefault
+    var alphaHebb = ELOlogic.alphaHebbDefault
     var skillThreshold = 0.5
     static let nItems = 16
     static let nStudents = 2000
@@ -110,13 +113,13 @@ class ELOlogic: Codable {
             }
             if parts.count != 3 && parts.count != 4 {
                 print("line with wrong number of items: \(parts)")
-                return
+                continue
             }
             let student = parts[0].replacingOccurrences(of: "\"", with: "")
             let item = parts[1].replacingOccurrences(of: "\"", with: "")
             guard let score = Double(parts[2]) else {
                 print("Score is not a number")
-                return
+                continue
             }
             if students[student] == nil {
                 let newStudent = Student(name: student)
@@ -147,19 +150,22 @@ class ELOlogic: Codable {
     }
     
     func resetModel() {
-        if synthetic && partialSynthetic {
-            generateDataReduced()
-            return
-        } else if synthetic {
-            generateDataFull()
-            return
-        }
-        for (_,student) in students {
-            student.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-        }
-        for (_,item) in items {
-            item.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-        }
+//        if synthetic && partialSynthetic {
+//            generateDataReduced()
+//            return
+//        } else if synthetic {
+//            generateDataFull()
+//            return
+//        }
+//        for (_,student) in students {
+//            student.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+//        }
+//        for (_,item) in items {
+//            item.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+//        }
+        students = [:]
+        items = [:]
+        scores = []
         results = []
         studentResults = []
         errors = []
@@ -333,6 +339,17 @@ class ELOlogic: Codable {
         return error
     }
     
+    func calculateErrorOnLastAdd() -> Double {
+        var error: Double = 0
+        var count: Int = 0
+        for score in scores {
+            if lastLoadedStudents.contains(score.student) {
+                error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
+                count += 1
+            }
+        }
+        return error/Double(count)
+    }
     
     func calculateModel(time: Int) {
         DispatchQueue.global().async { [self] () -> Void in
@@ -364,31 +381,11 @@ class ELOlogic: Codable {
                 for i in 0..<order.count {
                     if scores[order[i]].time == time {
                         oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
-                        
-//                        counter += 1
-//                        if counter == 1000 * nEpochs {
-//                            for key in sortedKeys {
-//                                for skills in 0..<nSkills {
-//                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-//                                    results.append(dp)
-//                                }
-//                            }
-//                            for key in studentKeys {
-//                                for skills in 0..<nSkills {
-//                                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-//                                    studentResults.append(dp)
-//                                }
-//                            }
-//                            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-//                            errors.append(dp)
-//                            lineCounter += 1
-//                            counter = 0
-//                            //                    print(calculateError())
-//                        }
                     }
                 }
                 if j % 100 == 0 {
                     DispatchQueue.main.async {
+                        self.counter = j
                         NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
                     }
                 } else {
@@ -403,19 +400,17 @@ class ELOlogic: Codable {
             for key in sortedKeys {
                 print(key,items[key]!.skills)
             }
-        }
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
+            DispatchQueue.main.async {
+                self.counter = self.nEpochs
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "endRun"), object: nil)
+
+            }
         }
     }
     
     
     func run(time: Int) {
-//        DispatchQueue.global().async { () -> Void in
             self.calculateModel(time: time)
-//            DispatchQueue.main.async {
-//                NotificationCenter.default.post(name: Notification.Name(rawValue: "runDone"), object: nil)
-//            }
-//        }
     }
 }

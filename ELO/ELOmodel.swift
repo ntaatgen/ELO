@@ -35,7 +35,9 @@ struct ELOmodel {
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
     var timeList: [Int] = [0]
+    var alphaItems: Double = ELOlogic.alphaItemsDefault
     var trace: String = "Starting ELO         \n"
+    
     mutating func loadData(filePath: URL, add: Bool) {
         if add {
             logic.addDataWithURL(filePath)
@@ -71,12 +73,9 @@ struct ELOmodel {
         logic.nEpochs = value
     }
     
-    func setAItems(value: Double) {
+    mutating func setAItems(value: Double) {
+        alphaItems = value
         logic.alphaItems = value
-    }
-    
-    func setOffsetParameter(value: Double) {
-        logic.offsetParameter = value
     }
     
     func setASubjects(value: Double) {
@@ -92,15 +91,18 @@ struct ELOmodel {
     }
     
     func setSkills(value: Int) {
-        if value > 0 && value <= ELOlogic.maxSkills {
             logic.nSkills = value
-        }
     }
     
     mutating func reset() {
-        logic.resetModel()
-        update()
+        logic = ELOlogic()
+//        logic.resetModel()
+        resetGraph()
+        timeList = [0]
+        selectedGroup = .items
+        trace = "Restarting ELO..\n"
         selected = 0
+        update()
     }
     
     mutating func run(time: Int) {
@@ -151,7 +153,7 @@ struct ELOmodel {
                 }
             }
             var nodeScore: Double? = 0.0
-            if selectedGroup == .students && selected != nil {
+            if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
                 nodeScore = averageScore(s: logic.students[studentKeys[selected!]]!, items: node.items)
             }
             graphData!.nodes.append(
@@ -183,6 +185,7 @@ struct ELOmodel {
         graphData!.nodes[node].x = newX
         graphData!.nodes[node].y = newY
     }
+    
     
     
 }

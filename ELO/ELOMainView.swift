@@ -11,11 +11,6 @@ import Charts
 
 struct ELOMainView: View {
     @ObservedObject var model: ELOViewModel
-    @State private var epochs: String = "1000"
-    @State private var aItems: String = "0.005"
-    @State private var aSubjects: String = "0.05"
-    @State private var aHebb: String = "0.025"
-    @State private var nSkills: String = "4"
     @State private var pickedTime: Int = 0
 
     func pickerContent() -> some View {
@@ -61,20 +56,20 @@ struct ELOMainView: View {
                 HStack {
                     Text("Epochs:")
 //                    TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
-                    TextField("Epochs", text: $epochs)
-                        .onChange(of: epochs) { model.changeEpochs(epochs) }
+                    TextField("Epochs", text: $model.nEpochsV)
+                        .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
                     Text("alphaItems:")
-                    TextField("aItems", text: $aItems) //, onEditingChanged: {changed in model.changeAItems(aItems)})
-                        .onChange(of: aItems) { model.changeAItems(aItems) }
+                    TextField("aItems", text: $model.alphaItemsV) //, onEditingChanged: {changed in model.changeAItems(aItems)})
+                        .onChange(of: model.alphaItemsV) { model.alphaItemsV = model.changeAItems(model.alphaItemsV) }
                     Text("alphaSubjects:")
-                    TextField("aSubs", text: $aSubjects) //, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
-                        .onChange(of: aSubjects) { model.changeASubjects(aSubjects)}
+                    TextField("aSubs", text: $model.alphaStudentV) //, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
+                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
                     Text("alphaHebb:")
-                    TextField("aHebb", text: $aHebb) //, onEditingChanged: {changed in model.changeAHebb(aHebb)})
-                        .onChange(of: aHebb) { model.changeAHebb(aHebb)}
+                    TextField("aHebb", text: $model.alphaHebbV) //, onEditingChanged: {changed in model.changeAHebb(aHebb)})
+                        .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}
                     Text("# Skills:")
-                    TextField("nSkills", text: $nSkills) // , onEditingChanged: {changed in model.changeNSkills(nSkills)})
-                        .onChange(of: nSkills) { model.changeNSkills(nSkills)}
+                    TextField("nSkills", text: $model.nSkillsV) // , onEditingChanged: {changed in model.changeNSkills(nSkills)})
+                        .onChange(of: model.nSkillsV) { model.nSkillsV = model.changeNSkills(model.nSkillsV)}
                     Spacer()
                 }
                 if model.selected != nil {

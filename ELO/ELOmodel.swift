@@ -136,7 +136,7 @@ struct ELOmodel {
             }
         }
         
-        print(count)
+//        print(count)
         return count != 0 ? score/count : nil
     }
     

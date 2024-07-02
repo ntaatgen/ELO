@@ -143,7 +143,7 @@ class ELOlogic: Codable {
                     }
                 }
             }
-            print(parts.count,newScore.time)
+//            print(parts.count,newScore.time)
             scores.append(newScore)
         }
         studentKeys = Array(Array<String>(lastLoadedStudents).shuffled().prefix(studentSampleSize))
@@ -234,6 +234,7 @@ class ELOlogic: Codable {
             }
         }
         nSkills = 4
+        studentKeys = Array<String>(students.keys)
     }
     
     func generateDataReduced() {
@@ -277,7 +278,8 @@ class ELOlogic: Codable {
             }
         }
         nSkills = 4
-        //        testRun()
+        studentKeys = Array<String>(students.keys)
+
     }
     func calcProb(studentDifficulty: Double, itemDifficulty: Double) -> Double {
         return 1 - itemDifficulty + itemDifficulty * studentDifficulty

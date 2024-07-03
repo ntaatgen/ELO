@@ -99,9 +99,15 @@ class ELOlogic: Codable {
     }
     
     func addDataWithURL(_ filePath: URL) {
-        let dataFileContents = try? String(contentsOf: filePath, encoding: String.Encoding.utf8)
+        var dataFileContents: String? = nil
+        do {
+            dataFileContents = try String(contentsOf: filePath, encoding: String.Encoding.utf8)
+            
+        } catch let error as NSError {
+            print("Error \(error) in adding data.")
+        }
         guard dataFileContents != nil else {
-            print("failed to load data")
+            print("failed to load data from \(filePath)")
             return
         }
         lastLoadedStudents = []
@@ -411,6 +417,46 @@ class ELOlogic: Codable {
         }
     }
     
+    func calculateModelForBatch(time: Int) {            
+            for j in 0..<nEpochs {
+                print("epoch", j)
+                var order = Array(0..<scores.count)
+                order.shuffle()
+                if j % (nEpochs/10) == 0 {
+                    for key in sortedKeys {
+                        if items[key]!.experiences > 0 {
+                            for skills in 0..<nSkills {
+                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                                results.append(dp)
+                            }
+                        }
+                    }
+                    for key in studentKeys {
+                        for skills in 0..<nSkills {
+                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                            studentResults.append(dp)
+                        }
+                    }
+                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                    errors.append(dp)
+                    lineCounter += (nEpochs/10)
+                }
+
+                for i in 0..<order.count {
+                    if scores[order[i]].time == time {
+                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+                    }
+                }
+
+                
+            }
+            
+            for key in sortedKeys {
+                print(key,items[key]!.skills)
+            }
+                self.counter = self.nEpochs
+    }
+
     
     func run(time: Int) {
             self.calculateModel(time: time)

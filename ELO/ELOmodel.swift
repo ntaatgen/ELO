@@ -47,6 +47,143 @@ struct ELOmodel {
         update()
     }
     
+    mutating func runScript(filePath: URL) {
+        let script = try? String(contentsOf: filePath, encoding: String.Encoding.utf8)
+        guard script != nil else {
+            addToTrace(s: "Failed to load script")
+            return
+        }
+        let lines = script!.components(separatedBy: "\n")
+        for line in lines {
+            let parts = line.components(separatedBy: " ")
+            if parts.count == 0 {
+                continue
+            }
+            switch parts[0] {
+            case "load-data":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in load-data")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                loadData(filePath: url, add: false)
+                addToTrace(s: "Loaded \(url.lastPathComponent)")
+            case "add-data":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in add-data")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                loadData(filePath: url, add: true)
+                addToTrace(s: "Added \(url.lastPathComponent)")
+            case "load-model":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in load-model")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                do {
+                    let data = try Data(contentsOf: url)
+                    logic = try JSONDecoder().decode(ELOlogic.self, from: data)
+                    addToTrace(s: "Loading model from \(url.pathComponents.last!)")
+                    selected = 0
+                    primViewCalculateGraph()
+                    updatePrimViewData()
+                    update()
+                }
+                catch _ as NSError {
+                    addToTrace(s: "Error in loading model.")
+                }
+            case "save-model":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in save-model")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                do {
+                    try JSONEncoder().encode(self.logic)
+                        .write(to: url)
+                    addToTrace(s: "Saving model to file \(parts[1])")
+                }
+                catch let error as NSError {
+                    print("Ooops! Something went in saving model file: \(error)")
+                    return
+                }
+            case "write-data":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in write-data")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                writeDataToFile(url: url, lastonly: false)
+            case "write-data-last":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in write-data-last")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                writeDataToFile(url: url, lastonly: true)
+            case "run":
+                guard parts.count <= 2 else {
+                    addToTrace(s: "Invalid number of arguments in run")
+                    return
+                }
+                var time = 0
+                if parts.count == 2 {
+                    if let x = Int(parts[1]) {
+                        time = x
+                    } else {
+                        addToTrace(s: "Invalid time argument in run")
+                    }
+                }
+
+                logic.calculateModelForBatch(time: time)
+
+            case "set":
+                guard parts.count == 3 else {
+                    addToTrace(s: "Invalid number of arguments in set command")
+                    return
+                }
+                switch parts[1] {
+                case "epochs":
+                    if let num = Int(parts[2]) {
+                        setEpochs(value: num)
+                    } else {
+                        addToTrace(s: "Invalid number for set epochs")
+                    }
+                case "alpha-items":
+                    if let num = Double(parts[2]) {
+                        setAItems(value: num)
+                    } else {
+                        addToTrace(s: "Invalid number for set alpha-items")
+                    }
+                case "alpha-students":
+                    if let num = Double(parts[2]) {
+                        setASubjects(value: num)
+                    } else {
+                        addToTrace(s: "Invalid number for set alpha-students")
+                    }
+                case "alpha-hebb":
+                    if let num = Double(parts[2]) {
+                        setAHebb(value: num)
+                    } else {
+                        addToTrace(s: "Invalid number for set alpha-hebb")
+                    }
+                case "skills":
+                    if let num = Int(parts[2]) {
+                        setSkills(value: num)
+                    } else {
+                        addToTrace(s: "Invalid number for set skills")
+                    }
+                default: addToTrace(s: "Invalid parameter name \(parts[1])")
+                }
+            default: addToTrace(s: "Unknown command \(parts[0])")
+            }
+            
+            
+        }
+    }
+    
     mutating func generateData(set: Int) {
         if set == 0 {
             logic.generateDataFull()
@@ -56,6 +193,45 @@ struct ELOmodel {
         update()
     }
     
+    mutating func writeDataToFile(url: URL, lastonly: Bool) {
+        var output = ""
+        for i in 0..<logic.sortedKeys.count {
+            let item = logic.items[logic.sortedKeys[i]]!
+            output += "item, " + item.name
+            for j in 0..<item.skills.count {
+                output += ", " + String(item.skills[j])
+            }
+            output += "\n"
+        }
+        if lastonly {
+            for studentName in logic.lastLoadedStudents {
+                let student = logic.students[studentName]!
+                output += "student, " + student.name
+                for j in 0..<student.skills.count {
+                    output += ", " + String(student.skills[j])
+                }
+                output += "\n"
+            }
+        } else {
+            for (_, student) in logic.students {
+                output += "student, " + student.name
+                for j in 0..<student.skills.count {
+                    output += ", " + String(student.skills[j])
+                }
+                output += "\n"
+            }
+        }
+        do {
+            try output.write(to: url, atomically: true, encoding: .utf8)
+            addToTrace(s: "Saving data to file \(url.pathComponents.last!)")
+        }
+        catch let error as NSError {
+            addToTrace(s: "Ooops! Something went wrong: \(error)")
+            return
+        }
+    }
+
+        
     mutating func update() {
         results = logic.results
         studentResults = logic.studentResults

@@ -23,6 +23,10 @@ struct ELOApp: App {
                     model.loadData(add: true)
                 }
                 Divider()
+                Button("Run script...") {
+                    model.runScript()
+                }
+                Divider()
                 Button("Synthetic data full graph") {
                     model.generateData(set: 0)
                 }

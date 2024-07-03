@@ -59,7 +59,7 @@ class ELOViewModel: ObservableObject {
     func loadData(add: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = true
+        panel.canChooseDirectories = false
         if panel.runModal() == .OK {
             for url in panel.urls {
                 model.loadData(filePath: url, add: add)
@@ -68,7 +68,19 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-
+    func runScript() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        if panel.runModal() == .OK {
+            for url in panel.urls {
+                model.addToTrace(s: "Start running script \(url.pathComponents.last!)")
+                model.runScript(filePath: url)
+                model.addToTrace(s: "Finished running script \(url.pathComponents.last!)")
+                updateParameters()
+            }
+        }
+    }
     
     func writeDataFile(lastonly: Bool = false) {
         let savePanel = NSSavePanel()
@@ -77,41 +89,42 @@ class ELOViewModel: ObservableObject {
         savePanel.begin { (result: NSApplication.ModalResponse) -> Void in
             if result == NSApplication.ModalResponse.OK {
                     if let panelURL = savePanel.url {
-                        var output = ""
-                        for i in 0..<self.model.logic.sortedKeys.count {
-                            let item = self.model.logic.items[self.model.logic.sortedKeys[i]]!
-                            output += "item, " + item.name
-                            for j in 0..<item.skills.count {
-                                output += ", " + String(item.skills[j])
-                            }
-                            output += "\n"
-                        }
-                        if lastonly {
-                            for studentName in self.model.logic.lastLoadedStudents {
-                                let student = self.model.logic.students[studentName]!
-                                output += "student, " + student.name
-                                for j in 0..<student.skills.count {
-                                    output += ", " + String(student.skills[j])
-                                }
-                                output += "\n"
-                            }
-                        } else {
-                            for (_, student) in self.model.logic.students {
-                                output += "student, " + student.name
-                                for j in 0..<student.skills.count {
-                                    output += ", " + String(student.skills[j])
-                                }
-                                output += "\n"
-                            }
-                        }
-                        do {
-                            try output.write(to: panelURL, atomically: true, encoding: .utf8)
-                            self.model.addToTrace(s: "Saving data to file \(panelURL.pathComponents.last!)")
-                        }
-                        catch let error as NSError {
-                            print("Ooops! Something went wrong: \(error)")
-                            return
-                        }
+                        self.model.writeDataToFile(url: panelURL, lastonly: lastonly)
+//                        var output = ""
+//                        for i in 0..<self.model.logic.sortedKeys.count {
+//                            let item = self.model.logic.items[self.model.logic.sortedKeys[i]]!
+//                            output += "item, " + item.name
+//                            for j in 0..<item.skills.count {
+//                                output += ", " + String(item.skills[j])
+//                            }
+//                            output += "\n"
+//                        }
+//                        if lastonly {
+//                            for studentName in self.model.logic.lastLoadedStudents {
+//                                let student = self.model.logic.students[studentName]!
+//                                output += "student, " + student.name
+//                                for j in 0..<student.skills.count {
+//                                    output += ", " + String(student.skills[j])
+//                                }
+//                                output += "\n"
+//                            }
+//                        } else {
+//                            for (_, student) in self.model.logic.students {
+//                                output += "student, " + student.name
+//                                for j in 0..<student.skills.count {
+//                                    output += ", " + String(student.skills[j])
+//                                }
+//                                output += "\n"
+//                            }
+//                        }
+//                        do {
+//                            try output.write(to: panelURL, atomically: true, encoding: .utf8)
+//                            self.model.addToTrace(s: "Saving data to file \(panelURL.pathComponents.last!)")
+//                        }
+//                        catch let error as NSError {
+//                            print("Ooops! Something went wrong: \(error)")
+//                            return
+//                        }
                     }
                 }
             

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B84120AF2C35E14A00469710 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = B84120AE2C35E14A00469710 /* Credits.rtf */; };
 		B84754FC2BCFF6690048ADD6 /* GraphEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F62BCFF6690048ADD6 /* GraphEdge.swift */; };
 		B84754FD2BCFF6690048ADD6 /* GraphHalo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F72BCFF6690048ADD6 /* GraphHalo.swift */; };
 		B84754FE2BCFF6690048ADD6 /* GraphNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F82BCFF6690048ADD6 /* GraphNode.swift */; };
@@ -23,6 +24,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B84120AE2C35E14A00469710 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		B84754F62BCFF6690048ADD6 /* GraphEdge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphEdge.swift; sourceTree = "<group>"; };
 		B84754F72BCFF6690048ADD6 /* GraphHalo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphHalo.swift; sourceTree = "<group>"; };
 		B84754F82BCFF6690048ADD6 /* GraphNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphNode.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 		B89E07002B987B0E00B52111 = {
 			isa = PBXGroup;
 			children = (
+				B84120AE2C35E14A00469710 /* Credits.rtf */,
 				B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */,
 				B84754FB2BCFF6690048ADD6 /* GraphView */,
 				B89E070B2B987B0E00B52111 /* ELO */,
@@ -166,6 +169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B89E07142B987B0F00B52111 /* Preview Assets.xcassets in Resources */,
+				B84120AF2C35E14A00469710 /* Credits.rtf in Resources */,
 				B89E07112B987B0F00B52111 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -320,7 +324,7 @@
 				CODE_SIGN_ENTITLEMENTS = ELO/ELO.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"ELO/Preview Content\"";
 				DEVELOPMENT_TEAM = YD3HPRU5U8;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -348,7 +352,7 @@
 				CODE_SIGN_ENTITLEMENTS = ELO/ELO.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"ELO/Preview Content\"";
 				DEVELOPMENT_TEAM = YD3HPRU5U8;
 				ENABLE_HARDENED_RUNTIME = YES;

@@ -366,7 +366,7 @@ class ELOlogic: Codable {
                 print("epoch", j)
                 var order = Array(0..<scores.count)
                 order.shuffle()
-                if j % (nEpochs/10) == 0 {
+                if nEpochs < 20 || j % (nEpochs/10) == 0 {
                     for key in sortedKeys {
                         if items[key]!.experiences > 0 {
                             for skills in 0..<nSkills {
@@ -422,7 +422,7 @@ class ELOlogic: Codable {
                 print("epoch", j)
                 var order = Array(0..<scores.count)
                 order.shuffle()
-                if j % (nEpochs/10) == 0 {
+                if nEpochs < 20 || j % (nEpochs/10) == 0 {
                     for key in sortedKeys {
                         if items[key]!.experiences > 0 {
                             for skills in 0..<nSkills {

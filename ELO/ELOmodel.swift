@@ -24,14 +24,14 @@ struct ELOmodel {
     internal var logic = ELOlogic()
     
     var results: [ModelData] = []
-
+    
     var studentResults: [ModelData] = []
     var errorResults: [ModelData] = []
     var sortedKeys: [String] = []
     var studentKeys: [String] = []
     var selected: Int? = nil
     var selectedGroup: SelectedGraph = .items
-//    var studentSelected: Bool = false
+    //    var studentSelected: Bool = false
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
     var timeList: [Int] = [0]
@@ -53,6 +53,7 @@ struct ELOmodel {
             addToTrace(s: "Failed to load script")
             return
         }
+        
         let lines = script!.components(separatedBy: "\n")
         for line in lines {
             let parts = line.components(separatedBy: " ")
@@ -136,9 +137,9 @@ struct ELOmodel {
                         addToTrace(s: "Invalid time argument in run")
                     }
                 }
-
+                
                 logic.calculateModelForBatch(time: time)
-
+                
             case "set":
                 guard parts.count == 3 else {
                     addToTrace(s: "Invalid number of arguments in set command")

@@ -14,8 +14,10 @@ struct ELOMainView: View {
     @State private var pickedTime: Int = 0
 
     func pickerContent() -> some View {
-        ForEach(model.timeList, id:\.self) {
-            Text(String($0))
+        VStack {
+            ForEach(model.timeList, id:\.self) {
+                Text(String($0))
+            }
         }
     }
     
@@ -51,6 +53,9 @@ struct ELOMainView: View {
                     .pickerStyle(.automatic)
                     Button(action: { model.run(time: pickedTime) }){
                         Label("Run", systemImage: "play")
+                    }
+                    Button(action: {model.run(time: nil)}) {
+                        Label("Run All", systemImage: "play")
                     }
                 }
                 HStack {

@@ -130,15 +130,17 @@ struct ELOmodel {
                     return
                 }
                 var time = 0
-                if parts.count == 2 {
+                if parts.count == 1 {
+                    logic.calculateModelForBatch(time: nil)
+                } else if parts.count == 2 {
                     if let x = Int(parts[1]) {
                         time = x
+                        logic.calculateModelForBatch(time: time)
                     } else {
                         addToTrace(s: "Invalid time argument in run")
                     }
                 }
                 
-                logic.calculateModelForBatch(time: time)
                 
             case "set":
                 guard parts.count == 3 else {
@@ -175,6 +177,14 @@ struct ELOmodel {
                         setSkills(value: num)
                     } else {
                         addToTrace(s: "Invalid number for set skills")
+                    }
+                case "show-last-students":
+                    if parts[2].lowercased() == "true" || parts[2].lowercased() == "t" {
+                        logic.showLastLoadedStudents = true
+                    } else if parts[2].lowercased() == "false" || parts[2].lowercased() == "f" {
+                        logic.showLastLoadedStudents = false
+                    } else {
+                        addToTrace(s: "Invalid value for set show-last-students")
                     }
                 default: addToTrace(s: "Invalid parameter name \(parts[1])")
                 }
@@ -282,7 +292,7 @@ struct ELOmodel {
         update()
     }
     
-    mutating func run(time: Int) {
+    mutating func run(time: Int?) {
             logic.run(time: time)
 //            update()
             selected = 0

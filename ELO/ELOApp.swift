@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct ELOApp: App {
-    let model = ELOViewModel()
+    @ObservedObject var model = ELOViewModel()
     var body: some Scene {
         WindowGroup {
             ELOMainView(model: model)
@@ -22,6 +22,8 @@ struct ELOApp: App {
                 Button("Add data...") {
                     model.loadData(add: true)
                 }
+                Divider()
+                Toggle(isOn: $model.lastLoaded, label: { Text("Last loaded students") })
                 Divider()
                 Button("Run script...") {
                     model.runScript()

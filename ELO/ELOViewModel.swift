@@ -17,6 +17,8 @@ class ELOViewModel: ObservableObject {
     @Published var alphaStudentV = String(ELOlogic.alphaStudentsDefault)
     @Published var alphaHebbV = String(ELOlogic.alphaHebbDefault)
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
+    @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
+    
     
     var graphData: GraphData? {
         model.graphData
@@ -77,6 +79,10 @@ class ELOViewModel: ObservableObject {
                 model.addToTrace(s: "Start running script \(url.pathComponents.last!)")
                 model.runScript(filePath: url)
                 model.addToTrace(s: "Finished running script \(url.pathComponents.last!)")
+                model.selected = 0
+                model.primViewCalculateGraph()
+                model.updatePrimViewData()
+                model.update()
                 updateParameters()
             }
         }
@@ -223,10 +229,10 @@ class ELOViewModel: ObservableObject {
         updateParameters()
     }
     
-    func run(time: Int) {
+    func run(time: Int?) {
         model.run(time: time)
         primViewCalculateGraph()
-        model.addToTrace(s: "Running model at time \(time) for \(model.logic.nEpochs) epochs")
+        model.addToTrace(s: "Running model at time \(time ?? 0) for \(model.logic.nEpochs) epochs")
     }
     
     @objc func runDone(_ notification: Notification) {
@@ -241,7 +247,7 @@ class ELOViewModel: ObservableObject {
     
     @objc func endRun(_ notification: Notification) {
         model.addToTrace(s: "Done running")
-        model.addToTrace(s: "Avg. error = \(model.logic.calculateErrorOnLastAdd())")
+        model.addToTrace(s: "Avg. error = \(model.logic.calculateError())")
     }
     
     var results: [ModelData] {
@@ -340,6 +346,7 @@ class ELOViewModel: ObservableObject {
         alphaStudentV = String(model.logic.alphaStudents)
         alphaHebbV = String(model.logic.alphaHebb)
         nEpochsV = String(model.logic.nEpochs)
+        lastLoaded = model.logic.showLastLoadedStudents
     }
     
     @objc func updatePrimsGraph(_ notification: Notification) {

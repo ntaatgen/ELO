@@ -82,6 +82,7 @@ class ELOlogic: Codable {
     var timeList: [Int] = [0]
     var lineCounter = 0
     var counter = 0
+    var showLastLoadedStudents = false
     
     func loadDataWithURL(_ filePath: URL) {
         filename = filePath
@@ -152,7 +153,11 @@ class ELOlogic: Codable {
 //            print(parts.count,newScore.time)
             scores.append(newScore)
         }
-        studentKeys = Array(Array<String>(lastLoadedStudents).shuffled().prefix(studentSampleSize))
+        if showLastLoadedStudents {
+            studentKeys = Array(Array<String>(lastLoadedStudents).shuffled().prefix(studentSampleSize))
+        } else {
+            studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
+        }
     }
     
     func resetModel() {
@@ -339,19 +344,19 @@ class ELOlogic: Codable {
     
 
        
-    func calculateError() -> Double {
-        var error: Double = 0
-        for score in scores {
-            error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
-        }
-        return error
-    }
+//    func calculateError() -> Double {
+//        var error: Double = 0
+//        for score in scores {
+//            error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
+//        }
+//        return error
+//    }
     
-    func calculateErrorOnLastAdd() -> Double {
+    func calculateError() -> Double {
         var error: Double = 0
         var count: Int = 0
         for score in scores {
-            if lastLoadedStudents.contains(score.student) {
+            if !showLastLoadedStudents || lastLoadedStudents.contains(score.student) {
                 error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
                 count += 1
             }
@@ -359,7 +364,7 @@ class ELOlogic: Codable {
         return error/Double(count)
     }
     
-    func calculateModel(time: Int) {
+    func calculateModel(time: Int?) {
         DispatchQueue.global().async { [self] () -> Void in
             
             for j in 0..<nEpochs {
@@ -387,7 +392,7 @@ class ELOlogic: Codable {
                 }
 
                 for i in 0..<order.count {
-                    if scores[order[i]].time == time {
+                    if time == nil || scores[order[i]].time == time! {
                         oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                     }
                 }
@@ -417,7 +422,7 @@ class ELOlogic: Codable {
         }
     }
     
-    func calculateModelForBatch(time: Int) {            
+    func calculateModelForBatch(time: Int!) {
             for j in 0..<nEpochs {
                 print("epoch", j)
                 var order = Array(0..<scores.count)
@@ -443,7 +448,7 @@ class ELOlogic: Codable {
                 }
 
                 for i in 0..<order.count {
-                    if scores[order[i]].time == time {
+                    if time == nil || scores[order[i]].time == time! {
                         oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                     }
                 }
@@ -458,7 +463,7 @@ class ELOlogic: Codable {
     }
 
     
-    func run(time: Int) {
+    func run(time: Int?) {
             self.calculateModel(time: time)
     }
 }

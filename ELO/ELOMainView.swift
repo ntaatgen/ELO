@@ -48,7 +48,10 @@ struct ELOMainView: View {
                         Label("Reset", systemImage: "eraser")
                     }
                     Picker("Time: ", selection: $pickedTime) {
-                        pickerContent()
+                        ForEach(model.timeList, id:\.self) {
+                            Text(String($0))
+                        }
+//                        pickerContent()
                     }
                     .pickerStyle(.automatic)
                     Button(action: { model.run(time: pickedTime) }){
@@ -121,8 +124,17 @@ struct ELOMainView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            ScrollView {
-                Text(model.trace)
+            VStack {
+                
+                ScrollView {
+                    Text(model.trace)
+                }
+                if model.currentItemImage != nil {
+                    Image(nsImage: model.currentItemImage!)
+                        .resizable()
+                        .scaledToFit()
+//                        .frame(width: 300, height: 300)
+                }
             }
         }
     }

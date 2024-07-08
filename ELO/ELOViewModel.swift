@@ -18,7 +18,9 @@ class ELOViewModel: ObservableObject {
     @Published var alphaHebbV = String(ELOlogic.alphaHebbDefault)
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
     @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
-    
+    @Published var selectableNodeLabels = false
+    @Published var currentItemImage: NSImage? = nil
+    var lastLoadPath: URL? = nil
     
     var graphData: GraphData? {
         model.graphData
@@ -58,6 +60,12 @@ class ELOViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.endRun(_:)), name: NSNotification.Name(rawValue: "endRun"), object: nil)
     }
     
+    func setImage(name: String) {
+        guard lastLoadPath != nil else { return }
+        let url = lastLoadPath!.appendingPathComponent(name + ".png")
+        currentItemImage = NSImage(contentsOf: url)
+    }
+    
     func loadData(add: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
@@ -66,6 +74,8 @@ class ELOViewModel: ObservableObject {
             for url in panel.urls {
                 model.loadData(filePath: url, add: add)
                 model.addToTrace(s: add ? "Adding data \(url.pathComponents.last!)" : "Loading data \(url.pathComponents.last!)")
+                lastLoadPath = url.deletingLastPathComponent()
+                currentItemImage = NSImage(contentsOf: lastLoadPath!.appendingPathComponent("1_1.png"))
             }
         }
     }
@@ -139,6 +149,7 @@ class ELOViewModel: ObservableObject {
                     model.updatePrimViewData()
                     model.update()
                     updateParameters()
+                    lastLoadPath = panelURL.deletingLastPathComponent()
                 }
             }
         }

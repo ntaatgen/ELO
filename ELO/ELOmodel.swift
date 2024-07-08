@@ -331,13 +331,14 @@ struct ELOmodel {
         guard primGraphData != nil else { return }
         graphData = GraphData()
         for (_, node) in primGraphData!.nodes {
-            var s = ""
+            var s: [String] = []
             for item in node.items {
-                if s == "" {
-                    s = item.name
-                } else {
-                    s = s + "\n" + item.name
-                }
+                s.append(item.name)
+//                if s == "" {
+//                    s = item.name
+//                } else {
+//                    s = s + "\n" + item.name
+//                }
             }
             var nodeScore: Double? = 0.0
             if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
@@ -388,7 +389,7 @@ struct ViewNode: Identifiable {
     var orgName: String
     var skillNode: Bool
     var taskNode: Bool
-    var problems: String
+    var problems: [String]
     var problemsHidden: Bool = true
 }
 

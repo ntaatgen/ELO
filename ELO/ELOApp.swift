@@ -24,6 +24,7 @@ struct ELOApp: App {
                 }
                 Divider()
                 Toggle(isOn: $model.lastLoaded, label: { Text("Last loaded students") })
+                Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
                 Divider()
                 Button("Run script...") {
                     model.runScript()

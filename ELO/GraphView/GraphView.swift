@@ -33,7 +33,7 @@ struct GraphView: View {
                                 .foregroundColor(edge.learned ? Color.red : Color.black)
                         }
                         ForEach(model.graphData!.nodes) { node in
-                            GraphNode(node: node, geometry: geometry)
+                            GraphNode(model: model, node: node, geometry: geometry, selectable: model.selectableNodeLabels)
                         }
                         
                     }

@@ -29,12 +29,13 @@ struct GraphNode: View {
                           y: CGFloat(node.y)/300 * geometry.size.height + 1.5 * vertexSize)
             if selectable {
                 List {
-                    ForEach(node.problems, id: \.self) { text in
-                        Text(text)
+                    ForEach(node.problems) { item in
+                        Text(item.name)
                             .font(.caption2)
                             .listRowInsets(EdgeInsets())
+                            .background(item.color == nil ? Color.white : gradientColor(value: item.color!))
                             .onTapGesture() {
-                                model.setImage(name: text)
+                                model.setImage(name: item.name)
                             }
                     }
                 }
@@ -44,7 +45,7 @@ struct GraphNode: View {
                 .position(x: CGFloat(node.x)/300 * geometry.size.width + vertexSize*2.5,
                           y: CGFloat(node.y)/300 * geometry.size.height)
             } else {
-                Text(node.problems.joined(separator: "\n"))
+                Text(node.problems.map{item in item.name}.joined(separator: "\n"))
                     .font(.caption2)
                     .background(Color.white)
                     .border(Color.black, width: 1)

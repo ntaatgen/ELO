@@ -129,12 +129,19 @@ struct ELOMainView: View {
                 ScrollView {
                     Text(model.trace)
                 }
-                if model.currentItemImage != nil {
-                    Image(nsImage: model.currentItemImage!)
-                        .resizable()
-                        .scaledToFit()
-//                        .frame(width: 300, height: 300)
+                ScrollView {
+                    ForEach(model.currentItemImage, id:\.self) {img in
+                        Image(nsImage: img)
+                            .resizable()
+                            .scaledToFit()
+                    }
                 }
+//                if model.currentItemImage != nil {
+//                    Image(nsImage: model.currentItemImage!)
+//                        .resizable()
+//                        .scaledToFit()
+////                        .frame(width: 300, height: 300)
+//                }
             }
         }
     }

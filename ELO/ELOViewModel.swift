@@ -19,8 +19,9 @@ class ELOViewModel: ObservableObject {
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
     @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
     @Published var selectableNodeLabels = false
-    @Published var currentItemImage: NSImage? = nil
+    @Published var currentItemImage: [NSImage] = []
     var lastLoadPath: URL? = nil
+    let maxImages = 10 // How many item images maximally at the same time
     
     var graphData: GraphData? {
         model.graphData
@@ -63,7 +64,12 @@ class ELOViewModel: ObservableObject {
     func setImage(name: String) {
         guard lastLoadPath != nil else { return }
         let url = lastLoadPath!.appendingPathComponent(name + ".png")
-        currentItemImage = NSImage(contentsOf: url)
+        if let img = NSImage(contentsOf: url) {
+            currentItemImage.append(img)
+        }
+        if currentItemImage.count > maxImages {
+            currentItemImage.removeFirst()
+        }
     }
     
     func loadData(add: Bool = false) {
@@ -75,7 +81,7 @@ class ELOViewModel: ObservableObject {
                 model.loadData(filePath: url, add: add)
                 model.addToTrace(s: add ? "Adding data \(url.pathComponents.last!)" : "Loading data \(url.pathComponents.last!)")
                 lastLoadPath = url.deletingLastPathComponent()
-                currentItemImage = NSImage(contentsOf: lastLoadPath!.appendingPathComponent("1_1.png"))
+//                currentItemImage = NSImage(contentsOf: lastLoadPath!.appendingPathComponent("1_1.png"))
             }
         }
     }

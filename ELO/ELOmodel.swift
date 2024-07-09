@@ -327,18 +327,27 @@ struct ELOmodel {
         return count != 0 ? score/count : nil
     }
     
+    func itemScore(item: Item, student: Student) -> Double? {
+        let expectedScore = logic.expectedScore(s: student, it: item)
+//        return expectedScore
+        if expectedScore > 0.5 && expectedScore < 0.8 {
+            return 1
+        } else {
+            return nil
+        }
+    }
+    
     mutating func updatePrimViewData() {
         guard primGraphData != nil else { return }
         graphData = GraphData()
         for (_, node) in primGraphData!.nodes {
-            var s: [String] = []
+            var s: [NodeItem] = []
             for item in node.items {
-                s.append(item.name)
-//                if s == "" {
-//                    s = item.name
-//                } else {
-//                    s = s + "\n" + item.name
-//                }
+                if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
+                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                } else {
+                    s.append(NodeItem(name: item.name, color: nil))
+                }
             }
             var nodeScore: Double? = 0.0
             if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
@@ -378,6 +387,12 @@ struct ELOmodel {
     
 }
 
+struct NodeItem: Identifiable {
+    var id = UUID()
+    var name: String
+    var color: Double?
+}
+
 struct ViewNode: Identifiable {
     var id = UUID()
     var x: Double
@@ -389,7 +404,8 @@ struct ViewNode: Identifiable {
     var orgName: String
     var skillNode: Bool
     var taskNode: Bool
-    var problems: [String]
+    var problems: [NodeItem]
+    var colors: [Double] = []
     var problemsHidden: Bool = true
 }
 

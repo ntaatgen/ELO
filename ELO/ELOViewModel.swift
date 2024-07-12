@@ -21,6 +21,7 @@ class ELOViewModel: ObservableObject {
     @Published var selectableNodeLabels = false
     @Published var currentItemImage: [NSImage] = []
     var lastLoadPath: URL? = nil
+    var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
     
     var graphData: GraphData? {
@@ -61,11 +62,16 @@ class ELOViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.endRun(_:)), name: NSNotification.Name(rawValue: "endRun"), object: nil)
     }
     
-    func setImage(name: String) {
+    func setImage(name: String, node: UUID) {
         guard lastLoadPath != nil else { return }
         let url = lastLoadPath!.appendingPathComponent(name + ".png")
         if let img = NSImage(contentsOf: url) {
-            currentItemImage.append(img)
+            if node == lastClickedNode {
+                currentItemImage.append(img)
+            } else {
+                lastClickedNode = node
+                currentItemImage = [img]
+            }
         }
         if currentItemImage.count > maxImages {
             currentItemImage.removeFirst()
@@ -280,6 +286,9 @@ class ELOViewModel: ObservableObject {
         guard selected != nil else { return }
         model.selectedGroup = model.selectedGroup.next()
         model.selected = 0
+        if model.selectedGroup == .students && studentKeys.isEmpty {
+            model.selectedGroup = model.selectedGroup.next()
+        }
         if model.selectedGroup == .students {
             updatePrimViewData()
         }

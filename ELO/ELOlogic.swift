@@ -11,9 +11,14 @@ class Student: Codable {
     var name: String
     var realSkills: [Double] = []
     var skills: [Double] = []
-    
-    init(name: String) {
+    var m: [Double] = []
+    var v: [Double] = []
+    var t: Int = 1
+    init(name: String, nSkills: Int) {
         self.name = name
+        self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+        self.m = (0..<nSkills).map {_ in 0 }
+        self.v = (0..<nSkills).map {_ in 0 }
     }
 }
 
@@ -22,9 +27,14 @@ class Item: Codable {
     var realSkills: [Double] = []
     var skills: [Double] = []
     var experiences = 0
-    
-    init(name: String) {
+    var m: [Double] = []
+    var v: [Double] = []
+    var t: Int = 1
+    init(name: String, nSkills: Int) {
         self.name = name
+        self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+        self.m = (0..<nSkills).map {_ in 0 }
+        self.v = (0..<nSkills).map {_ in 0 }
     }
 }
 
@@ -51,10 +61,10 @@ struct ModelData: Identifiable, Codable {
 }
 
 class ELOlogic: Codable {
-    static let alphaItemsDefault = 0.005
+    static let alphaItemsDefault = 0.001
     static let nSkillsDefault = 4
     static let alphaStudentsDefault = 0.05
-    static let alphaHebbDefault = 0.025
+    static let alphaHebbDefault = 1.0
     static let epochsDefault = 1000
     var nSkills = ELOlogic.nSkillsDefault
     static let maxSkills = 8
@@ -99,6 +109,8 @@ class ELOlogic: Codable {
         addDataWithURL(filePath)
     }
     
+    
+    
     func addDataWithURL(_ filePath: URL) {
         var dataFileContents: String? = nil
         do {
@@ -129,14 +141,12 @@ class ELOlogic: Codable {
                 continue
             }
             if students[student] == nil {
-                let newStudent = Student(name: student)
-                newStudent.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+                let newStudent = Student(name: student, nSkills: nSkills)
                 students[student] = newStudent
                 lastLoadedStudents.append(student)
             }
             if items[item] == nil {
-                let newItem = Item(name: item)
-                newItem.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+                let newItem = Item(name: item, nSkills: nSkills)
                 items[item] = newItem
                 print("Adding \(item)")
             }
@@ -161,19 +171,6 @@ class ELOlogic: Codable {
     }
     
     func resetModel() {
-//        if synthetic && partialSynthetic {
-//            generateDataReduced()
-//            return
-//        } else if synthetic {
-//            generateDataFull()
-//            return
-//        }
-//        for (_,student) in students {
-//            student.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-//        }
-//        for (_,item) in items {
-//            item.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-//        }
         students = [:]
         items = [:]
         scores = []
@@ -183,7 +180,6 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
-//        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
     }
     
     func integerToBinaryArray(_ number: Int, length: Int) -> [Double] {
@@ -216,20 +212,16 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
-//        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
         for i in 0..<ELOlogic.nItems {
             
-            let j = Item(name: String(format: "%03d", i))
+            let j = Item(name: String(format: "%03d", i), nSkills: nSkills)
             j.realSkills = integerToBinaryArray(i, length: nSkills)
-            j.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
-            j.experiences = 0
             items[j.name] = j
         }
         for i in 0..<ELOlogic.nStudents {
-            let s = Student(name: String(format: "%04d",i))
+            let s = Student(name: String(format: "%04d",i), nSkills: nSkills)
             let realSkill = Int.random(in: 0..<ELOlogic.nItems)
             s.realSkills = integerToBinaryArray(realSkill, length: nSkills)
-            s.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
             s.name +=  "s" + String(realSkill)
             students[s.name] = s
         }
@@ -263,17 +255,15 @@ class ELOlogic: Codable {
 //        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
         let itemSet = [0, 0, 0, 2, 2, 2, 2, 6, 6, 10, 10, 14, 14, 14, 11, 11, 15, 15, 15]
         for i in 0..<itemSet.count {
-            let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]))
+            let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]), nSkills: nSkills)
             j.realSkills = integerToBinaryArray(itemSet[i], length: nSkills)
-            j.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
             j.experiences = 0
             items[j.name] = j
         }
         for i in 0..<ELOlogic.nStudents {
-            let s = Student(name: String(format: "%04d",i))
+            let s = Student(name: String(format: "%04d",i), nSkills: nSkills)
             let realSkill = itemSet[Int.random(in: 0..<itemSet.count)]
             s.realSkills = integerToBinaryArray(realSkill, length: nSkills)
-            s.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
             s.name +=  "s" + String(realSkill)
             students[s.name] = s
         }
@@ -342,6 +332,41 @@ class ELOlogic: Codable {
         it.experiences += 1
     }
     
+    func oneItemAdam(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8) {
+        let s = students[score.student]!
+        let it = items[score.item]!
+        let error = expectedScore(s: s, it: it) - score.score
+        var expectedWithoutSkill: [Double] = []
+        for i in 0..<nSkills {
+            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+        }
+        for i in 0..<nSkills {
+            it.m[i] = beta1 * it.m[i] + (1 - beta1) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error
+            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(expectedWithoutSkill[i] * (s.skills[i] - 1) * error, 2)
+            let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
+            let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
+            
+            s.m[i] = beta1 * s.m[i] + (1 - beta1) * expectedWithoutSkill[i] * it.skills[i] * error
+            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(expectedWithoutSkill[i] * it.skills[i] * error, 2)
+            let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
+            let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
+            
+            it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
+        }
+        it.t += 1
+        s.t += 1
+        /// Add some "Hebbian" learning
+        if score.score > 0.7 {
+            for i in 0..<nSkills {
+                if it.skills[i] < s.skills[i] {
+                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
+                }
+            }
+        }
+        it.experiences += 1
+
+    }
 
        
 //    func calculateError() -> Double {
@@ -393,7 +418,8 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+//                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+                        oneItemAdam(score: scores[order[i]], alpha: alphaItems)
                     }
                 }
                 if j % 100 == 0 {
@@ -449,7 +475,8 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
+                        oneItemAdam(score: scores[order[i]], alpha: alphaItems)
+//                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                     }
                 }
 

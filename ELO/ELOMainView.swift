@@ -66,12 +66,12 @@ struct ELOMainView: View {
 //                    TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
                     TextField("Epochs", text: $model.nEpochsV)
                         .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
-                    Text("alphaItems:")
+                    Text("alpha:")
                     TextField("aItems", text: $model.alphaItemsV) //, onEditingChanged: {changed in model.changeAItems(aItems)})
                         .onChange(of: model.alphaItemsV) { model.alphaItemsV = model.changeAItems(model.alphaItemsV) }
-                    Text("alphaSubjects:")
-                    TextField("aSubs", text: $model.alphaStudentV) //, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
-                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
+//                    Text("alphaSubjects:")
+//                    TextField("aSubs", text: $model.alphaStudentV) //, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
+//                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
                     Text("alphaHebb:")
                     TextField("aHebb", text: $model.alphaHebbV) //, onEditingChanged: {changed in model.changeAHebb(aHebb)})
                         .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}

@@ -35,7 +35,7 @@ struct GraphNode: View {
                             .listRowInsets(EdgeInsets())
                             .background(item.color == nil ? Color.white : gradientColor(value: item.color!))
                             .onTapGesture() {
-                                model.setImage(name: item.name)
+                                model.setImage(name: item.name, node: node.id)
                             }
                     }
                 }

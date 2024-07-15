@@ -88,12 +88,13 @@ class ELOlogic: Codable {
     var studentSampleSize = 50
     var synthetic = false
     var partialSynthetic = false
-//    var regression = [[Double]]()
     var timeList: [Int] = [0]
     var lineCounter = 0
     var counter = 0
     var showLastLoadedStudents = false
     
+    /// Reset the model an load data from URL
+    /// - Parameter filePath: The file to be loaded
     func loadDataWithURL(_ filePath: URL) {
         filename = filePath
         students = [:]
@@ -105,12 +106,13 @@ class ELOlogic: Codable {
         lineCounter = 0
         counter = 0
         synthetic = false
-//        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
         addDataWithURL(filePath)
     }
     
     
     
+    /// Add data to the model from URL
+    /// - Parameter filePath: The file to be added
     func addDataWithURL(_ filePath: URL) {
         var dataFileContents: String? = nil
         do {
@@ -160,7 +162,6 @@ class ELOlogic: Codable {
                     }
                 }
             }
-//            print(parts.count,newScore.time)
             scores.append(newScore)
         }
         if showLastLoadedStudents {
@@ -170,6 +171,7 @@ class ELOlogic: Codable {
         }
     }
     
+    /// Reset the model
     func resetModel() {
         students = [:]
         items = [:]
@@ -182,6 +184,11 @@ class ELOlogic: Codable {
         counter = 0
     }
     
+    /// Convert an integer to a binary representation
+    /// - Parameters:
+    ///   - number: The integer to convert
+    ///   - length: the number of digits in the binary number
+    /// - Returns: An array with binary digits
     func integerToBinaryArray(_ number: Int, length: Int) -> [Double] {
         var binaryArray = [Double]()
         var num = number
@@ -200,6 +207,7 @@ class ELOlogic: Codable {
     }
     
     
+    /// Initialize the model with generated data. The data covers all possible combinations of skills.
     func generateDataFull() {
         students = [:]
         items = [:]
@@ -240,6 +248,7 @@ class ELOlogic: Codable {
         studentKeys = Array<String>(students.keys)
     }
     
+    /// Initialize the model with generated data. The data covers only a subset of possible combinations of skills.
     func generateDataReduced() {
         students = [:]
         items = [:]
@@ -282,11 +291,23 @@ class ELOlogic: Codable {
         studentKeys = Array<String>(students.keys)
 
     }
+    
+    /// Calculate the predicted score base on a single skill, given a student score and an item score.
+    /// - Parameters:
+    ///   - studentDifficulty: The student score, between 0 and 1.
+    ///   - itemDifficulty: The item score, between 0 and 1.
+    /// - Returns: The expected score for one skill.
     func calcProb(studentDifficulty: Double, itemDifficulty: Double) -> Double {
         return 1 - itemDifficulty + itemDifficulty * studentDifficulty
     }
     
     
+    /// Expected score for a student and item
+    /// - Parameters:
+    ///   - s: The student
+    ///   - it: The item
+    ///   - leaveOut: Optionally: leave one vector item out, necessary for calculating the gradient
+    /// - Returns: The expected score.
     func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
         var p: Double = 1
         for i in 0..<nSkills {
@@ -300,6 +321,13 @@ class ELOlogic: Codable {
     
 
     
+    /// Add to two numbers, but keep them between a lowerbound and an upperbound
+    /// - Parameters:
+    ///   - num1: The first number
+    ///   - num2: The second number
+    ///   - lwb: The lowerbound, 0 by default
+    ///   - upb: The upperbound, 1 by default
+    /// - Returns: The bounded sum
     func boundedAdd(_ num1: Double, _ num2: Double, lwb: Double = 0.0, upb: Double = 1.0) -> Double {
         let s = num1 + num2
         if s < lwb { return lwb }
@@ -307,32 +335,40 @@ class ELOlogic: Codable {
         else { return s }
     }
     
-
-    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
-        let s = students[score.student]!
-        let it = items[score.item]!
-        let error = score.score - expectedScore(s: s, it: it)
-        var expectedWithoutSkill: [Double] = []
-        for i in 0..<nSkills {
-            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
-        }
-        for i in 0..<nSkills {
-            it.skills[i] = boundedAdd(it.skills[i], alphaI * expectedWithoutSkill[i] * error * (s.skills[i] - 1), upb: 1.0)
-            s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i],lwb: 0.0)
-        }
-        /// Add some "Hebbian" learning
-        if score.score > 0.7 {
-            for i in 0..<nSkills {
-                if it.skills[i] < s.skills[i] {
-                    it.skills[i] += alphaI * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5) * 2
-                }
-            }
-        }
-        
-        it.experiences += 1
-    }
+//
+//    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.05) {
+//        let s = students[score.student]!
+//        let it = items[score.item]!
+//        let error = score.score - expectedScore(s: s, it: it)
+//        var expectedWithoutSkill: [Double] = []
+//        for i in 0..<nSkills {
+//            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+//        }
+//        for i in 0..<nSkills {
+//            it.skills[i] = boundedAdd(it.skills[i], alphaI * expectedWithoutSkill[i] * error * (s.skills[i] - 1), upb: 1.0)
+//            s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i],lwb: 0.0)
+//        }
+//        /// Add some "Hebbian" learning
+//        if score.score > 0.7 {
+//            for i in 0..<nSkills {
+//                if it.skills[i] < s.skills[i] {
+//                    it.skills[i] += alphaI * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5) * 2
+//                }
+//            }
+//        }
+//        
+//        it.experiences += 1
+//    }
     
-    func oneItemAdam(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8) {
+    /// Update the model based on a single datapoint using Adam optimization
+    /// - Parameters:
+    ///   - score: The datapoint used for the update
+    ///   - alpha: The alpha parameter for Adam, 0.001 by default
+    ///   - beta1: The beta1 parameter for Adam, 0.9 by default
+    ///   - beta2: The beta2 parameter for Adam, 0.99 by default
+    ///   - epsilon: The epsilon parameter, 1e-8 by default
+    ///   - alphaHebb: Learning multiplier (with alpha) to control the Hebbian learning.
+    func oneItemAdam(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8, alphaHebb: Double = 1.0) {
         let s = students[score.student]!
         let it = items[score.item]!
         let error = expectedScore(s: s, it: it) - score.score
@@ -368,15 +404,9 @@ class ELOlogic: Codable {
 
     }
 
-       
-//    func calculateError() -> Double {
-//        var error: Double = 0
-//        for score in scores {
-//            error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
-//        }
-//        return error
-//    }
     
+    /// Calculate the average error per datapoint, either of the whole dataset, or the last loaded students.
+    ///     /// - Returns: The average error
     func calculateError() -> Double {
         var error: Double = 0
         var count: Int = 0
@@ -389,9 +419,10 @@ class ELOlogic: Codable {
         return error/Double(count)
     }
     
+    /// Update the model for nEpoch epochs.
+    /// - Parameter time: If set, only process datapoints at that time, if nil process all datapoints
     func calculateModel(time: Int?) {
         DispatchQueue.global().async { [self] () -> Void in
-            
             for j in 0..<nEpochs {
                 print("epoch", j)
                 var order = Array(0..<scores.count)
@@ -419,7 +450,7 @@ class ELOlogic: Codable {
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
 //                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
-                        oneItemAdam(score: scores[order[i]], alpha: alphaItems)
+                        oneItemAdam(score: scores[order[i]], alpha: alphaItems, alphaHebb: alphaHebb)
                     }
                 }
                 if j % 100 == 0 {
@@ -448,6 +479,8 @@ class ELOlogic: Codable {
         }
     }
     
+    /// Same as calculateModel, except it does not run in the background and does not update the View.
+    /// - Parameter time: If set, only process datapoints at that time, if nil process all datapoints
     func calculateModelForBatch(time: Int!) {
             for j in 0..<nEpochs {
                 print("epoch", j)
@@ -475,7 +508,7 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-                        oneItemAdam(score: scores[order[i]], alpha: alphaItems)
+                        oneItemAdam(score: scores[order[i]], alpha: alphaItems, alphaHebb: alphaHebb)
 //                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                     }
                 }
@@ -489,8 +522,4 @@ class ELOlogic: Codable {
                 self.counter = self.nEpochs
     }
 
-    
-    func run(time: Int?) {
-            self.calculateModel(time: time)
-    }
 }

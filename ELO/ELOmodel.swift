@@ -293,8 +293,7 @@ struct ELOmodel {
     }
     
     mutating func run(time: Int?) {
-            logic.run(time: time)
-//            update()
+            logic.calculateModel(time: time)
             selected = 0
         
     }

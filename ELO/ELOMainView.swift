@@ -28,12 +28,15 @@ struct ELOMainView: View {
                     Button(action: { model.back() }) {
                         Label("Back", systemImage: "arrowshape.left")
                     }
+                    .padding()
                     Button(action: { model.forward() }) {
                         Label("Forward", systemImage: "arrowshape.right")
                     }
+                    .padding()
                     Button(action: { model.switchGraphs()}) {
                         Label("Switch graphs", systemImage: "play")
                     }
+                    .padding()
                     switch model.graphSelected {
                     case .items:
                         Text("Showing Items")
@@ -47,6 +50,7 @@ struct ELOMainView: View {
                     Button(action: { model.reset()}) {
                         Label("Reset", systemImage: "eraser")
                     }
+                    .padding()
                     Picker("Time: ", selection: $pickedTime) {
                         ForEach(model.timeList, id:\.self) {
                             Text(String($0))
@@ -54,12 +58,15 @@ struct ELOMainView: View {
 //                        pickerContent()
                     }
                     .pickerStyle(.automatic)
+                    .padding()
                     Button(action: { model.run(time: pickedTime) }){
                         Label("Run", systemImage: "play")
-                    }
+                    }                    
+                    .padding()
                     Button(action: {model.run(time: nil)}) {
                         Label("Run All", systemImage: "play")
                     }
+                    .padding()
                 }
                 HStack {
                     Text("Epochs:")
@@ -116,6 +123,7 @@ struct ELOMainView: View {
                             //                .foregroundStyle(by: .value("Index", $0.z + 1))
                         }
                         .chartYScale(domain: 0...1)
+                        .chartXScale(domain: model.resultsLowestX...model.resultsHighestX)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     //                }

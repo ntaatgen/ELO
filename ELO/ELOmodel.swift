@@ -35,7 +35,7 @@ struct ELOmodel {
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
     var timeList: [Int] = [0]
-    var alphaItems: Double = ELOlogic.alphaItemsDefault
+    var alphaItems: Double = ELOlogic.alphaDefault
     var trace: String = "Starting ELO         \n"
     
     mutating func loadData(filePath: URL, add: Bool) {
@@ -154,7 +154,7 @@ struct ELOmodel {
                     } else {
                         addToTrace(s: "Invalid number for set epochs")
                     }
-                case "alpha-items":
+                case "alpha","alpha-items":
                     if let num = Double(parts[2]) {
                         setAItems(value: num)
                     } else {
@@ -262,7 +262,7 @@ struct ELOmodel {
     
     mutating func setAItems(value: Double) {
         alphaItems = value
-        logic.alphaItems = value
+        logic.alpha = value
     }
     
     func setASubjects(value: Double) {

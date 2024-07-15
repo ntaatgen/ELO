@@ -12,7 +12,7 @@ class ELOViewModel: ObservableObject {
     
     @Published private var model: ELOmodel
     
-    @Published var alphaItemsV = String(ELOlogic.alphaItemsDefault)
+    @Published var alphaItemsV = String(ELOlogic.alphaDefault)
     @Published var nSkillsV = String(ELOlogic.nSkillsDefault)
     @Published var alphaStudentV = String(ELOlogic.alphaStudentsDefault)
     @Published var alphaHebbV = String(ELOlogic.alphaHebbDefault)
@@ -33,7 +33,6 @@ class ELOViewModel: ObservableObject {
         for res in results {
             lowest = min(lowest,res.y)
         }
-        print("Lowest ",lowest)
         return lowest
     }
 
@@ -42,8 +41,15 @@ class ELOViewModel: ObservableObject {
         for res in results {
             highest = max(highest,res.y)
         }
-        print("Highest ",highest)
         return highest
+    }
+    
+    var resultsLowestX: Int {
+        return results.isEmpty ? 0 : results.reduce(100000) { min($0, $1.x)}
+    }
+    
+    var resultsHighestX: Int {
+        return results.isEmpty ? 0 : results.reduce(0) {max($0, $1.x)}
     }
     
     var trace: String {
@@ -64,7 +70,7 @@ class ELOViewModel: ObservableObject {
     
     func setImage(name: String, node: UUID) {
         guard lastLoadPath != nil else { return }
-        let url = lastLoadPath!.appendingPathComponent(name + ".png")
+        let url = lastLoadPath!.appendingPathComponent("images/" + name + ".png")
         if let img = NSImage(contentsOf: url) {
             if node == lastClickedNode {
                 currentItemImage.append(img)
@@ -96,6 +102,7 @@ class ELOViewModel: ObservableObject {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
+        panel.prompt = "Run"
         if panel.runModal() == .OK {
             for url in panel.urls {
                 model.addToTrace(s: "Start running script \(url.pathComponents.last!)")
@@ -367,7 +374,7 @@ class ELOViewModel: ObservableObject {
     }
     
     func updateParameters() {
-        alphaItemsV = String(model.logic.alphaItems)
+        alphaItemsV = String(model.logic.alpha)
         nSkillsV = String(model.logic.nSkills)
         alphaStudentV = String(model.logic.alphaStudents)
         alphaHebbV = String(model.logic.alphaHebb)

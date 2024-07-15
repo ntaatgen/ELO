@@ -61,7 +61,7 @@ struct ModelData: Identifiable, Codable {
 }
 
 class ELOlogic: Codable {
-    static let alphaItemsDefault = 0.001
+    static let alphaDefault = 0.001
     static let nSkillsDefault = 4
     static let alphaStudentsDefault = 0.05
     static let alphaHebbDefault = 1.0
@@ -69,7 +69,7 @@ class ELOlogic: Codable {
     var nSkills = ELOlogic.nSkillsDefault
     static let maxSkills = 8
     var nEpochs = ELOlogic.epochsDefault
-    var alphaItems = ELOlogic.alphaItemsDefault
+    var alpha = ELOlogic.alphaDefault
     var alphaStudents = ELOlogic.alphaStudentsDefault
     var alphaHebb = ELOlogic.alphaHebbDefault
     var skillThreshold = 0.5
@@ -450,7 +450,7 @@ class ELOlogic: Codable {
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
 //                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
-                        oneItemAdam(score: scores[order[i]], alpha: alphaItems, alphaHebb: alphaHebb)
+                        oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
                     }
                 }
                 if j % 100 == 0 {
@@ -508,7 +508,7 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-                        oneItemAdam(score: scores[order[i]], alpha: alphaItems, alphaHebb: alphaHebb)
+                        oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
 //                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                     }
                 }

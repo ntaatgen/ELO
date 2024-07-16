@@ -24,7 +24,7 @@ struct ELOApp: App {
                 }
                 Divider()
                 Toggle(isOn: $model.lastLoaded, label: { Text("Last loaded students") })
-                Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
+//                Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
                 Divider()
                 Button("Run script...") {
                     model.runScript()
@@ -50,6 +50,11 @@ struct ELOApp: App {
                 Button("Write output file, last only...") {
                     model.writeDataFile(lastonly: true)
                 }
+            }
+            CommandGroup(replacing: CommandGroupPlacement.toolbar) {
+                Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
+                Divider()
+
             }
         }
     }

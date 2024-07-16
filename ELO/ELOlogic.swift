@@ -449,7 +449,6 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-//                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                         oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
                     }
                 }
@@ -509,7 +508,6 @@ class ELOlogic: Codable {
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
                         oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
-//                        oneItem(score: scores[order[i]], alphaS: alphaStudents, alphaI: alphaItems)
                     }
                 }
 

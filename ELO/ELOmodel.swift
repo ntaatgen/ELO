@@ -35,7 +35,7 @@ struct ELOmodel {
     var primGraphData: FruchtermanReingold?
     var graphData: GraphData?
     var timeList: [Int] = [0]
-    var alphaItems: Double = ELOlogic.alphaDefault
+    var alpha: Double = ELOlogic.alphaDefault
     var trace: String = "Starting ELO         \n"
     
     mutating func loadData(filePath: URL, add: Bool) {
@@ -261,7 +261,7 @@ struct ELOmodel {
     }
     
     mutating func setAItems(value: Double) {
-        alphaItems = value
+        alpha = value
         logic.alpha = value
     }
     
@@ -326,26 +326,40 @@ struct ELOmodel {
         return count != 0 ? score/count : nil
     }
     
-    func itemScore(item: Item, student: Student) -> Double? {
-        let expectedScore = logic.expectedScore(s: student, it: item)
-//        return expectedScore
-        if expectedScore > 0.5 && expectedScore < 0.8 {
-            return 1
-        } else {
-            return nil
+    func findScoreOnItems(s: Student) -> [String:Double] {
+        var result: [String:Double] = [:]
+        for score in logic.scores {
+            if score.student == s.name {
+                result[score.item] = score.score
+            }
         }
+        return result
     }
     
+    func itemScore(item: Item, student: Student) -> Bool {
+        let expectedScore = logic.expectedScore(s: student, it: item)
+        return expectedScore > 0.5 && expectedScore < 0.8
+    }
+        
     mutating func updatePrimViewData() {
         guard primGraphData != nil else { return }
         graphData = GraphData()
+        var itemScores: [String:Double] = [:]
+        if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
+            itemScores = findScoreOnItems(s: logic.students[studentKeys[selected!]]!)
+        }
         for (_, node) in primGraphData!.nodes {
             var s: [NodeItem] = []
             for item in node.items {
-                if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
-                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                if !itemScores.isEmpty {
+//                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                    if let itemScore = itemScores[item.name] {
+                        s.append(NodeItem(name: item.name, color: itemScore, recommended: false))
+                    } else {
+                        s.append(NodeItem(name: item.name, color: nil, recommended: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                    }
                 } else {
-                    s.append(NodeItem(name: item.name, color: nil))
+                    s.append(NodeItem(name: item.name, color: nil, recommended: false))
                 }
             }
             var nodeScore: Double? = 0.0
@@ -390,6 +404,7 @@ struct NodeItem: Identifiable {
     var id = UUID()
     var name: String
     var color: Double?
+    var recommended: Bool
 }
 
 struct ViewNode: Identifiable {

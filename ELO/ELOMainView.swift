@@ -22,7 +22,7 @@ struct ELOMainView: View {
     }
     
     var body: some View {
-        HStack {
+//        HStack {
             VStack {
                 HStack {
                     Button(action: { model.back() }) {
@@ -70,87 +70,93 @@ struct ELOMainView: View {
                 }
                 HStack {
                     Text("Epochs:")
-//                    TextField("Epochs", text: $epochs, onEditingChanged: {changed in model.changeEpochs(epochs)})
                     TextField("Epochs", text: $model.nEpochsV)
                         .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
                     Text("alpha:")
-                    TextField("aItems", text: $model.alphaItemsV) //, onEditingChanged: {changed in model.changeAItems(aItems)})
-                        .onChange(of: model.alphaItemsV) { model.alphaItemsV = model.changeAItems(model.alphaItemsV) }
+                    TextField("aItems", text: $model.alphaV)
+                        .onChange(of: model.alphaV) { model.alphaV = model.changeAItems(model.alphaV) }
 //                    Text("alphaSubjects:")
-//                    TextField("aSubs", text: $model.alphaStudentV) //, onEditingChanged: {changed in model.changeASubjects(aSubjects)})
+//                    TextField("aSubs", text: $model.alphaStudentV)
 //                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
                     Text("alphaHebb:")
-                    TextField("aHebb", text: $model.alphaHebbV) //, onEditingChanged: {changed in model.changeAHebb(aHebb)})
+                    TextField("aHebb", text: $model.alphaHebbV)
                         .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}
                     Text("# Skills:")
-                    TextField("nSkills", text: $model.nSkillsV) // , onEditingChanged: {changed in model.changeNSkills(nSkills)})
+                    TextField("nSkills", text: $model.nSkillsV)
                         .onChange(of: model.nSkillsV) { model.nSkillsV = model.changeNSkills(model.nSkillsV)}
                     Spacer()
                 }
-                if model.selected != nil {
-                    switch model.graphSelected {
-                    case .items: if model.selected! < model.sortedKeys.count {
-                        Text(model.sortedKeys[model.selected!])
-                    }
-                    case .students: if model.selected! < model.studentKeys.count {
-                        Text(model.studentKeys[model.selected!])
-                    }
-                    case .errors: Text("Final error " + String(model.results.last!.y))
-                        
-                    }
-                }
-                VSplitView {
-                    //                HStack {
-                    if model.graphSelected == .errors {
-                        Chart(model.results) {
-                            LineMark(x: .value("Training", $0.x),
-                                     y: .value("Score",$0.y),
-                                     series: .value("Index",$0.z)
-                            )
-                            .foregroundStyle(model.colors[$0.z])
-                            //                .foregroundStyle(by: .value("Index", $0.z + 1))
+
+                HSplitView {
+                    VSplitView {
+                        HStack {
+                            Spacer()
+                            
+                            if model.selected != nil {
+                                switch model.graphSelected {
+                                case .items: if model.selected! < model.sortedKeys.count {
+                                    Text(model.sortedKeys[model.selected!])
+                                        .frame(height: 15)
+                                }
+                                case .students: if model.selected! < model.studentKeys.count {
+                                    Text(model.studentKeys[model.selected!])
+                                        .frame(height: 15)
+                                }
+                                case .errors: Text("Final error " + String(model.results.last!.y))
+                                        .frame(height: 15)
+                                }
+                            }
+                            Spacer()
                         }
-                        .chartYScale(domain: model.resultsLWB...model.resultsUPB)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        
-                    } else {
-                        Chart(model.results) {
-                            LineMark(x: .value("Training", $0.x),
-                                     y: .value("Score",$0.y),
-                                     series: .value("Index",$0.z)
-                            )
-                            .foregroundStyle(model.colors[$0.z])
-                            //                .foregroundStyle(by: .value("Index", $0.z + 1))
+                        if model.graphSelected == .errors {
+                            Chart(model.results) {
+                                LineMark(x: .value("Training", $0.x),
+                                         y: .value("Score",$0.y),
+                                         series: .value("Index",$0.z)
+                                )
+                                .foregroundStyle(model.colors[$0.z])
+                                //                .foregroundStyle(by: .value("Index", $0.z + 1))
+                            }
+                            .chartYScale(domain: model.resultsLWB...model.resultsUPB)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            
+                        } else {
+                            Chart(model.results) {
+                                LineMark(x: .value("Training", $0.x),
+                                         y: .value("Score",$0.y),
+                                         series: .value("Index",$0.z)
+                                )
+                                .foregroundStyle(model.colors[$0.z])
+                            }
+                            .chartYScale(domain: 0...1)
+                            .chartXScale(domain: model.resultsLowestX...model.resultsHighestX)
+                            .chartLegend(position: .bottom)
+                            .chartForegroundStyleScale(model.chartLegendLabels)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
-                        .chartYScale(domain: 0...1)
-                        .chartXScale(domain: model.resultsLowestX...model.resultsHighestX)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        GraphView(model: model)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    //                }
-                    GraphView(model: model)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            VStack {
-                
-                ScrollView {
-                    Text(model.trace)
-                }
-                ScrollView {
-                    ForEach(model.currentItemImage, id:\.self) {img in
-                        Image(nsImage: img)
-                            .resizable()
-                            .scaledToFit()
+                    
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    VSplitView {
+                        ScrollView {
+                            Text(model.trace)
+                                .frame(maxWidth: .infinity, minHeight: 100, maxHeight: .infinity)
+                        }
+                        if !model.currentItemImages.isEmpty {
+                            ScrollView {
+                                ForEach(model.currentItemImages, id:\.self) {img in
+                                    Image(nsImage: img)
+                                        .resizable()
+                                        .scaledToFit()
+                                }
+                            }
+                        }
+                        
+
                     }
                 }
-//                if model.currentItemImage != nil {
-//                    Image(nsImage: model.currentItemImage!)
-//                        .resizable()
-//                        .scaledToFit()
-////                        .frame(width: 300, height: 300)
-//                }
-            }
         }
     }
 }

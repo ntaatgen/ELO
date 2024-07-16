@@ -12,14 +12,14 @@ class ELOViewModel: ObservableObject {
     
     @Published private var model: ELOmodel
     
-    @Published var alphaItemsV = String(ELOlogic.alphaDefault)
+    @Published var alphaV = String(ELOlogic.alphaDefault)
     @Published var nSkillsV = String(ELOlogic.nSkillsDefault)
     @Published var alphaStudentV = String(ELOlogic.alphaStudentsDefault)
     @Published var alphaHebbV = String(ELOlogic.alphaHebbDefault)
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
     @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
     @Published var selectableNodeLabels = false
-    @Published var currentItemImage: [NSImage] = []
+    @Published var currentItemImages: [NSImage] = []
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
@@ -29,19 +29,12 @@ class ELOViewModel: ObservableObject {
     }
     
     var resultsLWB: Double {
-        var lowest = 10000000.0
-        for res in results {
-            lowest = min(lowest,res.y)
-        }
-        return lowest
+        return results.isEmpty ? 0 : results.reduce(100000) { min($0, $1.y)}
     }
 
     var resultsUPB: Double {
-        var highest = -10000000.0
-        for res in results {
-            highest = max(highest,res.y)
-        }
-        return highest
+        return results.isEmpty ? 0 : results.reduce(0) {max($0, $1.y)}
+
     }
     
     var resultsLowestX: Int {
@@ -52,13 +45,24 @@ class ELOViewModel: ObservableObject {
         return results.isEmpty ? 0 : results.reduce(0) {max($0, $1.x)}
     }
     
+    var chartLegendLabels: KeyValuePairs<String, Color> {
+        switch model.logic.nSkills {
+        case 1: return ["1":colors[0]]
+        case 2: return ["1x":colors[0],"x1":colors[1]]
+        case 3: return ["1xx":colors[0],"x1x":colors[1],"xx1":colors[2]]
+        case 4: return ["1xxx":colors[0],"x1xx":colors[1],"xx1x":colors[2],"xxx1":colors[3]]
+        case 5: return ["1xxxx":colors[0],"x1xxx":colors[1],"xx1xx":colors[2],"xxx1x":colors[3],"xxxx1":colors[4]]
+        default: return ["1xxxxx":colors[0],"x1xxxx":colors[1],"xx1xxx":colors[2],"xxx1xx":colors[3],"xxxx1x":colors[4],"xxxxx1":colors[5]]
+        }
+    }
+    
     var trace: String {
         model.trace
     }
     
-    var alphaItems: Double {
-        model.alphaItems
-    }
+//    var alpha: Double {
+//        model.alpha
+//    }
     
     init() {
         model = ELOmodel()
@@ -73,14 +77,14 @@ class ELOViewModel: ObservableObject {
         let url = lastLoadPath!.appendingPathComponent("images/" + name + ".png")
         if let img = NSImage(contentsOf: url) {
             if node == lastClickedNode {
-                currentItemImage.append(img)
+                currentItemImages.append(img)
             } else {
                 lastClickedNode = node
-                currentItemImage = [img]
+                currentItemImages = [img]
             }
         }
-        if currentItemImage.count > maxImages {
-            currentItemImage.removeFirst()
+        if currentItemImages.count > maxImages {
+            currentItemImages.removeFirst()
         }
     }
     
@@ -201,7 +205,7 @@ class ELOViewModel: ObservableObject {
             return value
         } else {
             model.addToTrace(s: "Illegal value for Alpha items")
-            return String(model.alphaItems)
+            return String(model.alpha)
         }
     }
     
@@ -257,6 +261,7 @@ class ELOViewModel: ObservableObject {
         model.reset()
         primViewCalculateGraph()
         updateParameters()
+        currentItemImages = []
     }
     
     func run(time: Int?) {
@@ -374,7 +379,7 @@ class ELOViewModel: ObservableObject {
     }
     
     func updateParameters() {
-        alphaItemsV = String(model.logic.alpha)
+        alphaV = String(model.logic.alpha)
         nSkillsV = String(model.logic.nSkills)
         alphaStudentV = String(model.logic.alphaStudents)
         alphaHebbV = String(model.logic.alphaHebb)
@@ -412,7 +417,7 @@ func numberToColor(_ i: Int) -> Color {
     }
 }
 
-func gradientColor(value: Double) -> Color {
-    let color = NSColor(red: 1 - value, green: value, blue: 0, alpha: 1)
+func gradientColor(value: Double, alpha: Double = 1) -> Color {
+    let color = NSColor(red: 1 - value, green: value, blue: 0, alpha: alpha)
     return Color(color)
    }

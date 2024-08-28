@@ -30,6 +30,12 @@ class Item: Codable {
     var m: [Double] = []
     var v: [Double] = []
     var t: Int = 1
+    var guessP: Double = 0
+    var mistakeP: Double = 0
+    var guessPm: Double = 0
+    var mistakePm: Double = 0
+    var guessPv: Double = 0
+    var mistakePv: Double = 0
     init(name: String, nSkills: Int) {
         self.name = name
         self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
@@ -66,6 +72,7 @@ class ELOlogic: Codable {
     static let alphaStudentsDefault = 0.05
     static let alphaHebbDefault = 1.0
     static let epochsDefault = 1000
+    var includeGM = true
     var nSkills = ELOlogic.nSkillsDefault
     static let maxSkills = 8
     var nEpochs = ELOlogic.epochsDefault
@@ -308,7 +315,7 @@ class ELOlogic: Codable {
     ///   - it: The item
     ///   - leaveOut: Optionally: leave one vector item out, necessary for calculating the gradient
     /// - Returns: The expected score.
-    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
+    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil, withGuessAndMistake: Bool = false) -> Double {
         var p: Double = 1
         for i in 0..<nSkills {
             if leaveOut == nil || leaveOut! != i {
@@ -316,7 +323,11 @@ class ELOlogic: Codable {
                 p = p * skillP
             }
         }
-        return p
+        if withGuessAndMistake {
+            return it.guessP + (1 - it.guessP) * (1 - it.mistakeP) * p
+        } else {
+            return p
+        }
     }
     
 
@@ -404,6 +415,66 @@ class ELOlogic: Codable {
 
     }
 
+    /// Update the model based on a single datapoint using Adam optimization
+    /// This version also takes into account the probability of lucky guesses and mistakes
+    /// - Parameters:
+    ///   - score: The datapoint used for the update
+    ///   - alpha: The alpha parameter for Adam, 0.001 by default
+    ///   - beta1: The beta1 parameter for Adam, 0.9 by default
+    ///   - beta2: The beta2 parameter for Adam, 0.99 by default
+    ///   - epsilon: The epsilon parameter, 1e-8 by default
+    ///   - alphaHebb: Learning multiplier (with alpha) to control the Hebbian learning.
+    func oneItemAdamGF(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8, alphaHebb: Double = 1.0) {
+        let s = students[score.student]!
+        let it = items[score.item]!
+        let expectedS = expectedScore(s: s, it: it)
+        let error = it.guessP + (1 - it.guessP) * (1 - it.mistakeP) * expectedS - score.score
+        var expectedWithoutSkill: [Double] = []
+        for i in 0..<nSkills {
+            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+        }
+        for i in 0..<nSkills {
+            it.m[i] = beta1 * it.m[i] + (1 - beta1) * (1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error
+            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow((1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error, 2)
+            let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
+            let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
+            
+            s.m[i] = beta1 * s.m[i] + (1 - beta1) * (1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * it.skills[i] * error
+            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow((1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * it.skills[i] * error, 2)
+            let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
+            let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
+            
+            it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
+        }
+        it.guessPm = beta1 * it.guessPm + (1 - beta1) * (1 - expectedS + it.mistakeP * expectedS) * error
+        it.guessPv = beta2 * it.guessPv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
+        let mhatG = it.guessPm / (1 - pow(beta1, Double(it.t)))
+        let vhatG = it.guessPv / (1 - pow(beta2, Double(it.t)))
+        it.guessP = boundedAdd(it.guessP, -alpha * mhatG / (sqrt(vhatG) + epsilon), upb: 0.25)
+        
+        it.mistakePm = beta1 * it.mistakePm + (1 - beta1) * (-expectedS + it.guessP * expectedS) * error
+        it.mistakePv = beta2 * it.mistakePv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
+        let mhatM = it.mistakePm / (1 - pow(beta1, Double(it.t)))
+        let vhatM = it.mistakePv / (1 - pow(beta2, Double(it.t)))
+        it.mistakeP = boundedAdd(it.mistakeP, -alpha * mhatM / (sqrt(vhatM) + epsilon), upb: 0.25)
+
+        
+        it.t += 1
+        s.t += 1
+        /// Add some "Hebbian" learning
+        if score.score > 0.7 {
+            for i in 0..<nSkills {
+                if it.skills[i] < s.skills[i] {
+                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
+                }
+            }
+        }
+        it.experiences += 1
+
+    }
+
+    
     
     /// Calculate the average error per datapoint, either of the whole dataset, or the last loaded students.
     ///     /// - Returns: The average error
@@ -412,7 +483,7 @@ class ELOlogic: Codable {
         var count: Int = 0
         for score in scores {
             if !showLastLoadedStudents || lastLoadedStudents.contains(score.student) {
-                error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
+                error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!, withGuessAndMistake: includeGM))
                 count += 1
             }
         }
@@ -434,6 +505,12 @@ class ELOlogic: Codable {
                                 let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
                                 results.append(dp)
                             }
+                            if includeGM {
+                                let guessDP = ModelData(item: key, z: nSkills, x: lineCounter, y: items[key]!.guessP)
+                                results.append(guessDP)
+                                let mistakeDP = ModelData(item: key, z: nSkills + 1, x: lineCounter, y: items[key]!.mistakeP)
+                                results.append(mistakeDP)
+                            }
                         }
                     }
                     for key in studentKeys {
@@ -449,7 +526,11 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-                        oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                        if includeGM {
+                            oneItemAdamGF(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                        } else {
+                            oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                        }
                     }
                 }
                 if j % 100 == 0 {
@@ -467,7 +548,7 @@ class ELOlogic: Codable {
             }
             
             for key in sortedKeys {
-                print(key,items[key]!.skills)
+                print(key,items[key]!.skills, items[key]!.guessP, items[key]!.mistakeP)
             }
             DispatchQueue.main.async {
                 self.counter = self.nEpochs
@@ -481,42 +562,41 @@ class ELOlogic: Codable {
     /// Same as calculateModel, except it does not run in the background and does not update the View.
     /// - Parameter time: If set, only process datapoints at that time, if nil process all datapoints
     func calculateModelForBatch(time: Int!) {
-            for j in 0..<nEpochs {
-                print("epoch", j)
-                var order = Array(0..<scores.count)
-                order.shuffle()
-                if nEpochs < 20 || j % (nEpochs/10) == 0 {
-                    for key in sortedKeys {
-                        if items[key]!.experiences > 0 {
-                            for skills in 0..<nSkills {
-                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                                results.append(dp)
-                            }
-                        }
-                    }
-                    for key in studentKeys {
+        for j in 0..<nEpochs {
+            print("epoch", j)
+            var order = Array(0..<scores.count)
+            order.shuffle()
+            if nEpochs < 20 || j % (nEpochs/10) == 0 {
+                for key in sortedKeys {
+                    if items[key]!.experiences > 0 {
                         for skills in 0..<nSkills {
-                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                            studentResults.append(dp)
+                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                            results.append(dp)
                         }
                     }
-                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-                    errors.append(dp)
-                    lineCounter += (nEpochs/10)
                 }
-
-                for i in 0..<order.count {
-                    if time == nil || scores[order[i]].time == time! {
-                        oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                for key in studentKeys {
+                    for skills in 0..<nSkills {
+                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                        studentResults.append(dp)
                     }
                 }
-
-                
+                let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                errors.append(dp)
+                lineCounter += (nEpochs/10)
             }
             
-            for key in sortedKeys {
-                print(key,items[key]!.skills)
+            for i in 0..<order.count {
+                if time == nil || scores[order[i]].time == time! {
+                    if includeGM {
+                        oneItemAdamGF(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                    } else {
+                        oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                    }
+                    
+                }
             }
+        }
                 self.counter = self.nEpochs
     }
 

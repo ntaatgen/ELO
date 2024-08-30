@@ -573,6 +573,12 @@ class ELOlogic: Codable {
                             let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
                             results.append(dp)
                         }
+                        if includeGM {
+                            let guessDP = ModelData(item: key, z: nSkills, x: lineCounter, y: items[key]!.guessP)
+                            results.append(guessDP)
+                            let mistakeDP = ModelData(item: key, z: nSkills + 1, x: lineCounter, y: items[key]!.mistakeP)
+                            results.append(mistakeDP)
+                        }
                     }
                 }
                 for key in studentKeys {

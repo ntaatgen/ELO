@@ -41,7 +41,7 @@ struct GraphNode: View {
                 }
                 .listStyle(.plain)
                 //            .frame(width: 100, height: 50)
-                .frame(maxWidth: 80, maxHeight: 50)
+                .frame(maxWidth: 80, maxHeight: 75)
                 .position(x: CGFloat(node.x)/300 * geometry.size.width + vertexSize*2.5,
                           y: CGFloat(node.y)/300 * geometry.size.height)
             } else {

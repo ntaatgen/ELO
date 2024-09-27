@@ -19,6 +19,7 @@ class ELOViewModel: ObservableObject {
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
     @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
     @Published var selectableNodeLabels = false
+    @Published var studentMode = false  { didSet {model.changeStudentMode(studentMode)}}
     @Published var currentItemImages: [NSImage] = []
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
@@ -88,6 +89,14 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    func setImageToCurrentProblem() {
+        if model.selected! < model.sortedKeys.count {
+            let imageName = model.sortedKeys[model.selected!]
+            currentItemImages = []
+            setImage(name: imageName, node: UUID())
+        }
+    }
+    
     func loadData(add: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
@@ -117,6 +126,9 @@ class ELOViewModel: ObservableObject {
                 model.updatePrimViewData()
                 model.update()
                 updateParameters()
+                if model.selectedGroup == .items {
+                    setImageToCurrentProblem()
+                }
             }
         }
     }
@@ -172,6 +184,9 @@ class ELOViewModel: ObservableObject {
                     model.updatePrimViewData()
                     model.update()
                     updateParameters()
+                    if model.selectedGroup == .items {
+                        setImageToCurrentProblem()
+                    }
                     lastLoadPath = panelURL.deletingLastPathComponent()
                 }
             }
@@ -267,22 +282,32 @@ class ELOViewModel: ObservableObject {
     func run(time: Int?) {
         model.run(time: time)
         primViewCalculateGraph()
+        
         model.addToTrace(s: "Running model at time \(time ?? 0) for \(model.logic.nEpochs) epochs")
     }
     
     @objc func runDone(_ notification: Notification) {
         model.update()
+        if model.selectedGroup == .items {
+            setImageToCurrentProblem()
+        }
     }
     
     @objc func updateGraph(_ notification: Notification) {
         model.addToTrace(s: "Epoch \(model.logic.counter)")
         primViewCalculateGraph()
         model.update()
+        if model.selectedGroup == .items {
+            setImageToCurrentProblem()
+        }
     }
     
     @objc func endRun(_ notification: Notification) {
         model.addToTrace(s: "Done running")
         model.addToTrace(s: "Avg. error = \(model.logic.calculateError())")
+        if model.selectedGroup == .items {
+            setImageToCurrentProblem()
+        }
     }
     
     var results: [ModelData] {
@@ -303,6 +328,9 @@ class ELOViewModel: ObservableObject {
         }
         if model.selectedGroup == .students {
             updatePrimViewData()
+        }
+        if model.selectedGroup == .items {
+            setImageToCurrentProblem()
         }
     }
     
@@ -363,6 +391,9 @@ class ELOViewModel: ObservableObject {
         if model.selectedGroup == .students {
             updatePrimViewData()
         }
+        if model.selectedGroup == .items {
+            setImageToCurrentProblem()
+        }
         model.update()
     }
     
@@ -374,6 +405,9 @@ class ELOViewModel: ObservableObject {
         }
         if model.selectedGroup == .students {
             updatePrimViewData()
+        }
+        if model.selectedGroup == .items {
+            setImageToCurrentProblem()
         }
         model.update()
     }

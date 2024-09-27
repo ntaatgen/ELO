@@ -405,6 +405,15 @@ struct ELOmodel {
         graphData!.nodes[node].y = newY
     }
     
+    mutating func changeStudentMode(_ mode: Bool) {
+        switch mode {
+        case true:
+            selectedGroup = .students
+            
+        case false:
+            break
+        }
+    }
     
     
 }

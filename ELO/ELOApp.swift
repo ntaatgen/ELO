@@ -54,7 +54,8 @@ struct ELOApp: App {
             CommandGroup(replacing: CommandGroupPlacement.toolbar) {
                 Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
                 Divider()
-
+                Toggle(isOn: $model.studentMode, label: { Text("Student Mode")})
+                Divider()
             }
         }
     }

@@ -72,7 +72,7 @@ class ELOlogic: Codable {
     static let alphaStudentsDefault = 0.05
     static let alphaHebbDefault = 1.0
     static let epochsDefault = 1000
-    var includeGM = true
+    var includeGM = false
     var nSkills = ELOlogic.nSkillsDefault
     static let maxSkills = 8
     var nEpochs = ELOlogic.epochsDefault
@@ -400,6 +400,8 @@ class ELOlogic: Codable {
             
             it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
             s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
+//            it.skills[i] = boundedAdd(it.skills[i], -(alpha / log(Double(it.t + 1))) * mhatI / (sqrt(vhatI) + epsilon))
+//            s.skills[i] = boundedAdd(s.skills[i],  -(alpha / log(Double(s.t + 1))) * mhatS / (sqrt(vhatS) + epsilon))
         }
         it.t += 1
         s.t += 1
@@ -411,7 +413,7 @@ class ELOlogic: Codable {
                 }
             }
         }
-        it.experiences += 1
+        it.experiences += 1 // redundant
 
     }
 

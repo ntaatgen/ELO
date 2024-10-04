@@ -19,8 +19,16 @@ class ELOViewModel: ObservableObject {
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
     @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
     @Published var selectableNodeLabels = false
-    @Published var studentMode = false  { didSet {model.changeStudentMode(studentMode)}}
+    @Published var studentMode = false  { didSet {
+        if studentMode == true {
+            selectableNodeLabels = true
+        }
+        model.changeStudentMode(studentMode)
+        model.updatePrimViewData()}}
     @Published var currentItemImages: [NSImage] = []
+    @Published var openSheet = false
+    @Published var sheetImage: NSImage? = nil
+    @Published var queryItem = ItemInfo()
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
@@ -45,6 +53,7 @@ class ELOViewModel: ObservableObject {
     var resultsHighestX: Int {
         return results.isEmpty ? 0 : results.reduce(0) {max($0, $1.x)}
     }
+    
     
     var chartLegendLabels: KeyValuePairs<String, Color> {
         switch model.logic.nSkills {
@@ -95,6 +104,17 @@ class ELOViewModel: ObservableObject {
             currentItemImages = []
             setImage(name: imageName, node: UUID())
         }
+    }
+    
+    func showItemOnSheet(_ name: String) {
+        guard lastLoadPath != nil else { return }
+        queryItem.read(name: name, loadPath: lastLoadPath!)
+        openSheet = true
+        
+    }
+    
+    func scoreSheet(answers: [String]) {
+        model.scoreSheet(itemInfo: queryItem, answers: answers)
     }
     
     func loadData(add: Bool = false) {

@@ -21,6 +21,7 @@
 		B89E07112B987B0F00B52111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B89E07102B987B0F00B52111 /* Assets.xcassets */; };
 		B89E07142B987B0F00B52111 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B89E07132B987B0F00B52111 /* Preview Assets.xcassets */; };
 		B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E071B2B987C0100B52111 /* ELOViewModel.swift */; };
+		B8FD1B952CA6E6DF00142692 /* ItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD1B942CA6E6DF00142692 /* ItemView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		B89E07132B987B0F00B52111 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B89E07152B987B0F00B52111 /* ELO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ELO.entitlements; sourceTree = "<group>"; };
 		B89E071B2B987C0100B52111 /* ELOViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOViewModel.swift; sourceTree = "<group>"; };
+		B8FD1B942CA6E6DF00142692 /* ItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +95,7 @@
 				B89E071B2B987C0100B52111 /* ELOViewModel.swift */,
 				B84A064F2B99EC95003C06A8 /* ELOmodel.swift */,
 				B89E070C2B987B0E00B52111 /* ELOApp.swift */,
+				B8FD1B942CA6E6DF00142692 /* ItemView.swift */,
 				B84A06512B99ECC3003C06A8 /* ELOlogic.swift */,
 				B87EFC772BFDF99300165F1E /* oldcode.swift */,
 				B89E07102B987B0F00B52111 /* Assets.xcassets */,
@@ -188,6 +191,7 @@
 				B89E070F2B987B0E00B52111 /* ELOMainView.swift in Sources */,
 				B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */,
 				B84A06502B99EC95003C06A8 /* ELOmodel.swift in Sources */,
+				B8FD1B952CA6E6DF00142692 /* ItemView.swift in Sources */,
 				B84755022BCFF9180048ADD6 /* FruchtermanReingold.swift in Sources */,
 				B89E070D2B987B0E00B52111 /* ELOApp.swift in Sources */,
 				B84754FE2BCFF6690048ADD6 /* GraphNode.swift in Sources */,
@@ -326,7 +330,7 @@
 				CODE_SIGN_ENTITLEMENTS = ELO/ELO.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"ELO/Preview Content\"";
 				DEVELOPMENT_TEAM = YD3HPRU5U8;
@@ -355,7 +359,7 @@
 				CODE_SIGN_ENTITLEMENTS = ELO/ELO.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"ELO/Preview Content\"";
 				DEVELOPMENT_TEAM = YD3HPRU5U8;

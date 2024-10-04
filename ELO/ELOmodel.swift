@@ -415,6 +415,14 @@ struct ELOmodel {
         }
     }
     
+    mutating func scoreSheet(itemInfo: ItemInfo, answers: [String]) {
+        guard selectedGroup == .students && selected != nil else {return}
+        let score = logic.scoreSheet(itemInfo: itemInfo, answers: answers, student: studentKeys[selected!])
+        addToTrace(s: "Score on item \(itemInfo.name) is \(score).")
+        update()
+        updatePrimViewData()
+    }
+    
     
 }
 

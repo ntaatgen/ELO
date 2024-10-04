@@ -35,7 +35,11 @@ struct GraphNode: View {
                             .listRowInsets(EdgeInsets())
                             .background(item.color == nil ? item.recommended ? Color(NSColor(red:0, green:0, blue:1, alpha: 0.5)) : Color.white : gradientColor(value: item.color!, alpha: 0.5))
                             .onTapGesture() {
-                                model.setImage(name: item.name, node: node.id)
+                                if model.studentMode {
+                                    model.showItemOnSheet(item.name)
+                                } else {
+                                    model.setImage(name: item.name, node: node.id)
+                                }
                             }
                     }
                 }

@@ -158,6 +158,12 @@ struct ELOMainView: View {
                     }
                 }
         }
+            .sheet(isPresented: $model.openSheet) {
+
+                ItemView(model: model, itemInfo: model.queryItem, groupsize: model.queryItem.answerArray.count)
+                    .frame(minWidth: model.queryItem.image?.size.width ?? 0, minHeight: model.queryItem.image?.size.height ?? 0)
+                
+            }
     }
 }
 

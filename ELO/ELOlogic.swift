@@ -630,11 +630,30 @@ class ELOlogic: Codable {
     func scoreSheet(itemInfo: ItemInfo, answers: [String], student: String) -> Double {
         var maxScore = 0.0
         var score = 0.0
-        for i in 0..<itemInfo.answers.count {
-            if itemInfo.answers[i].lowercased() == answers[i].lowercased() {
-                score += itemInfo.points[i]
+        for i in 0..<itemInfo.questions.count {
+            switch itemInfo.questions[i] {
+            case .text(_, let correctAnswers, let points):
+                if correctAnswers.contains(answers[i].lowercased()) {
+                    score += points
+                }
+                maxScore += points
+            case .multipleChoice(prompt: _, options: let options, correct: let correct, points: let points):
+                print("index = \(String(describing: options.firstIndex(of: answers[i]))), correct = \(correct - 1)")
+                if !answers[i].isEmpty &&  Int(options.firstIndex(of: answers[i])!) == correct - 1 {
+                    score += points
+                }
+                maxScore += points
+            case .realNumber(_, answer: let correctAnswer, points: let points):
+                if Double(answers[i]) == correctAnswer {
+                    score += points
+                }
+                maxScore += points
+            case .intNumber(_, answer: let correctAnswer, points: let points):
+                if Int(answers[i]) == correctAnswer {
+                    score += points
+                }
+                maxScore += points
             }
-            maxScore += itemInfo.points[i]
         }
         score = score / maxScore
         let newScore = Score(student: students[student]!, item: items[itemInfo.name]!, score: score, time: 100)

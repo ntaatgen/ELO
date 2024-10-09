@@ -28,7 +28,7 @@ class ELOViewModel: ObservableObject {
     @Published var currentItemImages: [NSImage] = []
     @Published var openSheet = false
     @Published var sheetImage: NSImage? = nil
-    @Published var queryItem = ItemInfo()
+    @Published var queryItem: ItemInfo? = nil
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
@@ -108,13 +108,13 @@ class ELOViewModel: ObservableObject {
     
     func showItemOnSheet(_ name: String) {
         guard lastLoadPath != nil else { return }
-        queryItem.read(name: name, loadPath: lastLoadPath!)
+        queryItem = ItemInfo(name: name, loadPath: lastLoadPath!)
         openSheet = true
         
     }
     
     func scoreSheet(answers: [String]) {
-        model.scoreSheet(itemInfo: queryItem, answers: answers)
+        model.scoreSheet(itemInfo: queryItem!, answers: answers)
     }
     
     func loadData(add: Bool = false) {

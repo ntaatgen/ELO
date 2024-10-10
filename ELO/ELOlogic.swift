@@ -632,23 +632,23 @@ class ELOlogic: Codable {
         var score = 0.0
         for i in 0..<itemInfo.questions.count {
             switch itemInfo.questions[i] {
-            case .text(_, let correctAnswers, let points):
+            case .text(_, let correctAnswers, let points, _):
                 if correctAnswers.contains(answers[i].lowercased()) {
                     score += points
                 }
                 maxScore += points
-            case .multipleChoice(prompt: _, options: let options, correct: let correct, points: let points):
+            case .multipleChoice(prompt: _, options: let options, correct: let correct, points: let points, _, _):
                 print("index = \(String(describing: options.firstIndex(of: answers[i]))), correct = \(correct - 1)")
                 if !answers[i].isEmpty &&  Int(options.firstIndex(of: answers[i])!) == correct - 1 {
                     score += points
                 }
                 maxScore += points
-            case .realNumber(_, answer: let correctAnswer, points: let points):
+            case .realNumber(_, answer: let correctAnswer, points: let points, _):
                 if Double(answers[i]) == correctAnswer {
                     score += points
                 }
                 maxScore += points
-            case .intNumber(_, answer: let correctAnswer, points: let points):
+            case .intNumber(_, answer: let correctAnswer, points: let points, _):
                 if Int(answers[i]) == correctAnswer {
                     score += points
                 }

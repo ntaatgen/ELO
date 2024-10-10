@@ -100,6 +100,7 @@ class ELOlogic: Codable {
     var lineCounter = 0
     var counter = 0
     var showLastLoadedStudents = false
+    var feedback: [Bool] = []
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -630,27 +631,40 @@ class ELOlogic: Codable {
     func scoreSheet(itemInfo: ItemInfo, answers: [String], student: String) -> Double {
         var maxScore = 0.0
         var score = 0.0
+        feedback = []
         for i in 0..<itemInfo.questions.count {
             switch itemInfo.questions[i] {
             case .text(_, let correctAnswers, let points, _):
                 if correctAnswers.contains(answers[i].lowercased()) {
                     score += points
+                    feedback.append(true)
+                } else {
+                    feedback.append(false)
                 }
                 maxScore += points
             case .multipleChoice(prompt: _, options: let options, correct: let correct, points: let points, _, _):
                 print("index = \(String(describing: options.firstIndex(of: answers[i]))), correct = \(correct - 1)")
                 if !answers[i].isEmpty &&  Int(options.firstIndex(of: answers[i])!) == correct - 1 {
                     score += points
+                    feedback.append(true)
+                } else {
+                    feedback.append(false)
                 }
                 maxScore += points
             case .realNumber(_, answer: let correctAnswer, points: let points, _):
                 if Double(answers[i]) == correctAnswer {
                     score += points
+                    feedback.append(true)
+                } else {
+                    feedback.append(false)
                 }
                 maxScore += points
             case .intNumber(_, answer: let correctAnswer, points: let points, _):
                 if Int(answers[i]) == correctAnswer {
                     score += points
+                    feedback.append(true)
+                } else {
+                    feedback.append(false)
                 }
                 maxScore += points
             }

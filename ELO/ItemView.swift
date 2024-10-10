@@ -46,6 +46,9 @@ struct ItemInfo {
             if let (command, argument) = splitLine(line: lines[i]) {
                 switch command {
                 case "answer","answers": answers = argument.components(separatedBy: ",")
+                    for i in 0..<answers.count {
+                        answers[i] = answers[i].trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
                 case "points": if let x = Double(argument) {
                     points = x
                 }
@@ -67,7 +70,7 @@ struct ItemInfo {
         while i < lines.count && !done {
             if let (command, argument) = splitLine(line: lines[i]) {
                 switch command {
-                case "answer": if let x = Double(argument) {
+                case "answer": if let x = Double(argument.replacingOccurrences(of: ",", with: ".")) {
                     answer = x
                 }
                 case "points": if let x = Double(argument) {
@@ -187,7 +190,9 @@ struct ItemView: View {
     var model: ELOViewModel
     var itemInfo: ItemInfo
     var groupsize: Int
+    @State var feedback = [Color](repeating: Color.white, count: 10)
     @State var answerArray = [String](repeating: "", count: 10)
+    @State var answerGiven = false
     var body: some View {
         VStack {
             if itemInfo.title != nil {
@@ -209,13 +214,17 @@ struct ItemView: View {
                         case .text(let prompt, _, _, let qIndex), .realNumber(let prompt, _, _, let qIndex),.intNumber(let prompt, _, _, let qIndex):
                             Text(prompt)
                             TextField("antwoord", text: $answerArray[qIndex])
+                                .overlay(Rectangle()
+                                    .stroke(feedback[qIndex], lineWidth: 4))
                         case .multipleChoice(prompt: let prompt, options: let options, _, _, .menu, let qIndex):
                             VStack {
                                 Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
                                     ForEach(options, id:\.self) { label in
                                         Text(label)
                                     }
-                                } // .pickerStyle(type == .menu ? DefaultPickerStyle() : RadioGroupPickerStyle())
+                                }
+                                .overlay(Rectangle()
+                                    .stroke(feedback[qIndex], lineWidth: 1))
                             }
                             
                         case .multipleChoice(prompt: let prompt, options: let options, _, _, .radio, let qIndex):
@@ -225,19 +234,28 @@ struct ItemView: View {
                                         Text(label)
                                     }
                                 } .pickerStyle(RadioGroupPickerStyle())
+                                    .overlay(Rectangle()
+                                        .stroke(feedback[qIndex], lineWidth: 1))
                             }
-                    }
+                        }
                     }
                     .padding()
                 }
                 
             }.padding()
-            
-            Button("Submit") {
-                model.openSheet = false
-                model.scoreSheet(answers: answerArray)
+            HStack {
+                Button("Submit") {
+                    model.scoreSheet(answers: answerArray)
+                    feedback = model.feedback
+                    answerGiven = true
+                }
+                .disabled(answerGiven)
+                .padding()
+                Button("Close") {
+                    model.openSheet = false
+                }
+                .disabled(!answerGiven)
             }
-            .padding()
         }
         
     }

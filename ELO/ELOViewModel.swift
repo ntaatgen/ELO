@@ -29,6 +29,7 @@ class ELOViewModel: ObservableObject {
     @Published var openSheet = false
     @Published var sheetImage: NSImage? = nil
     @Published var queryItem: ItemInfo? = nil
+    @Published var feedback = [Color](repeating: Color.white, count: 10)
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
@@ -109,12 +110,22 @@ class ELOViewModel: ObservableObject {
     func showItemOnSheet(_ name: String) {
         guard lastLoadPath != nil else { return }
         queryItem = ItemInfo(name: name, loadPath: lastLoadPath!)
+        feedback = [Color](repeating: Color.blue, count: 10)
         openSheet = true
         
     }
     
     func scoreSheet(answers: [String]) {
         model.scoreSheet(itemInfo: queryItem!, answers: answers)
+        var newFeedback: [Color] = []
+        for i in 0..<model.logic.feedback.count {
+            if model.logic.feedback[i] {
+                newFeedback.append(Color.green)
+            } else {
+                newFeedback.append(Color.red)
+            }
+        }
+        feedback = newFeedback
     }
     
     func loadData(add: Bool = false) {

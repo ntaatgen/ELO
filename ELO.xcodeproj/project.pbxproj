@@ -92,10 +92,10 @@
 			isa = PBXGroup;
 			children = (
 				B89E070E2B987B0E00B52111 /* ELOMainView.swift */,
+				B8FD1B942CA6E6DF00142692 /* ItemView.swift */,
 				B89E071B2B987C0100B52111 /* ELOViewModel.swift */,
 				B84A064F2B99EC95003C06A8 /* ELOmodel.swift */,
 				B89E070C2B987B0E00B52111 /* ELOApp.swift */,
-				B8FD1B942CA6E6DF00142692 /* ItemView.swift */,
 				B84A06512B99ECC3003C06A8 /* ELOlogic.swift */,
 				B87EFC772BFDF99300165F1E /* oldcode.swift */,
 				B89E07102B987B0F00B52111 /* Assets.xcassets */,

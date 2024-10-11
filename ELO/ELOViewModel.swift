@@ -128,6 +128,11 @@ class ELOViewModel: ObservableObject {
         feedback = newFeedback
     }
     
+    func createNewStudent() {
+        model.createNewStudent()
+        studentMode = true
+    }
+    
     func loadData(add: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false

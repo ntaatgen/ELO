@@ -56,6 +56,9 @@ struct ELOApp: App {
                 Divider()
                 Toggle(isOn: $model.studentMode, label: { Text("Student Mode")})
                 Divider()
+                Button("New Student") {
+                    model.createNewStudent()
+                }
             }
         }
     }

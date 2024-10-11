@@ -38,6 +38,13 @@ struct ELOmodel {
     var alpha: Double = ELOlogic.alphaDefault
     var trace: String = "Starting ELO         \n"
     
+    mutating func createNewStudent(name: String = "NewStudent") {
+        let newStudent = Student(name: name, nSkills: logic.nSkills)
+        logic.students[name] = newStudent
+        logic.studentKeys = [name]
+        studentKeys = [name]
+    }
+    
     mutating func loadData(filePath: URL, add: Bool) {
         if add {
             logic.addDataWithURL(filePath)
@@ -409,9 +416,9 @@ struct ELOmodel {
         switch mode {
         case true:
             selectedGroup = .students
-            
+            logic.studentMode = true
         case false:
-            break
+            logic.studentMode = false
         }
     }
     

@@ -16,7 +16,7 @@ class Student: Codable {
     var t: Int = 1
     init(name: String, nSkills: Int) {
         self.name = name
-        self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+        self.skills = (0..<nSkills).map { _ in .random(in: 0.1...0.3) }
         self.m = (0..<nSkills).map {_ in 0 }
         self.v = (0..<nSkills).map {_ in 0 }
     }
@@ -101,6 +101,7 @@ class ELOlogic: Codable {
     var counter = 0
     var showLastLoadedStudents = false
     var feedback: [Bool] = []
+    var studentMode: Bool = false
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -418,7 +419,7 @@ class ELOlogic: Codable {
             let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
-            it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon)) }
             s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
 //            it.skills[i] = boundedAdd(it.skills[i], -(alpha / log(Double(it.t + 1))) * mhatI / (sqrt(vhatI) + epsilon))
 //            s.skills[i] = boundedAdd(s.skills[i],  -(alpha / log(Double(s.t + 1))) * mhatS / (sqrt(vhatS) + epsilon))
@@ -466,23 +467,25 @@ class ELOlogic: Codable {
             let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
-            it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon)) }
             s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
         }
-        it.guessPm = beta1 * it.guessPm + (1 - beta1) * (1 - expectedS + it.mistakeP * expectedS) * error
-        it.guessPv = beta2 * it.guessPv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
-        let mhatG = it.guessPm / (1 - pow(beta1, Double(it.t)))
-        let vhatG = it.guessPv / (1 - pow(beta2, Double(it.t)))
-        it.guessP = boundedAdd(it.guessP, -alpha * mhatG / (sqrt(vhatG) + epsilon), upb: 0.25)
-        
-        it.mistakePm = beta1 * it.mistakePm + (1 - beta1) * (-expectedS + it.guessP * expectedS) * error
-        it.mistakePv = beta2 * it.mistakePv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
-        let mhatM = it.mistakePm / (1 - pow(beta1, Double(it.t)))
-        let vhatM = it.mistakePv / (1 - pow(beta2, Double(it.t)))
-        it.mistakeP = boundedAdd(it.mistakeP, -alpha * mhatM / (sqrt(vhatM) + epsilon), upb: 0.25)
-
-        
-        it.t += 1
+        if !studentMode {
+            it.guessPm = beta1 * it.guessPm + (1 - beta1) * (1 - expectedS + it.mistakeP * expectedS) * error
+            it.guessPv = beta2 * it.guessPv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
+            let mhatG = it.guessPm / (1 - pow(beta1, Double(it.t)))
+            let vhatG = it.guessPv / (1 - pow(beta2, Double(it.t)))
+            it.guessP = boundedAdd(it.guessP, -alpha * mhatG / (sqrt(vhatG) + epsilon), upb: 0.25)
+            
+            it.mistakePm = beta1 * it.mistakePm + (1 - beta1) * (-expectedS + it.guessP * expectedS) * error
+            it.mistakePv = beta2 * it.mistakePv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
+            let mhatM = it.mistakePm / (1 - pow(beta1, Double(it.t)))
+            let vhatM = it.mistakePv / (1 - pow(beta2, Double(it.t)))
+            it.mistakeP = boundedAdd(it.mistakeP, -alpha * mhatM / (sqrt(vhatM) + epsilon), upb: 0.25)
+            
+            
+            it.t += 1
+        }
         s.t += 1
         /// Add some "Hebbian" learning
         if score.score > 0.7 {

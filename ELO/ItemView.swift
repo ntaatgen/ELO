@@ -24,16 +24,13 @@ struct ItemInfo {
     var image: NSImage?
     var extraText: String?
     var questions: [Question] = []
-//    var answerArray: [String] = []
-//    var answers: [String] = []
-//    var points: [Double] = []
     var name: String = ""
     
     func splitLine(line: String) -> (String, String)? {
         let index = line.firstIndex(of: ":")
         if index == nil { return nil }
         let indexPlusOne = line.index(after: index!)
-        print(String(line.prefix(upTo: index!)), line.suffix(from: indexPlusOne).trimmingCharacters(in: .whitespacesAndNewlines))
+//        print(String(line.prefix(upTo: index!)), line.suffix(from: indexPlusOne).trimmingCharacters(in: .whitespacesAndNewlines))
         return (String(line.prefix(upTo: index!)), line.suffix(from: indexPlusOne).trimmingCharacters(in: .whitespacesAndNewlines))
     }
     
@@ -144,7 +141,6 @@ struct ItemInfo {
             self.image = img
         }
         let url = loadPath.appendingPathComponent("items/" + name + ".txt")
-//        print("URL = \(url)")
         let text = try? String(contentsOf: url, encoding: String.Encoding.utf8)
         guard text != nil else { return }
         let lines = text!.components(separatedBy: "\n")
@@ -199,9 +195,7 @@ struct ItemView: View {
                 Text(itemInfo.title!)
                     .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
             }
-            if itemInfo.image == nil {
-                Text("No Image")
-            } else {
+            if itemInfo.image != nil {
                 Image(nsImage: itemInfo.image!)
             }
             if itemInfo.extraText != nil {
@@ -211,9 +205,19 @@ struct ItemView: View {
                 ForEach(itemInfo.questions, id: \.self) { question in
                     HStack {
                         switch question {
-                        case .text(let prompt, _, _, let qIndex), .realNumber(let prompt, _, _, let qIndex),.intNumber(let prompt, _, _, let qIndex):
+                        case .text(let prompt, let answers, _, let qIndex):
                             Text(prompt)
-                            TextField("antwoord", text: $answerArray[qIndex])
+                            TextField(answers[0], text: $answerArray[qIndex])
+                                .overlay(Rectangle()
+                                    .stroke(feedback[qIndex], lineWidth: 4))
+                        case  .realNumber(let prompt, let answer, _, let qIndex):
+                            Text(prompt)
+                            TextField(String(answer), text: $answerArray[qIndex])
+                                .overlay(Rectangle()
+                                    .stroke(feedback[qIndex], lineWidth: 4))                        
+                        case .intNumber(let prompt, let answer, _, let qIndex):
+                            Text(prompt)
+                            TextField(String(answer), text: $answerArray[qIndex])
                                 .overlay(Rectangle()
                                     .stroke(feedback[qIndex], lineWidth: 4))
                         case .multipleChoice(prompt: let prompt, options: let options, _, _, .menu, let qIndex):
@@ -249,12 +253,12 @@ struct ItemView: View {
                     feedback = model.feedback
                     answerGiven = true
                 }
-                .disabled(answerGiven)
+                .disabled(answerGiven || itemInfo.questions.isEmpty)
                 .padding()
                 Button("Close") {
                     model.openSheet = false
                 }
-                .disabled(!answerGiven)
+                .disabled(!answerGiven && !itemInfo.questions.isEmpty)
             }
         }
         

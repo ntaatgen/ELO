@@ -652,7 +652,7 @@ class ELOlogic: Codable {
                 }
                 maxScore += points
             case .realNumber(_, answer: let correctAnswer, points: let points, _):
-                if Double(answers[i]) == correctAnswer {
+                if Double(answers[i].replacingOccurrences(of: ",", with: ".")) == correctAnswer {
                     score += points
                     feedback.append(true)
                 } else {

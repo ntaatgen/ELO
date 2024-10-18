@@ -40,6 +40,7 @@ struct ELOmodel {
     
     mutating func createNewStudent(name: String = "NewStudent") {
         let newStudent = Student(name: name, nSkills: logic.nSkills)
+        newStudent.skills = (0..<logic.nSkills).map {_ in 0.1}
         logic.students[name] = newStudent
         logic.studentKeys = [name]
         studentKeys = [name]

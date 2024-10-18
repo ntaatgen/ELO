@@ -12,7 +12,7 @@ import Charts
 struct ELOMainView: View {
     @ObservedObject var model: ELOViewModel
     @State private var pickedTime: Int = 0
-
+    
     func pickerContent() -> some View {
         VStack {
             ForEach(model.timeList, id:\.self) {
@@ -22,7 +22,8 @@ struct ELOMainView: View {
     }
     
     var body: some View {
-//        HStack {
+        //        HStack {
+        GeometryReader { geometry in
             VStack {
                 HStack {
                     Button(action: { model.back() }) {
@@ -55,13 +56,13 @@ struct ELOMainView: View {
                         ForEach(model.timeList, id:\.self) {
                             Text(String($0))
                         }
-//                        pickerContent()
+                        //                        pickerContent()
                     }
                     .pickerStyle(.automatic)
                     .padding()
                     Button(action: { model.run(time: pickedTime) }){
                         Label("Run", systemImage: "play")
-                    }                    
+                    }
                     .padding()
                     Button(action: {model.run(time: nil)}) {
                         Label("Run All", systemImage: "play")
@@ -75,9 +76,9 @@ struct ELOMainView: View {
                     Text("alpha:")
                     TextField("aItems", text: $model.alphaV)
                         .onChange(of: model.alphaV) { model.alphaV = model.changeAItems(model.alphaV) }
-//                    Text("alphaSubjects:")
-//                    TextField("aSubs", text: $model.alphaStudentV)
-//                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
+                    //                    Text("alphaSubjects:")
+                    //                    TextField("aSubs", text: $model.alphaStudentV)
+                    //                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
                     Text("alphaHebb:")
                     TextField("aHebb", text: $model.alphaHebbV)
                         .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}
@@ -86,7 +87,7 @@ struct ELOMainView: View {
                         .onChange(of: model.nSkillsV) { model.nSkillsV = model.changeNSkills(model.nSkillsV)}
                     Spacer()
                 }
-
+                
                 HSplitView {
                     VSplitView {
                         HStack {
@@ -154,16 +155,18 @@ struct ELOMainView: View {
                             }
                         }
                         
-
+                        
                     }
                 }
-        }
+            }
             .sheet(isPresented: $model.openSheet) {
                 if model.queryItem != nil {
                     ItemView(model: model, itemInfo: model.queryItem!, groupsize: model.queryItem!.questions.count)
-                        .frame(minWidth: model.queryItem!.image?.size.width ?? 0, minHeight: model.queryItem!.image?.size.height ?? 0)
+                        .frame(minWidth: geometry.size.width * 0.7)
+                    //                        .frame(minWidth: model.queryItem!.image?.size.width ?? 0, minHeight: model.queryItem!.image?.size.height ?? 0)
                 }
             }
+        }
     }
 }
 

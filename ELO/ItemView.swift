@@ -151,7 +151,11 @@ struct ItemInfo {
                  print("Command \(command)")
                 switch command {
                 case "title": self.title = argument
-                case "text": self.extraText = argument
+                case "text": if self.extraText == nil {
+                    self.extraText = argument
+                } else {
+                    self.extraText = self.extraText! + "\n" + argument
+                }
                 case "question", "text-question": let (question, newIndex) = parseTextQuestion(argument: argument, lines: lines, index: lineIndex + 1, order: questionIndex)
                     lineIndex = newIndex
                     questions.append(question)
@@ -192,14 +196,20 @@ struct ItemView: View {
     var body: some View {
         VStack {
             if itemInfo.title != nil {
-                Text(itemInfo.title!)
-                    .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
+                HStack {
+                    Text(itemInfo.title!)
+                        .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
+                    Spacer()
+                } .padding()
             }
             if itemInfo.image != nil {
                 Image(nsImage: itemInfo.image!)
             }
             if itemInfo.extraText != nil {
-                Text(itemInfo.extraText!)
+                HStack {
+                    Text(itemInfo.extraText!)
+                    Spacer()
+                } .padding()
             }
             VStack {
                 ForEach(itemInfo.questions, id: \.self) { question in
@@ -221,25 +231,30 @@ struct ItemView: View {
                                 .overlay(Rectangle()
                                     .stroke(feedback[qIndex], lineWidth: 4))
                         case .multipleChoice(prompt: let prompt, options: let options, _, _, .menu, let qIndex):
-                            VStack {
-                                Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
-                                    ForEach(options, id:\.self) { label in
-                                        Text(label)
+                            HStack {
+                                VStack {
+                                    Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
+                                        ForEach(options, id:\.self) { label in
+                                            Text(label)
+                                        }
                                     }
-                                }
-                                .overlay(Rectangle()
-                                    .stroke(feedback[qIndex], lineWidth: 1))
-                            }
-                            
-                        case .multipleChoice(prompt: let prompt, options: let options, _, _, .radio, let qIndex):
-                            VStack {
-                                Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
-                                    ForEach(options, id:\.self) { label in
-                                        Text(label)
-                                    }
-                                } .pickerStyle(RadioGroupPickerStyle())
                                     .overlay(Rectangle()
                                         .stroke(feedback[qIndex], lineWidth: 1))
+                                }
+                                Spacer()
+                            }
+                        case .multipleChoice(prompt: let prompt, options: let options, _, _, .radio, let qIndex):
+                            HStack {
+                                VStack {
+                                    Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
+                                        ForEach(options, id:\.self) { label in
+                                            Text(label)
+                                        }
+                                    } .pickerStyle(RadioGroupPickerStyle())
+                                        .overlay(Rectangle()
+                                            .stroke(feedback[qIndex], lineWidth: 1))
+                                }
+                                Spacer()
                             }
                         }
                     }

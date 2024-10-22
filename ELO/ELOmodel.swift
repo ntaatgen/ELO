@@ -44,6 +44,7 @@ struct ELOmodel {
         logic.students[name] = newStudent
         logic.studentKeys = [name]
         studentKeys = [name]
+        selected = 0
     }
     
     mutating func loadData(filePath: URL, add: Bool) {
@@ -164,16 +165,16 @@ struct ELOmodel {
                     }
                 case "alpha","alpha-items":
                     if let num = Double(parts[2]) {
-                        setAItems(value: num)
+                        setAlpha(value: num)
                     } else {
                         addToTrace(s: "Invalid number for set alpha-items")
                     }
-                case "alpha-students":
-                    if let num = Double(parts[2]) {
-                        setASubjects(value: num)
-                    } else {
-                        addToTrace(s: "Invalid number for set alpha-students")
-                    }
+//                case "alpha-students":
+//                    if let num = Double(parts[2]) {
+//                        setASubjects(value: num)
+//                    } else {
+//                        addToTrace(s: "Invalid number for set alpha-students")
+//                    }
                 case "alpha-hebb":
                     if let num = Double(parts[2]) {
                         setAHebb(value: num)
@@ -277,14 +278,14 @@ struct ELOmodel {
         logic.nEpochs = value
     }
     
-    mutating func setAItems(value: Double) {
+    mutating func setAlpha(value: Double) {
         alpha = value
         logic.alpha = value
     }
     
-    func setASubjects(value: Double) {
-        logic.alphaStudents = value
-    }
+//    func setASubjects(value: Double) {
+//        logic.alphaStudents = value
+//    }
     
     func setAHebb(value: Double) {
         logic.alphaHebb = value

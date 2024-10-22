@@ -14,7 +14,7 @@ class ELOViewModel: ObservableObject {
     
     @Published var alphaV = String(ELOlogic.alphaDefault)
     @Published var nSkillsV = String(ELOlogic.nSkillsDefault)
-    @Published var alphaStudentV = String(ELOlogic.alphaStudentsDefault)
+//    @Published var alphaStudentV = String(ELOlogic.alphaStudentsDefault)
     @Published var alphaHebbV = String(ELOlogic.alphaHebbDefault)
     @Published var nEpochsV = String(ELOlogic.epochsDefault)
     @Published var lastLoaded = false { didSet {model.logic.showLastLoadedStudents = lastLoaded}}
@@ -130,6 +130,8 @@ class ELOViewModel: ObservableObject {
     
     func createNewStudent() {
         model.createNewStudent()
+        _ = changeAlpha("0.01")
+        alphaV = "0.01"
         studentMode = true
     }
     
@@ -249,27 +251,27 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-    func changeAItems(_ value:String) -> String {
+    func changeAlpha(_ value:String) -> String {
         if let numval = Double(value) {
-            model.setAItems(value: numval)
-            model.addToTrace(s: "Changing Alpha items to \(numval)")
+            model.setAlpha(value: numval)
+            model.addToTrace(s: "Changing Alpha  to \(numval)")
             return value
         } else {
-            model.addToTrace(s: "Illegal value for Alpha items")
+            model.addToTrace(s: "Illegal value for Alpha")
             return String(model.alpha)
         }
     }
     
-    func changeASubjects(_ value:String) -> String {
-        if let numval = Double(value) {
-            model.setASubjects(value: numval)
-            model.addToTrace(s: "Changing Alpha subjects to \(numval)")
-            return value
-        } else {
-            model.addToTrace(s: "Illegal value for Alpha subjects")
-            return String(model.logic.alphaStudents)
-        }
-    }
+//    func changeASubjects(_ value:String) -> String {
+//        if let numval = Double(value) {
+//            model.setASubjects(value: numval)
+//            model.addToTrace(s: "Changing Alpha subjects to \(numval)")
+//            return value
+//        } else {
+//            model.addToTrace(s: "Illegal value for Alpha subjects")
+//            return String(model.logic.alphaStudents)
+//        }
+//    }
     
     func changeAHebb(_ value:String) -> String {
         if let numval = Double(value) {
@@ -451,7 +453,7 @@ class ELOViewModel: ObservableObject {
     func updateParameters() {
         alphaV = String(model.logic.alpha)
         nSkillsV = String(model.logic.nSkills)
-        alphaStudentV = String(model.logic.alphaStudents)
+//        alphaStudentV = String(model.logic.alphaStudents)
         alphaHebbV = String(model.logic.alphaHebb)
         nEpochsV = String(model.logic.nEpochs)
         lastLoaded = model.logic.showLastLoadedStudents

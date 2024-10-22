@@ -69,7 +69,7 @@ struct ModelData: Identifiable, Codable {
 class ELOlogic: Codable {
     static let alphaDefault = 0.001
     static let nSkillsDefault = 4
-    static let alphaStudentsDefault = 0.05
+//    static let alphaStudentsDefault = 0.05
     static let alphaHebbDefault = 1.0
     static let epochsDefault = 1000
     var includeGM = false
@@ -78,7 +78,7 @@ class ELOlogic: Codable {
     static let maxSkills = 8
     var nEpochs = ELOlogic.epochsDefault
     var alpha = ELOlogic.alphaDefault
-    var alphaStudents = ELOlogic.alphaStudentsDefault
+//    var alphaStudents = ELOlogic.alphaStudentsDefault
     var alphaHebb = ELOlogic.alphaHebbDefault
     var skillThreshold = 0.5
     static let nItems = 16

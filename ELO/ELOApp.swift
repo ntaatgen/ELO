@@ -59,6 +59,7 @@ struct ELOApp: App {
                 Button("New Student") {
                     model.createNewStudent()
                 }
+                Divider()
             }
         }
     }

@@ -75,7 +75,7 @@ struct ELOMainView: View {
                         .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
                     Text("alpha:")
                     TextField("aItems", text: $model.alphaV)
-                        .onChange(of: model.alphaV) { model.alphaV = model.changeAItems(model.alphaV) }
+                        .onChange(of: model.alphaV) { model.alphaV = model.changeAlpha(model.alphaV) }
                     //                    Text("alphaSubjects:")
                     //                    TextField("aSubs", text: $model.alphaStudentV)
                     //                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}

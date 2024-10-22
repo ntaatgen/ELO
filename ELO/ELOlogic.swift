@@ -36,6 +36,7 @@ class Item: Codable {
     var mistakePm: Double = 0
     var guessPv: Double = 0
     var mistakePv: Double = 0
+    var executable: Bool = false
     init(name: String, nSkills: Int) {
         self.name = name
         self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
@@ -148,7 +149,7 @@ class ELOlogic: Codable {
             }
             let student = parts[0].replacingOccurrences(of: "\"", with: "")
             let item = parts[1].replacingOccurrences(of: "\"", with: "")
-            guard let score = Double(parts[2]) else {
+            guard let score = Double(parts[2].replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: ",", with: ".")) else {
                 print("Score is not a number")
                 continue
             }
@@ -159,8 +160,10 @@ class ELOlogic: Codable {
             }
             if items[item] == nil {
                 let newItem = Item(name: item, nSkills: nSkills)
+                let url = filePath.deletingLastPathComponent().appendingPathComponent("items/" + item + ".txt")
+                newItem.executable = FileManager.default.fileExists(atPath: url.path)
                 items[item] = newItem
-                print("Adding \(item)")
+                print("Adding \(item) executable = \(newItem.executable)")
             }
             let newScore = Score(student: students[student]!, item: items[item]!, score: score)
             if parts.count == 4 {

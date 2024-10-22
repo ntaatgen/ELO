@@ -369,15 +369,17 @@ struct ELOmodel {
         for (_, node) in primGraphData!.nodes {
             var s: [NodeItem] = []
             for item in node.items {
-                if !itemScores.isEmpty {
-//                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
-                    if let itemScore = itemScores[item.name] {
-                        s.append(NodeItem(name: item.name, color: itemScore, recommended: false))
+                if !logic.studentMode || item.executable {
+                    if !itemScores.isEmpty {
+                        //                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                        if let itemScore = itemScores[item.name] {
+                            s.append(NodeItem(name: item.name, color: itemScore, recommended: false))
+                        } else {
+                            s.append(NodeItem(name: item.name, color: nil, recommended: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                        }
                     } else {
-                        s.append(NodeItem(name: item.name, color: nil, recommended: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                        s.append(NodeItem(name: item.name, color: nil, recommended: false))
                     }
-                } else {
-                    s.append(NodeItem(name: item.name, color: nil, recommended: false))
                 }
             }
             var nodeScore: Double? = 0.0

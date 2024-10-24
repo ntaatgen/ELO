@@ -19,7 +19,7 @@ enum Question: Hashable {
     case intNumber(prompt: String, answer: Int, points: Double, index: Int)
 }
 
-struct ItemInfo {
+struct ItemInfo: Hashable {
     var title: String?
     var image: NSImage?
     var extraText: String?
@@ -190,6 +190,7 @@ struct ItemView: View {
     var model: ELOViewModel
     var itemInfo: ItemInfo
     var groupsize: Int
+    var active: Bool
     @State var feedback = [Color](repeating: Color.white, count: 10)
     @State var answerArray = [String](repeating: "", count: 10)
     @State var answerGiven = false
@@ -262,18 +263,20 @@ struct ItemView: View {
                 }
                 
             }.padding()
-            HStack {
-                Button("Submit") {
-                    model.scoreSheet(answers: answerArray)
-                    feedback = model.feedback
-                    answerGiven = true
+            if active {
+                HStack {
+                    Button("Submit") {
+                        model.scoreSheet(answers: answerArray)
+                        feedback = model.feedback
+                        answerGiven = true
+                    }
+                    .disabled(answerGiven || itemInfo.questions.isEmpty)
+                    .padding()
+                    Button("Close") {
+                        model.openSheet = false
+                    }
+                    .disabled(!answerGiven && !itemInfo.questions.isEmpty)
                 }
-                .disabled(answerGiven || itemInfo.questions.isEmpty)
-                .padding()
-                Button("Close") {
-                    model.openSheet = false
-                }
-                .disabled(!answerGiven && !itemInfo.questions.isEmpty)
             }
         }
         

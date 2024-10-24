@@ -145,12 +145,10 @@ struct ELOMainView: View {
                             Text(model.trace)
                                 .frame(maxWidth: .infinity, minHeight: 100, maxHeight: .infinity)
                         }
-                        if !model.currentItemImages.isEmpty {
+                        if !model.currentItemInfos.isEmpty {
                             ScrollView {
-                                ForEach(model.currentItemImages, id:\.self) {img in
-                                    Image(nsImage: img)
-                                        .resizable()
-                                        .scaledToFit()
+                                ForEach(model.currentItemInfos, id:\.self) {item in
+                                    ItemView(model: model, itemInfo: item, groupsize: item.questions.count, active: false)
                                 }
                             }
                         }
@@ -161,7 +159,7 @@ struct ELOMainView: View {
             }
             .sheet(isPresented: $model.openSheet) {
                 if model.queryItem != nil {
-                    ItemView(model: model, itemInfo: model.queryItem!, groupsize: model.queryItem!.questions.count)
+                    ItemView(model: model, itemInfo: model.queryItem!, groupsize: model.queryItem!.questions.count, active: true)
                         .frame(minWidth: geometry.size.width * 0.7)
                     //                        .frame(minWidth: model.queryItem!.image?.size.width ?? 0, minHeight: model.queryItem!.image?.size.height ?? 0)
                 }

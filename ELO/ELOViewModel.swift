@@ -25,7 +25,7 @@ class ELOViewModel: ObservableObject {
         }
         model.changeStudentMode(studentMode)
         model.updatePrimViewData()}}
-    @Published var currentItemImages: [NSImage] = []
+    @Published var currentItemInfos: [ItemInfo] = []
     @Published var openSheet = false
     @Published var sheetImage: NSImage? = nil
     @Published var queryItem: ItemInfo? = nil
@@ -85,24 +85,24 @@ class ELOViewModel: ObservableObject {
     
     func setImage(name: String, node: UUID) {
         guard lastLoadPath != nil else { return }
-        let url = lastLoadPath!.appendingPathComponent("images/" + name + ".png")
-        if let img = NSImage(contentsOf: url) {
-            if node == lastClickedNode {
-                currentItemImages.append(img)
-            } else {
-                lastClickedNode = node
-                currentItemImages = [img]
-            }
+        let item = ItemInfo(name: name, loadPath: lastLoadPath!)
+        guard item.image != nil || item.questions != [] else {return}
+        
+        if node == lastClickedNode {
+            currentItemInfos.append(item)
+        } else {
+            lastClickedNode = node
+            currentItemInfos = [item]
         }
-        if currentItemImages.count > maxImages {
-            currentItemImages.removeFirst()
+        if currentItemInfos.count > maxImages {
+            currentItemInfos.removeFirst()
         }
     }
     
     func setImageToCurrentProblem() {
         if model.selected! < model.sortedKeys.count {
             let imageName = model.sortedKeys[model.selected!]
-            currentItemImages = []
+            currentItemInfos = []
             setImage(name: imageName, node: UUID())
         }
     }
@@ -314,7 +314,7 @@ class ELOViewModel: ObservableObject {
         model.reset()
         primViewCalculateGraph()
         updateParameters()
-        currentItemImages = []
+        currentItemInfos = []
     }
     
     func run(time: Int?) {

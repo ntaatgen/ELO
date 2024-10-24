@@ -19,7 +19,7 @@ enum Question: Hashable {
     case intNumber(prompt: String, answer: Int, points: Double, index: Int)
 }
 
-struct ItemInfo {
+struct ItemInfo: Hashable {
     var title: String?
     var image: NSImage?
     var extraText: String?
@@ -190,6 +190,7 @@ struct ItemView: View {
     var model: ELOViewModel
     var itemInfo: ItemInfo
     var groupsize: Int
+    var active: Bool
     @State var feedback = [Color](repeating: Color.white, count: 10)
     @State var answerArray = [String](repeating: "", count: 10)
     @State var answerGiven = false
@@ -233,7 +234,8 @@ struct ItemView: View {
                         case .multipleChoice(prompt: let prompt, options: let options, _, _, .menu, let qIndex):
                             HStack {
                                 VStack {
-                                    Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
+                                    Text(prompt)
+                                    Picker(selection: $answerArray[qIndex], label: Text("")) {
                                         ForEach(options, id:\.self) { label in
                                             Text(label)
                                         }
@@ -246,7 +248,8 @@ struct ItemView: View {
                         case .multipleChoice(prompt: let prompt, options: let options, _, _, .radio, let qIndex):
                             HStack {
                                 VStack {
-                                    Picker(selection: $answerArray[qIndex], label: Text(prompt)) {
+                                    Text(prompt)
+                                    Picker(selection: $answerArray[qIndex], label: Text("")) {
                                         ForEach(options, id:\.self) { label in
                                             Text(label)
                                         }
@@ -262,18 +265,20 @@ struct ItemView: View {
                 }
                 
             }.padding()
-            HStack {
-                Button("Submit") {
-                    model.scoreSheet(answers: answerArray)
-                    feedback = model.feedback
-                    answerGiven = true
+            if active {
+                HStack {
+                    Button("Submit") {
+                        model.scoreSheet(answers: answerArray)
+                        feedback = model.feedback
+                        answerGiven = true
+                    }
+                    .disabled(answerGiven || itemInfo.questions.isEmpty)
+                    .padding()
+                    Button("Close") {
+                        model.openSheet = false
+                    }
+                    .disabled(!answerGiven && !itemInfo.questions.isEmpty)
                 }
-                .disabled(answerGiven || itemInfo.questions.isEmpty)
-                .padding()
-                Button("Close") {
-                    model.openSheet = false
-                }
-                .disabled(!answerGiven && !itemInfo.questions.isEmpty)
             }
         }
         

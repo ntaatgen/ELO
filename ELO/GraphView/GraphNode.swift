@@ -25,7 +25,7 @@ struct GraphNode: View {
                 .background(GraphNodeShape(node: node).foregroundColor(node.z != nil ? gradientColor(value: node.z!) : .gray))
             Text(node.name)
                 .font(node.skillNode == false && node.taskNode == false ? .caption2 : .title2)
-                .position(x: CGFloat(node.x)/300 * geometry.size.width,
+                .position(x: CGFloat(node.x)/300 * geometry.size.width - 0.6 * vertexSize,
                           y: CGFloat(node.y)/300 * geometry.size.height + 1.5 * vertexSize)
             if selectable {
                 List {

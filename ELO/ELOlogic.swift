@@ -321,37 +321,38 @@ class ELOlogic: Codable {
     ///   - it: The item
     ///   - leaveOut: Optionally: leave one vector item out, necessary for calculating the gradient
     /// - Returns: The expected score.
-    func expectedScores(s: Student, it: Item, beta: Double) -> (Double, [Double], [Double]) {
-        var p: Double = 1
-        var singles: [Double] = []
-        var leaveOut: [Double] = []
-        var totalAdjustedSkills = 0.0
+//    func expectedScores(s: Student, it: Item, beta: Double) -> (Double, [Double], [Double]) {
+//        var p: Double = 1
+//        var singles: [Double] = []
+//        var leaveOut: [Double] = []
+//        var totalAdjustedSkills = 0.0
+////        for i in 0..<nSkills {
+////            totalAdjustedSkills +=  it.skills[i]
+////        }
+////        totalAdjustedSkills = totalAdjustedSkills * beta / Double(nSkills)
 //        for i in 0..<nSkills {
-//            totalAdjustedSkills +=  it.skills[i]
+//            let skillP = s.skills[i] * it.skills[i] + (1 - it.skills[i])
+//            singles.append(skillP)
+//            p = p * skillP
 //        }
-//        totalAdjustedSkills = totalAdjustedSkills * beta / Double(nSkills)
-        for i in 0..<nSkills {
-            let skillP = s.skills[i] * it.skills[i] + (1 - it.skills[i])
-            singles.append(skillP)
-            p = p * skillP
-        }
-        for i in 0..<nSkills {
-            if singles[i] != 0 {
-                leaveOut.append(p / singles[i])
-            } else {
-                leaveOut.append(p)
-            }
-        }
-        return (p, singles, leaveOut)
-    }
+//        for i in 0..<nSkills {
+//            if singles[i] != 0 {
+//                leaveOut.append(p / singles[i])
+//            } else {
+//                leaveOut.append(p)
+//            }
+//        }
+//        return (p, singles, leaveOut)
+//    }
     
     func expectedScore(s: Student, it: Item, beta: Double, leaveOut: Int = -1) -> Double {
         var p: Double = 1
-        var totalAdjustedSkills = 0.0
+//        var totalAdjustedSkills = 0.0
         for i in 0..<nSkills {
             if i != leaveOut {
                 //            let skillP = s.skills[i] * it.skills[i] + (1 - it.skills[i])
-                let skillP = s.skills[i] > it.skills[i] ? 1.0 : 1 - (it.skills[i] - s.skills[i])
+//                let skillP = s.skills[i] > it.skills[i] ? 1.0 : 1 - (it.skills[i] - s.skills[i])
+                let skillP = -0.4 * pow(s.skills[i] - it.skills[i],2) + 0.5 * (s.skills[i] - it.skills[i]) + 0.9
                 p = p * skillP
             }
         }
@@ -432,8 +433,9 @@ class ELOlogic: Codable {
 //            }
 //            let itemGradient = -2 * error * ((1 - beta) * s.skills[i] - 1) * expectedWithoutSkill[i]
 //            let itemGradient = -2 * error * ((1 - beta) * s.skills[i] - 1) * expectedWithoutSkill[i]
-            let itemGradient = -2 * error * (s.skills[i] > it.skills[i] ? 0 : -1 * expectedWithoutSkill[i])
+//            let itemGradient = -2 * error * (s.skills[i] > it.skills[i] ? 0 : -1 * expectedWithoutSkill[i])
 //            let itemGradient = -2 * error * (s.skills[i] - 1) / Double(nSkills)
+            let itemGradient = -2 * error * (-0.5 + 0.8 * (s.skills[i] - it.skills[i])) * expectedWithoutSkill[i]
             it.m[i] = beta1 * it.m[i] + (1 - beta1) * itemGradient
             it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itemGradient, 2)
             
@@ -457,7 +459,8 @@ class ELOlogic: Codable {
 //            let part2 = (beta * (n - 1) / n) * summedExpectsWithoutI
 //            let studentGradient = -2 * error * expected * (part1 + part2)
 //            let studentGradient = -2 * error * ((1 - beta) * it.skills[i]) * expectedWithoutSkill[i]
-            let studentGradient = -2 * error * (s.skills[i] > it.skills[i] ? 0 : expectedWithoutSkill[i])
+//            let studentGradient = -2 * error * (s.skills[i] > it.skills[i] ? 0 : expectedWithoutSkill[i])
+            let studentGradient = -2 * error * (-0.8 * (s.skills[i] - it.skills[i]) + 0.5) * expectedWithoutSkill[i]
 //            let studentGradient = -2 * error * it.skills[i] / Double(nSkills)
             s.m[i] = beta1 * s.m[i] + (1 - beta1) * studentGradient
             s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(studentGradient, 2)
@@ -481,67 +484,6 @@ class ELOlogic: Codable {
         it.experiences += 1 // redundant
 
     }
-
-    /// Update the model based on a single datapoint using Adam optimization
-    /// This version also takes into account the probability of lucky guesses and mistakes
-    /// - Parameters:
-    ///   - score: The datapoint used for the update
-    ///   - alpha: The alpha parameter for Adam, 0.001 by default
-    ///   - beta1: The beta1 parameter for Adam, 0.9 by default
-    ///   - beta2: The beta2 parameter for Adam, 0.99 by default
-    ///   - epsilon: The epsilon parameter, 1e-8 by default
-    ///   - alphaHebb: Learning multiplier (with alpha) to control the Hebbian learning.
-//    func oneItemAdamGF(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8, alphaHebb: Double = 1.0) {
-//        let s = students[score.student]!
-//        let it = items[score.item]!
-//        let expectedS = expectedScore(s: s, it: it)
-//        let error = it.guessP + (1 - it.guessP) * (1 - it.mistakeP) * expectedS - score.score
-//        var expectedWithoutSkill: [Double] = []
-//        for i in 0..<nSkills {
-//            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
-//        }
-//        for i in 0..<nSkills {
-//            it.m[i] = beta1 * it.m[i] + (1 - beta1) * (1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error
-//            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow((1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error, 2)
-//            let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
-//            let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
-//            
-//            s.m[i] = beta1 * s.m[i] + (1 - beta1) * (1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * it.skills[i] * error
-//            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow((1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * it.skills[i] * error, 2)
-//            let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
-//            let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
-//            
-//            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon)) }
-//            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
-//        }
-//        if !studentMode {
-//            it.guessPm = beta1 * it.guessPm + (1 - beta1) * (1 - expectedS + it.mistakeP * expectedS) * error
-//            it.guessPv = beta2 * it.guessPv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
-//            let mhatG = it.guessPm / (1 - pow(beta1, Double(it.t)))
-//            let vhatG = it.guessPv / (1 - pow(beta2, Double(it.t)))
-//            it.guessP = boundedAdd(it.guessP, -alpha * mhatG / (sqrt(vhatG) + epsilon), upb: 0.25)
-//            
-//            it.mistakePm = beta1 * it.mistakePm + (1 - beta1) * (-expectedS + it.guessP * expectedS) * error
-//            it.mistakePv = beta2 * it.mistakePv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
-//            let mhatM = it.mistakePm / (1 - pow(beta1, Double(it.t)))
-//            let vhatM = it.mistakePv / (1 - pow(beta2, Double(it.t)))
-//            it.mistakeP = boundedAdd(it.mistakeP, -alpha * mhatM / (sqrt(vhatM) + epsilon), upb: 0.25)
-//            
-//            
-//            it.t += 1
-//        }
-//        s.t += 1
-//        /// Add some "Hebbian" learning
-//        if score.score > 0.7 {
-//            for i in 0..<nSkills {
-//                if it.skills[i] < s.skills[i] {
-//                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
-//                }
-//            }
-//        }
-//        it.experiences += 1
-//
-//    }
 
     
     

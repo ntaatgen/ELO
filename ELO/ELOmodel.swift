@@ -355,7 +355,7 @@ struct ELOmodel {
     }
     
     func itemScore(item: Item, student: Student) -> Bool {
-        let expectedScore = logic.expectedScore(s: student, it: item, withGuessAndMistake: logic.includeGM)
+        let expectedScore = logic.expectedScore(s: student, it: item)
         return expectedScore > 0.5 && expectedScore < 0.8
     }
         

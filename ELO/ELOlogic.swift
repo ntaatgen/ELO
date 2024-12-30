@@ -124,8 +124,8 @@ class ELOlogic: Codable {
     var feedback: [Bool] = []
     var studentMode: Bool = false
     var pre = PreReq(nSkills: nSkillsDefault)
-    static let itemScoreMultiplier = 5.0
-    static let preAlphaMultiplier = 3.0
+    static let itemScoreMultiplier = 1.0
+    static let preAlphaMultiplier = 1.0
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -318,7 +318,7 @@ class ELOlogic: Codable {
                 for i in 0..<nSkills {
                     result = result && (s.realSkills[i] == 1 || it.realSkills[i] == 0)
                 }
-                let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.6...1.0) : Double.random(in: 0.0...0.4)))
+                let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.96...1.0) : Double.random(in: 0.0...0.05)))
 //                                let score = Score(student: s, item: it, score: (result ? 1.0 : 0.0))
                 scores.append(score)
             }
@@ -465,8 +465,6 @@ class ELOlogic: Codable {
             let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
-            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon)) }
-            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
 //            it.skills[i] = boundedAdd(it.skills[i], -(alpha / log(Double(it.t + 1))) * mhatI / (sqrt(vhatI) + epsilon))
 //            s.skills[i] = boundedAdd(s.skills[i],  -(alpha / log(Double(s.t + 1))) * mhatS / (sqrt(vhatS) + epsilon))
             for j in 0..<nSkills {
@@ -480,7 +478,8 @@ class ELOlogic: Codable {
                     pre.t[j][i] += 1.0
                 }
             }
-            
+            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha  * mhatI / (sqrt(vhatI) + epsilon)) }
+            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
         }
         it.t += 1
         s.t += 1

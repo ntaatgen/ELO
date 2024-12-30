@@ -342,6 +342,13 @@ class ELOViewModel: ObservableObject {
     
     @objc func endRun(_ notification: Notification) {
         model.addToTrace(s: "Done running")
+        for i in 0..<model.logic.nSkills {
+            for j in 0..<model.logic.nSkills {
+                if i != j {
+                    model.addToTrace(s: "Skill \(j) supports \(i) with \(model.logic.pre.pre[j][i])")
+                }
+            }
+        }
         model.addToTrace(s: "Avg. error = \(model.logic.calculateError())")
         if model.selectedGroup == .items {
             setImageToCurrentProblem()

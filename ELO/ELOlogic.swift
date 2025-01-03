@@ -71,7 +71,7 @@ class ELOlogic: Codable {
     static let alphaDefault = 0.001
     static let nSkillsDefault = 4
 //    static let alphaStudentsDefault = 0.05
-    static let alphaHebbDefault = 1.0
+    static let alphaHebbDefault = 0.0
     static let epochsDefault = 1000
     var includeGM = false
     var linearLoss = false
@@ -393,31 +393,36 @@ class ELOlogic: Codable {
     func oneItemAdam(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8, alphaHebb: Double = 1.0) {
         let s = students[score.student]!
         let it = items[score.item]!
-        let error = expectedScore(s: s, it: it) - score.score
+        let error = score.score - expectedScore(s: s, it: it)
         var expectedWithoutSkill: [Double] = []
         for i in 0..<nSkills {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
         }
         for i in 0..<nSkills {
             if linearLoss {
-                it.m[i] = beta1 * it.m[i] + (1 - beta1) * expectedWithoutSkill[i] * (s.skills[i] - 1) * sign(error)
-                it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(expectedWithoutSkill[i] * (s.skills[i] - 1) * sign(error), 2)
+                let itGradient = -2 * sign(error) * expectedWithoutSkill[i] * (s.skills[i] - 1)
+                it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
+                it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
             } else {
-                it.m[i] = beta1 * it.m[i] + (1 - beta1) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error
-                it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(expectedWithoutSkill[i] * (s.skills[i] - 1) * error, 2)
+                let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1)
+                it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
+                it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
             }
-
             
             let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
             let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
-            if linearLoss {
-                s.m[i] = beta1 * s.m[i] + (1 - beta1) * expectedWithoutSkill[i] * it.skills[i] * sign(error)
-                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(expectedWithoutSkill[i] * it.skills[i] * sign(error), 2)
-            } else {
-                s.m[i] = beta1 * s.m[i] + (1 - beta1) * expectedWithoutSkill[i] * it.skills[i] * error
-                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(expectedWithoutSkill[i] * it.skills[i] * error, 2)
-            }
+            
+//            print("sGradio for skill \(i) is \(sGradient)")
 
+            if linearLoss {
+                let sGradient = -2 * sign(error) * expectedWithoutSkill[i] * it.skills[i]
+                s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
+                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
+            } else {
+                let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
+                s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
+                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
+            }
 
             let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))

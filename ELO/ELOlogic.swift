@@ -26,6 +26,7 @@ class Item: Codable {
     var name: String
     var realSkills: [Double] = []
     var skills: [Double] = []
+    var eSkills: [Double] = []
     var experiences = 0
     var m: [Double] = []
     var v: [Double] = []
@@ -39,6 +40,7 @@ class Item: Codable {
     var executable: Bool = false
     init(name: String, nSkills: Int) {
         self.name = name
+        self.eSkills = (0..<nSkills).map { _ in 0 }
         self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
         self.m = (0..<nSkills).map {_ in 0 }
         self.v = (0..<nSkills).map {_ in 0 }
@@ -103,6 +105,7 @@ class ELOlogic: Codable {
     var showLastLoadedStudents = false
     var feedback: [Bool] = []
     var studentMode: Bool = false
+    var avgSkill: [Double] = []
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -117,6 +120,7 @@ class ELOlogic: Codable {
         lineCounter = 0
         counter = 0
         synthetic = false
+        avgSkill = (0..<nSkills).map { _ in 0.2 }
         addDataWithURL(filePath)
     }
     
@@ -195,6 +199,7 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
+        avgSkill = (0..<nSkills).map { _ in 0.2 }
     }
     
     /// Convert an integer to a binary representation
@@ -233,6 +238,7 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
+        avgSkill = (0..<nSkills).map { _ in 0.2 }
         for i in 0..<ELOlogic.nItems {
             
             let j = Item(name: String(format: "%03d", i), nSkills: nSkills)
@@ -274,8 +280,9 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
+        avgSkill = (0..<nSkills).map { _ in 0.2 }
 //        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
-        let itemSet = [0, 0, 0, 2, 2, 2, 2, 6, 6, 10, 10, 14, 14, 14, 11, 11, 15, 15, 15]
+        let itemSet = [0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 6, 6, 10, 10, 14, 14, 14, 11, 11, 15, 15, 15]
         for i in 0..<itemSet.count {
             let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]), nSkills: nSkills)
             j.realSkills = integerToBinaryArray(itemSet[i], length: nSkills)
@@ -295,7 +302,7 @@ class ELOlogic: Codable {
                 for i in 0..<nSkills {
                     result = result && (s.realSkills[i] == 1 || it.realSkills[i] == 0)
                 }
-                let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.6...1.0) : Double.random(in: 0.0...0.4)))
+                let score = Score(student: s, item: it, score: (result ? Double.random(in: 0.7...1.0) : Double.random(in: 0.0...0.4)))
 //                                let score = Score(student: s, item: it, score: (result ? 1.0 : 0.0))
                 scores.append(score)
             }
@@ -434,14 +441,26 @@ class ELOlogic: Codable {
         }
         it.t += 1
         s.t += 1
-        /// Add some "Hebbian" learning
-        if score.score > 0.7 {
+        /// update average score
+        for i in 0..<nSkills {
+            avgSkill[i] = 0.99 * avgSkill[i] + 0.01 * s.skills[i]
+        }
+        /// Update eSkills
+        if score.score >= 0.7 {
             for i in 0..<nSkills {
-                if it.skills[i] < s.skills[i] {
-                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
-                }
+                let update = (s.skills[i] - avgSkill[i]) / (1 - avgSkill[i] + epsilon)
+                it.eSkills[i] = 0.99 * it.eSkills[i] + 0.01 * update
             }
         }
+        
+        /// Add some "Hebbian" learning
+//        if score.score > 0.7 {
+//            for i in 0..<nSkills {
+//                if it.skills[i] < s.skills[i] {
+//                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
+//                }
+//            }
+//        }
         it.experiences += 1 // redundant
 
     }
@@ -516,7 +535,7 @@ class ELOlogic: Codable {
         var count: Int = 0
         for score in scores {
             if !showLastLoadedStudents || lastLoadedStudents.contains(score.student) {
-                error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!, withGuessAndMistake: includeGM))
+                error += pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!, withGuessAndMistake: includeGM),2)
                 count += 1
             }
         }
@@ -535,7 +554,7 @@ class ELOlogic: Codable {
                     for key in sortedKeys {
                         if items[key]!.experiences > 0 {
                             for skills in 0..<nSkills {
-                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.eSkills[skills])
                                 results.append(dp)
                             }
                             if includeGM {

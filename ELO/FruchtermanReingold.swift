@@ -191,7 +191,7 @@ class FruchtermanReingold {
     
     func itemToSkillString(item: Item, model: ELOlogic) -> String {
         var s = ""
-        for x in item.skills {
+        for x in item.eSkills {
             if x >= model.skillThreshold {
                 s = s + "1"
             } else {
@@ -203,10 +203,10 @@ class FruchtermanReingold {
     
     func itemHigherThan(item1: Item, item2: Item, model: ELOlogic) -> Bool {
         var b = false
-        for i in 0..<item1.skills.count {
-            if item1.skills[i] < model.skillThreshold && item2.skills[i] >= model.skillThreshold {
+        for i in 0..<item1.eSkills.count {
+            if item1.eSkills[i] < model.skillThreshold && item2.eSkills[i] >= model.skillThreshold {
                 return false
-            } else if item1.skills[i] >= model.skillThreshold && item2.skills[i] < model.skillThreshold {
+            } else if item1.eSkills[i] >= model.skillThreshold && item2.eSkills[i] < model.skillThreshold {
                 b = true
             }
         }

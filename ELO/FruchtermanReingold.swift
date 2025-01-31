@@ -102,8 +102,8 @@ class FruchtermanReingold {
             var maxRank = 0.0
             if randomInit {
                 for (_,node) in self.nodes {
+                    node.x = Double(Int(arc4random_uniform(UInt32(self.W))))
                     if !node.fixed {
-                        node.x = Double(Int(arc4random_uniform(UInt32(self.W))))
                         node.y = Double(Int(arc4random_uniform(UInt32(self.H))))
                         maxRank = max(maxRank,node.rank)
                     }
@@ -151,10 +151,10 @@ class FruchtermanReingold {
                 for (_,node) in self.nodes {
                     //                                println("\(node.name) at (\(node.x),\(node.y))")
                     //                println("\(node.name) delta (\(node.dx),\(node.dy))")
+                    node.x += (node.dx / self.vectorLength(node.dx, y: node.dy)) * min(abs(node.dx), temperature)
+                    node.x = min(self.W, max(0, node.x))
                     if !node.fixed {
-                        node.x += (node.dx / self.vectorLength(node.dx, y: node.dy)) * min(abs(node.dx), temperature)
                         node.y += (node.dy / self.vectorLength(node.dx, y: node.dy)) * min(abs(node.dy), temperature)
-                        node.x = min(self.W, max(0, node.x))
                         node.y = min(self.H, max(0, node.y))
                         //                println("\(node.name) at (\(node.x),\(node.y))")
                         if node.rank > 0.1 {
@@ -306,6 +306,24 @@ class FruchtermanReingold {
         return nil
     }
     
+    func hasOutgoingEdge(node: Node) -> Bool {
+        for edge in edges {
+            if edge.from === node {
+                return true
+            }
+        }
+        return false
+    }
+    
+    func hasIncomingEdge(node: Node) -> Bool {
+        for edge in edges {
+            if edge.to === node {
+                return true
+            }
+        }
+        return false
+    }
+    
     func setUpGraph(_ model: ELOlogic) {
         guard model.items.count != 0 else { return }
         model.updateAverages()
@@ -326,15 +344,15 @@ class FruchtermanReingold {
                 newNode.labelVisible = true
                 newNode.items = [item]
                 newNode.skillNode = true
-                if !s.contains("1") { // all zeros, so bottom node
-                    newNode.fixed = true
-                    newNode.y = H - 30
-                    newNode.x = W/2
-                } else if !s.contains("0") { // all ones
-                    newNode.fixed = true
-                    newNode.y = 20
-                    newNode.x = W/2
-                }
+//                if !s.contains("1") { // all zeros, so bottom node
+//                    newNode.fixed = true
+//                    newNode.y = H - 30
+//                    newNode.x = W/2
+//                } else if !s.contains("0") { // all ones
+//                    newNode.fixed = true
+//                    newNode.y = 20
+//                    newNode.x = W/2
+//                }
 
                 nodes[s] = newNode
             }
@@ -376,6 +394,15 @@ class FruchtermanReingold {
                 }
             }
             
+        }
+        for (_,node) in nodes {
+            if !hasIncomingEdge(node: node) {
+                node.fixed = true
+                node.y = H - 30
+            } else if !hasOutgoingEdge(node: node) {
+                node.fixed = true
+                node.y = 20
+            }
         }
         keys = Array(nodes.keys)
         nodeToIndex = [:]

@@ -30,6 +30,7 @@ class ELOViewModel: ObservableObject {
     @Published var sheetImage: NSImage? = nil
     @Published var queryItem: ItemInfo? = nil
     @Published var feedback = [Color](repeating: Color.white, count: 10)
+    @Published var disableRun = false
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
@@ -318,6 +319,7 @@ class ELOViewModel: ObservableObject {
     }
     
     func run(time: Int?) {
+        disableRun = true
         model.run(time: time)
         primViewCalculateGraph()
         
@@ -346,6 +348,7 @@ class ELOViewModel: ObservableObject {
         if model.selectedGroup == .items {
             setImageToCurrentProblem()
         }
+        disableRun = false
     }
     
     var results: [ModelData] {

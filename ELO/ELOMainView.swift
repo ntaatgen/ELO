@@ -63,10 +63,12 @@ struct ELOMainView: View {
                     Button(action: { model.run(time: pickedTime) }){
                         Label("Run", systemImage: "play")
                     }
+                    .disabled(model.disableRun)
                     .padding()
                     Button(action: {model.run(time: nil)}) {
                         Label("Run All", systemImage: "play")
                     }
+                    .disabled(model.disableRun)
                     .padding()
                 }
                 HStack {

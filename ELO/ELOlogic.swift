@@ -365,30 +365,21 @@ class ELOlogic: Codable {
     }
     
 
-    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.00) {
-        let s = students[score.student]!
-        let it = items[score.item]!
-        let error = score.score - expectedScore(s: s, it: it)
-        var expectedWithoutSkill: [Double] = []
-        for i in 0..<nSkills {
-            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
-        }
-        for i in 0..<nSkills {
-            it.skills[i] = boundedAdd(it.skills[i], alphaI * expectedWithoutSkill[i] * error * (s.skills[i] - 1), upb: 1.0)
-            s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i],lwb: 0.0)
-        }
-        /// Add some "Hebbian" learning
-        if score.score > 0.7 {
-            for i in 0..<nSkills {
-                if it.skills[i] < s.skills[i] {
-                    it.skills[i] += alphaI * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5) * 2
-                }
-            }
-        }
-        
-        it.experiences += 1
-    }
-    
+//    func oneItem(score:Score, alphaS: Double = 0.5, alphaI: Double = 0.00) {
+//        let s = students[score.student]!
+//        let it = items[score.item]!
+//        let error = score.score - expectedScore(s: s, it: it)
+//        var expectedWithoutSkill: [Double] = []
+//        for i in 0..<nSkills {
+//            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+//        }
+//        for i in 0..<nSkills {
+//            it.skills[i] = boundedAdd(it.skills[i], alphaI * expectedWithoutSkill[i] * error * (s.skills[i] - 1), upb: 1.0)
+//            s.skills[i] = boundedAdd(s.skills[i], alphaS * expectedWithoutSkill[i] * error * it.skills[i],lwb: 0.0)
+//        }
+//        it.experiences += 1
+//    }
+//    
     func sign(_ x: Double) -> Double {
         return x > 0 ? 1 : (x < 0 ? -1 : 0)
     }
@@ -434,27 +425,34 @@ class ELOlogic: Codable {
                 it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
                 it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
             }
-            
+                        
             let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
             let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
             
 //            print("sGradio for skill \(i) is \(sGradient)")
 
-            if linearLoss {
-                let sGradient = -2 * sign(error) * expectedWithoutSkill[i] * it.skills[i]
-                s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
-                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
-            } else {
-                let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
-                s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
-                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
-            }
+//            if linearLoss {
+//                let sGradient = -2 * sign(error) * expectedWithoutSkill[i] * it.skills[i]
+//                s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
+            //                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
+            //            } else {
+            let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
+            s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
+            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
+            //            }
 
             let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
-            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon)) }
-            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
+            if !studentMode {
+                it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+                s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
+            } else {
+                s.skills[i] = boundedAdd(s.skills[i], -alpha * sGradient)
+            }
+            
+            if !studentMode {  }
+            
 //            it.skills[i] = boundedAdd(it.skills[i], -(alpha / log(Double(it.t + 1))) * mhatI / (sqrt(vhatI) + epsilon))
 //            s.skills[i] = boundedAdd(s.skills[i],  -(alpha / log(Double(s.t + 1))) * mhatS / (sqrt(vhatS) + epsilon))
         }
@@ -748,7 +746,7 @@ class ELOlogic: Codable {
         scores.append(newScore)
         print(students[student]!.skills)
         for _ in 0..<10 {
-            oneItem(score: newScore) // Use standard gradient descent // TODO: add learning parameter
+            oneItemAdam(score: newScore, alpha: alpha) // Uses standard gradient descent, because studentModel == true
 //            if includeGM {
 //                oneItemAdamGF(score: newScore, alpha: alpha, alphaHebb: alphaHebb)
 //            } else {

@@ -148,7 +148,7 @@ struct ItemInfo: Hashable {
         var questionIndex = 0
         while lineIndex < lines.count {
              if let (command, argument) = splitLine(line: lines[lineIndex]) {
-                 print("Command \(command)")
+//                 print("Command \(command)")
                 switch command {
                 case "title": self.title = argument
                 case "text": if self.extraText == nil {

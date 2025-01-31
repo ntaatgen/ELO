@@ -24,6 +24,7 @@ class Node {
     var halo = false
     var fixed = false
     var items: [Item] = []
+    var relations: Set<String> = []
     init(name: String) {
         self.name = name
         self.shortName = name
@@ -52,6 +53,9 @@ class FruchtermanReingold {
     let iterations = 100
     var constantC = 0.3
     var wallRepulsionMultiplier = 2.0
+    
+    var orderThreshold = 0.12
+    
     var area: Double {
         get {
             return W * H
@@ -191,8 +195,9 @@ class FruchtermanReingold {
     
     func itemToSkillString(item: Item, model: ELOlogic) -> String {
         var s = ""
-        for x in item.eSkills {
-            if x >= model.skillThreshold {
+        for i in 0..<item.eSkills.count {
+//        for x in item.eSkills {
+            if model.mapESkill(it: item, index: i) >= model.skillThreshold {
                 s = s + "1"
             } else {
                 s = s + "0"
@@ -200,13 +205,92 @@ class FruchtermanReingold {
         }
         return s
     }
+ 
+    func relu(_ x: Double) -> Double {
+        return x > 0 ? x : 0
+    }
+ 
+    
+    func calculateNodeRelations(logic: ELOlogic) {
+        guard !nodes.isEmpty else { return }
+        var studentToIndex: [String:Int] = [:]
+        var nodeToIndex: [String:Int] = [:]
+        var itemToNode: [String:String] = [:]
+        var n = 0
+        for (_, s) in logic.students {
+            studentToIndex[s.name] = n
+            n += 1
+        }
+        n = 0
+        for (_, node) in nodes {
+            nodeToIndex[node.name] = n
+            n += 1
+            for it in node.items {
+                itemToNode[it.name] = node.name
+            }
+        }
+        
+        var studentScore: [[Double?]] = Array(repeating: Array(repeating: nil, count: studentToIndex.count), count: nodeToIndex.count)
+        var studentScoreN: [[Int]] = Array(repeating: Array(repeating: 0, count: studentToIndex.count), count: nodeToIndex.count)
+        for score in logic.scores {
+            let sIndex = studentToIndex[score.student]!
+            let nIndex = nodeToIndex[itemToNode[score.item]!]!
+            studentScore[nIndex][sIndex] =  studentScore[nIndex][sIndex] == nil ? score.score : studentScore[nIndex][sIndex]! + score.score
+            studentScoreN[nIndex][sIndex] += 1
+        }
+        for i in 0..<studentScore.count {
+            for j in 0..<studentScore[i].count {
+                if studentScore[i][j] != nil {
+                    studentScore[i][j] = studentScore[i][j]! / Double(studentScoreN[i][j])
+                }
+            }
+        }
+        for (node1,_) in nodes {
+            for (node2,_) in nodes {
+                if node1 == node2 { continue }
+                var sumDiff = 0.0
+                var sumGT = 0.0
+                var sumLT = 0.0
+                var count = 0.0
+                for (s,_) in logic.students {
+                    if studentScore[nodeToIndex[node1]!][studentToIndex[s]!] != nil &&
+                        studentScore[nodeToIndex[node2]!][studentToIndex[s]!] != nil
+                    {
+                        sumDiff += abs(studentScore[nodeToIndex[node1]!][studentToIndex[s]!]! -
+                                       studentScore[nodeToIndex[node2]!][studentToIndex[s]!]!)
+                        sumGT += relu(studentScore[nodeToIndex[node1]!][studentToIndex[s]!]! -
+                                       studentScore[nodeToIndex[node2]!][studentToIndex[s]!]!)
+                        sumLT +=
+                        relu(studentScore[nodeToIndex[node2]!][studentToIndex[s]!]! - studentScore[nodeToIndex[node1]!][studentToIndex[s]!]! )
+                                       
+                        count += 1
+                    }
+                }
+//                let LTGTDifference = (sumLT - sumGT) / count
+//                if LTGTDifference > orderThreshold {
+//                    nodes[node1]!.relations.insert(node2)
+//                    print("Added \(node1) > \(node2)")
+//                }
+                // Alternative
+                let LTGTfraction = (sumLT/sumGT)
+                if LTGTfraction > orderThreshold {
+                    nodes[node1]!.relations.insert(node2)
+                    print("Added \(node1) > \(node2)")
+                }
+                print("Similarity between \(node1) and \(node2) is \(sumDiff/count)  GT = \(sumGT/count) LT = \(sumLT/count)" )
+            }
+        }
+        
+    }
     
     func itemHigherThan(item1: Item, item2: Item, model: ELOlogic) -> Bool {
         var b = false
         for i in 0..<item1.eSkills.count {
-            if item1.eSkills[i] < model.skillThreshold && item2.eSkills[i] >= model.skillThreshold {
+            let item1skill = model.mapESkill(it: item1, index: i)
+            let item2skill = model.mapESkill(it: item2, index: i)
+            if item1skill < model.skillThreshold && item2skill >= model.skillThreshold {
                 return false
-            } else if item1.eSkills[i] >= model.skillThreshold && item2.eSkills[i] < model.skillThreshold {
+            } else if item1skill >= model.skillThreshold && item2skill < model.skillThreshold {
                 b = true
             }
         }
@@ -224,6 +308,7 @@ class FruchtermanReingold {
     
     func setUpGraph(_ model: ELOlogic) {
         guard model.items.count != 0 else { return }
+        model.updateAverages()
         nodes = [:]
         edges = []
         constantC = 1.0
@@ -243,25 +328,34 @@ class FruchtermanReingold {
                 newNode.skillNode = true
                 if !s.contains("1") { // all zeros, so bottom node
                     newNode.fixed = true
-                    newNode.y = H - 20
+                    newNode.y = H - 30
                     newNode.x = W/2
                 } else if !s.contains("0") { // all ones
                     newNode.fixed = true
                     newNode.y = 20
                     newNode.x = W/2
                 }
-                for (_, node) in nodes {
-                    if itemHigherThan(item1: item, item2: node.items[0], model: model) {
-                        let newEdge = Edge(from: node, to: newNode)
-                        edges.append(newEdge)
-                    } else if itemHigherThan(item1: node.items[0], item2: item, model: model) {
-                        let newEdge = Edge(from: newNode, to: node)
-                        edges.append(newEdge)
-                    }
-                }
+
                 nodes[s] = newNode
             }
         }
+        
+        calculateNodeRelations(logic: model)
+        
+        for (_, node1) in nodes {
+            for (_, node2) in nodes {
+                if node1.name != node2.name && (itemHigherThan(item1: node1.items[0], item2: node2.items[0], model: model)
+                                      || node1.relations.contains(node2.name)) {
+                    let newEdge = Edge(from: node2, to: node1)
+                    edges.append(newEdge)
+                }
+//                else if itemHigherThan(item1: node.items[0], item2: item, model: model) {
+//                    let newEdge = Edge(from: newNode, to: node)
+//                    edges.append(newEdge)
+//                }
+            }
+        }
+        
         var removeList: [Edge] = []
         for (_, node1) in nodes {
             for (_, node2) in nodes {

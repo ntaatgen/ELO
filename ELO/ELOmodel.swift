@@ -321,10 +321,13 @@ struct ELOmodel {
         graphData = nil
     }
     
+       
+    
+    
     mutating func primViewCalculateGraph() {
         primGraphData = FruchtermanReingold(W: 300.0, H: 300.0)
         primGraphData!.constantC = 0.1
-
+        primGraphData!.orderThreshold = logic.alphaHebb
         primGraphData!.setUpGraph(logic)
 
         primGraphData!.calculate(randomInit: true)

@@ -73,13 +73,13 @@ struct ELOMainView: View {
                     Text("Epochs:")
                     TextField("Epochs", text: $model.nEpochsV)
                         .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
-                    Text("alpha:")
+                    Text("Alpha:")
                     TextField("aItems", text: $model.alphaV)
                         .onChange(of: model.alphaV) { model.alphaV = model.changeAlpha(model.alphaV) }
                     //                    Text("alphaSubjects:")
                     //                    TextField("aSubs", text: $model.alphaStudentV)
                     //                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
-                    Text("alphaHebb:")
+                    Text("Threshold:")
                     TextField("aHebb", text: $model.alphaHebbV)
                         .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}
                     Text("# Skills:")

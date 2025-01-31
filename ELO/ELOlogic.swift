@@ -70,10 +70,10 @@ struct ModelData: Identifiable, Codable {
 }
 
 class ELOlogic: Codable {
-    static let alphaDefault = 0.001
+    static let alphaDefault = 0.0005
     static let nSkillsDefault = 4
 //    static let alphaStudentsDefault = 0.05
-    static let alphaHebbDefault = 0.12
+    static let alphaHebbDefault = 3.0
     static let epochsDefault = 1000
     var includeGM = false
     var linearLoss = false

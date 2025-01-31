@@ -205,6 +205,8 @@ struct ItemView: View {
             }
             if itemInfo.image != nil {
                 Image(nsImage: itemInfo.image!)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)              
             }
             if itemInfo.extraText != nil {
                 HStack {

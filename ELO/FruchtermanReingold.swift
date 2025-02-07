@@ -234,9 +234,11 @@ class FruchtermanReingold {
         var studentScoreN: [[Int]] = Array(repeating: Array(repeating: 0, count: studentToIndex.count), count: nodeToIndex.count)
         for score in logic.scores {
             let sIndex = studentToIndex[score.student]!
-            let nIndex = nodeToIndex[itemToNode[score.item]!]!
-            studentScore[nIndex][sIndex] =  studentScore[nIndex][sIndex] == nil ? score.score : studentScore[nIndex][sIndex]! + score.score
-            studentScoreN[nIndex][sIndex] += 1
+            if let index = itemToNode[score.item] {
+                let nIndex = nodeToIndex[index]!
+                studentScore[nIndex][sIndex] =  studentScore[nIndex][sIndex] == nil ? score.score : studentScore[nIndex][sIndex]! + score.score
+                studentScoreN[nIndex][sIndex] += 1
+            }
         }
         for i in 0..<studentScore.count {
             for j in 0..<studentScore[i].count {

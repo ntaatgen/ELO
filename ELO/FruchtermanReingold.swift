@@ -195,9 +195,8 @@ class FruchtermanReingold {
     
     func itemToSkillString(item: Item, model: ELOlogic) -> String {
         var s = ""
-        for i in 0..<item.eSkills.count {
-//        for x in item.eSkills {
-            if model.mapESkill(it: item, index: i) >= model.skillThreshold {
+        for i in 0..<item.skills.count {
+            if item.skills[i] >= model.skillThreshold {
                 s = s + "1"
             } else {
                 s = s + "0"
@@ -287,9 +286,9 @@ class FruchtermanReingold {
     
     func itemHigherThan(item1: Item, item2: Item, model: ELOlogic) -> Bool {
         var b = false
-        for i in 0..<item1.eSkills.count {
-            let item1skill = model.mapESkill(it: item1, index: i)
-            let item2skill = model.mapESkill(it: item2, index: i)
+        for i in 0..<item1.skills.count {
+            let item1skill = item1.skills[i]
+            let item2skill = item2.skills[i]
             if item1skill < model.skillThreshold && item2skill >= model.skillThreshold {
                 return false
             } else if item1skill >= model.skillThreshold && item2skill < model.skillThreshold {
@@ -328,7 +327,6 @@ class FruchtermanReingold {
     
     func setUpGraph(_ model: ELOlogic) {
         guard model.items.count != 0 else { return }
-        model.updateAverages()
         nodes = [:]
         edges = []
         constantC = 1.0
@@ -364,8 +362,9 @@ class FruchtermanReingold {
         
         for (_, node1) in nodes {
             for (_, node2) in nodes {
-                if node1.name != node2.name && (itemHigherThan(item1: node1.items[0], item2: node2.items[0], model: model)
-                                      || node1.relations.contains(node2.name)) {
+                if node1.name != node2.name &&
+                    (itemHigherThan(item1: node1.items[0], item2: node2.items[0], model: model) ||
+                     (node1.relations.contains(node2.name) && !(itemHigherThan(item1: node2.items[0], item2: node1.items[0], model: model))))  {
                     let newEdge = Edge(from: node2, to: node1)
                     edges.append(newEdge)
                 }

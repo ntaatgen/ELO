@@ -438,11 +438,11 @@ class ELOViewModel: ObservableObject {
         model.update()
     }
     
-    func forward() {
+    func forward(_ step: Int = 1) {
         if selected == nil || model.selectedGroup == .errors  {
             model.selected = 0
-        } else if (model.selectedGroup == .items && model.selected! != sortedKeys.count - 1) || (model.selectedGroup == .students && model.selected != studentKeys.count - 1) {
-            model.selected = model.selected! + 1
+        } else if (model.selectedGroup == .items && model.selected! + step < sortedKeys.count) || (model.selectedGroup == .students && model.selected! + step < studentKeys.count) {
+            model.selected = model.selected! + step
         }
         if model.selectedGroup == .students {
             updatePrimViewData()

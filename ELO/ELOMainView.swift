@@ -34,6 +34,10 @@ struct ELOMainView: View {
                         Label("Forward", systemImage: "arrowshape.right")
                     }
                     .padding()
+                    Button(action: { model.forward(10) }) {
+                        Label("F + 10", systemImage: "arrowshape.right")
+                    }
+                    .padding()
                     Button(action: { model.switchGraphs()}) {
                         Label("Switch graphs", systemImage: "play")
                     }

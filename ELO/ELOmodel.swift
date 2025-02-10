@@ -221,9 +221,6 @@ struct ELOmodel {
             for j in 0..<item.skills.count {
                 output += ", " + String(item.skills[j])
             }
-            if logic.includeGM {
-                output += ", " + String(item.guessP) + ", " + String(item.mistakeP)
-            }
             output += "\n"
         }
         if lastonly {
@@ -233,9 +230,6 @@ struct ELOmodel {
                 for j in 0..<student.skills.count {
                     output += ", " + String(student.skills[j])
                 }
-                if logic.includeGM {
-                    output += ", 0, 0"
-                }
                 output += "\n"
             }
         } else {
@@ -243,9 +237,6 @@ struct ELOmodel {
                 output += "student, " + student.name
                 for j in 0..<student.skills.count {
                     output += ", " + String(student.skills[j])
-                }
-                if logic.includeGM {
-                    output += ", 0, 0"
                 }
                 output += "\n"
             }
@@ -358,7 +349,7 @@ struct ELOmodel {
     }
     
     func itemScore(item: Item, student: Student) -> Bool {
-        let expectedScore = logic.expectedScore(s: student, it: item, withGuessAndMistake: logic.includeGM)
+        let expectedScore = logic.expectedScore(s: student, it: item)
         return expectedScore > 0.5 && expectedScore < 0.8
     }
         

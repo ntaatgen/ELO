@@ -16,7 +16,8 @@ class Student: Codable {
     var t: Int = 1
     init(name: String, nSkills: Int) {
         self.name = name
-        self.skills = (0..<nSkills).map { _ in .random(in: 0.1...0.3) }
+//        self.skills = (0..<nSkills).map { _ in .random(in: 0.1...0.3) }
+        self.skills = (0..<nSkills).map { _ in .random(in: 0.15...0.18) }
         self.m = (0..<nSkills).map {_ in 0 }
         self.v = (0..<nSkills).map {_ in 0 }
     }
@@ -26,7 +27,6 @@ class Item: Codable {
     var name: String
     var realSkills: [Double] = []
     var skills: [Double] = []
-    var eSkills: [Double] = []
     var experiences = 0
     var m: [Double] = []
     var v: [Double] = []
@@ -40,8 +40,8 @@ class Item: Codable {
     var executable: Bool = false
     init(name: String, nSkills: Int) {
         self.name = name
-        self.eSkills = (0..<nSkills).map { _ in 0 }
-        self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+//        self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
+        self.skills = (0..<nSkills).map { _ in .random(in: 0.48...0.52) }
         self.m = (0..<nSkills).map {_ in 0 }
         self.v = (0..<nSkills).map {_ in 0 }
     }
@@ -75,13 +75,10 @@ class ELOlogic: Codable {
 //    static let alphaStudentsDefault = 0.05
     static let alphaHebbDefault = 3.0
     static let epochsDefault = 1000
-    var includeGM = false
-    var linearLoss = false
     var nSkills = ELOlogic.nSkillsDefault
     static let maxSkills = 8
     var nEpochs = ELOlogic.epochsDefault
     var alpha = ELOlogic.alphaDefault
-//    var alphaStudents = ELOlogic.alphaStudentsDefault
     var alphaHebb = ELOlogic.alphaHebbDefault
     var skillThreshold = 0.5
     static let nItems = 16
@@ -105,8 +102,6 @@ class ELOlogic: Codable {
     var showLastLoadedStudents = false
     var feedback: [Bool] = []
     var studentMode: Bool = false
-    var avgSkill: [Double] = []
-    var avgSkillVariance: [Double] = []
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -121,8 +116,6 @@ class ELOlogic: Codable {
         lineCounter = 0
         counter = 0
         synthetic = false
-        avgSkill = (0..<nSkills).map { _ in 0.2 }
-        avgSkillVariance = (0..<nSkills).map { _ in 0.2 }
         addDataWithURL(filePath)
     }
     
@@ -201,8 +194,6 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
-        avgSkill = (0..<nSkills).map { _ in 0.2 }
-        avgSkillVariance = (0..<nSkills).map { _ in 0.2 }
     }
     
     /// Convert an integer to a binary representation
@@ -241,8 +232,6 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
-        avgSkill = (0..<nSkills).map { _ in 0.2 }
-        avgSkillVariance = (0..<nSkills).map { _ in 0.2 }
         for i in 0..<ELOlogic.nItems {
             
             let j = Item(name: String(format: "%03d", i), nSkills: nSkills)
@@ -284,9 +273,6 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
-        avgSkill = (0..<nSkills).map { _ in 0.2 }
-        avgSkillVariance = (0..<nSkills).map { _ in 0.2 }
-//        regression = Array(repeating: Array(repeating: 0, count: nSkills), count: nSkills)
         let itemSet = [0, 0, 0, 2, 2, 2, 2, 6, 6, 10, 10, 14, 14, 14, 11, 11, 15, 15, 15]
         for i in 0..<itemSet.count {
             let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]), nSkills: nSkills)
@@ -333,7 +319,7 @@ class ELOlogic: Codable {
     ///   - it: The item
     ///   - leaveOut: Optionally: leave one vector item out, necessary for calculating the gradient
     /// - Returns: The expected score.
-    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil, withGuessAndMistake: Bool = false) -> Double {
+    func expectedScore(s: Student, it: Item, leaveOut: Int? = nil) -> Double {
         var p: Double = 1
         for i in 0..<nSkills {
             if leaveOut == nil || leaveOut! != i {
@@ -341,11 +327,7 @@ class ELOlogic: Codable {
                 p = p * skillP
             }
         }
-        if withGuessAndMistake {
-            return it.guessP + (1 - it.guessP) * (1 - it.mistakeP) * p
-        } else {
-            return p
-        }
+        return p
     }
     
 
@@ -384,20 +366,6 @@ class ELOlogic: Codable {
         return x > 0 ? 1 : (x < 0 ? -1 : 0)
     }
     
-    func updateAverages() {
-        guard students.count > 0 else {return}
-        for (_,s) in students {
-            for i in 0..<nSkills {
-                avgSkill[i] += s.skills[i]
-                avgSkillVariance[i] += pow(s.skills[i],2)
-            }
-        }
-        for i in 0..<nSkills {
-            avgSkill[i] = avgSkill[i] / Double(students.count)
-            avgSkillVariance[i] = avgSkillVariance[i] / Double(students.count)
-        }
-    }
-    
     
     /// Update the model based on a single datapoint using Adam optimization
     /// - Parameters:
@@ -416,26 +384,15 @@ class ELOlogic: Codable {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
         }
         for i in 0..<nSkills {
-            if linearLoss {
-                let itGradient = -2 * sign(error) * expectedWithoutSkill[i] * (s.skills[i] - 1)
-                it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
-                it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
-            } else {
-                let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1)
-                it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
-                it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
-            }
-                        
+            
+            let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1)
+            it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
+            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
+            
+            
             let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
             let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
             
-//            print("sGradio for skill \(i) is \(sGradient)")
-
-//            if linearLoss {
-//                let sGradient = -2 * sign(error) * expectedWithoutSkill[i] * it.skills[i]
-//                s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
-            //                s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
-            //            } else {
             let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
             s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
             s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
@@ -458,109 +415,12 @@ class ELOlogic: Codable {
         }
         it.t += 1
         s.t += 1
-        /// update average score
-//        let alphaSkills = 0.001
-//        for i in 0..<nSkills {
-//            avgSkill[i] = (1 - alphaSkills) * avgSkill[i] + alphaSkills * s.skills[i]
-//            avgSkillVariance[i] = (1 - alphaSkills) * avgSkillVariance[i] + alphaSkills * pow(s.skills[i] - avgSkill[i], 2)
-//        }
-        /// Update eSkills
-        let scoreThreshold = 0.6
-        if score.score >= scoreThreshold {
-            for i in 0..<nSkills {
-                let update = s.skills[i]
-//                let update = s.skills[i] > avgSkill[i] ? (s.skills[i] - avgSkill[i])  / (1 - avgSkill[i] + epsilon) : (s.skills[i] - avgSkill[i])/(avgSkill[i] + epsilon)
-//                if s.skills[i] > avgSkill[i] { update *= 1.5 }
-//                let update = (s.skills[i] - 0.5)  * 2
-                let updateMagnitude = (score.score - scoreThreshold) / (1 - scoreThreshold) / 100
-                it.eSkills[i] = boundedAdd((1 - updateMagnitude) * it.eSkills[i], updateMagnitude * update)
-                if it.eSkills[i] < it.skills[i] { it.eSkills[i] = it.skills[i] }
-            }
-        }
-        
-        
-        /// Add some "Hebbian" learning
-//        if score.score > 0.7 {
-//            for i in 0..<nSkills {
-//                if it.skills[i] < s.skills[i] {
-//                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
-//                }
-//            }
-//        }
+
         it.experiences += 1 // redundant
 
     }
     
-    func mapESkill(it: Item, index: Int) -> Double {
-//        return max(it.skills[index], boundedAdd((it.eSkills[index] - avgSkill[index])/(sqrt(avgSkillVariance[index])),0))
-//        return max(it.skills[index], boundedAdd((it.eSkills[index] - avgSkill[index])/(sqrt(avgSkillVariance[index]) + 0.001)/(1 - avgSkill[index] + 0.001),0))
-//          return max(it.skills[index], boundedAdd((it.eSkills[index] - avgSkill[index])/(1 - avgSkill[index] + 0.001),0))
-//        return it.eSkills[index]
-        return it.skills[index]
-    }
 
-    /// Update the model based on a single datapoint using Adam optimization
-    /// This version also takes into account the probability of lucky guesses and mistakes
-    /// - Parameters:
-    ///   - score: The datapoint used for the update
-    ///   - alpha: The alpha parameter for Adam, 0.001 by default
-    ///   - beta1: The beta1 parameter for Adam, 0.9 by default
-    ///   - beta2: The beta2 parameter for Adam, 0.99 by default
-    ///   - epsilon: The epsilon parameter, 1e-8 by default
-    ///   - alphaHebb: Learning multiplier (with alpha) to control the Hebbian learning.
-//    func oneItemAdamGF(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8, alphaHebb: Double = 1.0) {
-//        let s = students[score.student]!
-//        let it = items[score.item]!
-//        let expectedS = expectedScore(s: s, it: it)
-//        let error = it.guessP + (1 - it.guessP) * (1 - it.mistakeP) * expectedS - score.score
-//        var expectedWithoutSkill: [Double] = []
-//        for i in 0..<nSkills {
-//            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
-//        }
-//        for i in 0..<nSkills {
-//            it.m[i] = beta1 * it.m[i] + (1 - beta1) * (1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error
-//            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow((1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * (s.skills[i] - 1) * error, 2)
-//            let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
-//            let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
-//            
-//            s.m[i] = beta1 * s.m[i] + (1 - beta1) * (1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * it.skills[i] * error
-//            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow((1 - it.guessP) * (1 - it.mistakeP) * expectedWithoutSkill[i] * it.skills[i] * error, 2)
-//            let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
-//            let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
-//            
-//            if !studentMode { it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon)) }
-//            s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
-//        }
-//        if !studentMode {
-//            it.guessPm = beta1 * it.guessPm + (1 - beta1) * (1 - expectedS + it.mistakeP * expectedS) * error
-//            it.guessPv = beta2 * it.guessPv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
-//            let mhatG = it.guessPm / (1 - pow(beta1, Double(it.t)))
-//            let vhatG = it.guessPv / (1 - pow(beta2, Double(it.t)))
-//            it.guessP = boundedAdd(it.guessP, -alpha * mhatG / (sqrt(vhatG) + epsilon), upb: 0.25)
-//            
-//            it.mistakePm = beta1 * it.mistakePm + (1 - beta1) * (-expectedS + it.guessP * expectedS) * error
-//            it.mistakePv = beta2 * it.mistakePv + (1 - beta2) * pow((1 - expectedS + it.mistakeP * expectedS) * error,2)
-//            let mhatM = it.mistakePm / (1 - pow(beta1, Double(it.t)))
-//            let vhatM = it.mistakePv / (1 - pow(beta2, Double(it.t)))
-//            it.mistakeP = boundedAdd(it.mistakeP, -alpha * mhatM / (sqrt(vhatM) + epsilon), upb: 0.25)
-//            
-//            
-//            it.t += 1
-//        }
-//        s.t += 1
-//        /// Add some "Hebbian" learning
-//        if score.score > 0.7 {
-//            for i in 0..<nSkills {
-//                if it.skills[i] < s.skills[i] {
-//                    it.skills[i] += alpha * alphaHebb * (s.skills[i] - it.skills[i]) * (score.score - 0.5)
-//                }
-//            }
-//        }
-//        it.experiences += 1
-//
-//    }
-
-    
     
     /// Calculate the average error per datapoint, either of the whole dataset, or the last loaded students.
     ///     /// - Returns: The average error
@@ -569,12 +429,9 @@ class ELOlogic: Codable {
         var count: Int = 0
         for score in scores {
             if !showLastLoadedStudents || lastLoadedStudents.contains(score.student) {
-                if linearLoss {
-                    error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!, withGuessAndMistake: includeGM))
 
-                } else {
-                    error += pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!, withGuessAndMistake: includeGM),2)
-                }
+                error += pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!),2)
+                
                 count += 1
             }
         }
@@ -590,19 +447,11 @@ class ELOlogic: Codable {
                 var order = Array(0..<scores.count)
                 order.shuffle()
                 if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
-                    updateAverages()
                     for key in sortedKeys {
                         if items[key]!.experiences > 0 {
                             for skills in 0..<nSkills {
-//                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.eSkills[skills])
-                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: mapESkill(it: items[key]!, index: skills))
+                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
                                 results.append(dp)
-                            }
-                            if includeGM {
-                                let guessDP = ModelData(item: key, z: nSkills, x: lineCounter, y: items[key]!.guessP)
-                                results.append(guessDP)
-                                let mistakeDP = ModelData(item: key, z: nSkills + 1, x: lineCounter, y: items[key]!.mistakeP)
-                                results.append(mistakeDP)
                             }
                         }
                     }
@@ -619,11 +468,7 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-//                        if includeGM {
-//                            oneItemAdamGF(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
-//                        } else {
                             oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
-//                        }
                     }
                 }
                 if j % 100 == 0 {
@@ -632,7 +477,6 @@ class ELOlogic: Codable {
                         NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
                     }
                 } else {
-                    
                     DispatchQueue.main.async {
                         NotificationCenter.default.post(name: Notification.Name(rawValue: "runDone"), object: nil)
                     }
@@ -642,7 +486,6 @@ class ELOlogic: Codable {
             
             for key in sortedKeys {
                 print(key,items[key]!.skills)
-                print(key,items[key]!.eSkills)
             }
             DispatchQueue.main.async {
                 self.counter = self.nEpochs
@@ -660,18 +503,12 @@ class ELOlogic: Codable {
             print("epoch", j)
             var order = Array(0..<scores.count)
             order.shuffle()
-            if nEpochs < 20 || j % (nEpochs/10) == 0 {
+            if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
                 for key in sortedKeys {
                     if items[key]!.experiences > 0 {
                         for skills in 0..<nSkills {
                             let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
                             results.append(dp)
-                        }
-                        if includeGM {
-                            let guessDP = ModelData(item: key, z: nSkills, x: lineCounter, y: items[key]!.guessP)
-                            results.append(guessDP)
-                            let mistakeDP = ModelData(item: key, z: nSkills + 1, x: lineCounter, y: items[key]!.mistakeP)
-                            results.append(mistakeDP)
                         }
                     }
                 }
@@ -688,12 +525,7 @@ class ELOlogic: Codable {
             
             for i in 0..<order.count {
                 if time == nil || scores[order[i]].time == time! {
-//                    if includeGM {
-//                        oneItemAdamGF(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
-//                    } else {
-                        oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
-//                    }
-                    
+                    oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
                 }
             }
         }
@@ -747,23 +579,12 @@ class ELOlogic: Codable {
         print(students[student]!.skills)
         for _ in 0..<10 {
             oneItemAdam(score: newScore, alpha: alpha) // Uses standard gradient descent, because studentModel == true
-//            if includeGM {
-//                oneItemAdamGF(score: newScore, alpha: alpha, alphaHebb: alphaHebb)
-//            } else {
-//                oneItemAdam(score: newScore, alpha: alpha, alphaHebb: alphaHebb)
-//            }
         }
         print(students[student]!.skills)
         for skills in 0..<nSkills {
             let dp = ModelData(item: itemInfo.name, z: skills, x: lineCounter, y: items[itemInfo.name]!.skills[skills])
             results.append(dp)
             print(dp)
-        }
-        if includeGM {
-            let guessDP = ModelData(item: itemInfo.name, z: nSkills, x: lineCounter, y: items[itemInfo.name]!.guessP)
-            results.append(guessDP)
-            let mistakeDP = ModelData(item: itemInfo.name, z: nSkills + 1, x: lineCounter, y: items[itemInfo.name]!.mistakeP)
-            results.append(mistakeDP)
         }
         for skills in 0..<nSkills {
             let dp = ModelData(item: student, z: skills, x: lineCounter, y: students[student]!.skills[skills])

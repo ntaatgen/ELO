@@ -407,11 +407,7 @@ class ELOlogic: Codable {
             } else {
                 s.skills[i] = boundedAdd(s.skills[i], -alpha * sGradient)
             }
-            
-            if !studentMode {  }
-            
-//            it.skills[i] = boundedAdd(it.skills[i], -(alpha / log(Double(it.t + 1))) * mhatI / (sqrt(vhatI) + epsilon))
-//            s.skills[i] = boundedAdd(s.skills[i],  -(alpha / log(Double(s.t + 1))) * mhatS / (sqrt(vhatS) + epsilon))
+
         }
         it.t += 1
         s.t += 1
@@ -532,48 +528,52 @@ class ELOlogic: Codable {
                 self.counter = self.nEpochs
     }
     
-    func scoreSheet(itemInfo: ItemInfo, answers: [String], student: String) -> Double {
+    func scoreSheet(itemInfo: ItemInfo, answers: [String], student: String, forced: Bool? = nil) -> Double {
         var maxScore = 0.0
         var score = 0.0
-        feedback = []
-        for i in 0..<itemInfo.questions.count {
-            switch itemInfo.questions[i] {
-            case .text(_, let correctAnswers, let points, _):
-                if correctAnswers.contains(answers[i].lowercased()) {
-                    score += points
-                    feedback.append(true)
-                } else {
-                    feedback.append(false)
+        if forced == nil {
+            feedback = []
+            for i in 0..<itemInfo.questions.count {
+                switch itemInfo.questions[i] {
+                case .text(_, let correctAnswers, let points, _):
+                    if correctAnswers.contains(answers[i].lowercased()) {
+                        score += points
+                        feedback.append(true)
+                    } else {
+                        feedback.append(false)
+                    }
+                    maxScore += points
+                case .multipleChoice(prompt: _, options: let options, correct: let correct, points: let points, _, _):
+                    print("index = \(String(describing: options.firstIndex(of: answers[i]))), correct = \(correct - 1)")
+                    if !answers[i].isEmpty &&  Int(options.firstIndex(of: answers[i])!) == correct - 1 {
+                        score += points
+                        feedback.append(true)
+                    } else {
+                        feedback.append(false)
+                    }
+                    maxScore += points
+                case .realNumber(_, answer: let correctAnswer, points: let points, _):
+                    if Double(answers[i].replacingOccurrences(of: ",", with: ".")) == correctAnswer {
+                        score += points
+                        feedback.append(true)
+                    } else {
+                        feedback.append(false)
+                    }
+                    maxScore += points
+                case .intNumber(_, answer: let correctAnswer, points: let points, _):
+                    if Int(answers[i]) == correctAnswer {
+                        score += points
+                        feedback.append(true)
+                    } else {
+                        feedback.append(false)
+                    }
+                    maxScore += points
                 }
-                maxScore += points
-            case .multipleChoice(prompt: _, options: let options, correct: let correct, points: let points, _, _):
-                print("index = \(String(describing: options.firstIndex(of: answers[i]))), correct = \(correct - 1)")
-                if !answers[i].isEmpty &&  Int(options.firstIndex(of: answers[i])!) == correct - 1 {
-                    score += points
-                    feedback.append(true)
-                } else {
-                    feedback.append(false)
-                }
-                maxScore += points
-            case .realNumber(_, answer: let correctAnswer, points: let points, _):
-                if Double(answers[i].replacingOccurrences(of: ",", with: ".")) == correctAnswer {
-                    score += points
-                    feedback.append(true)
-                } else {
-                    feedback.append(false)
-                }
-                maxScore += points
-            case .intNumber(_, answer: let correctAnswer, points: let points, _):
-                if Int(answers[i]) == correctAnswer {
-                    score += points
-                    feedback.append(true)
-                } else {
-                    feedback.append(false)
-                }
-                maxScore += points
             }
+            score = score / maxScore
+        } else {
+            score = forced! ? 1.0 : 0.0
         }
-        score = score / maxScore
         let newScore = Score(student: students[student]!, item: items[itemInfo.name]!, score: score, time: 100)
         scores.append(newScore)
         print(students[student]!.skills)

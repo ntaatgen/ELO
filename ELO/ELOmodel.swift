@@ -45,6 +45,7 @@ struct ELOmodel {
         logic.studentKeys = [name]
         studentKeys = [name]
         selected = 0
+        selectedGroup = .students
     }
     
     mutating func loadData(filePath: URL, add: Bool) {
@@ -338,6 +339,23 @@ struct ELOmodel {
         return count != 0 ? score/count : nil
     }
     
+    func averageNodeScore(s: Student, items: [Item]) -> Double {
+        var score = 0.0
+        var index = 0
+        for item in items {
+            score += logic.expectedScore(s: s, it: item)
+            index += 1
+        }
+//        for char in nodeName {
+//            if char == "1" {
+//                score *= s.skills[index]
+//            }
+//            index += 1
+//        }
+        return score / Double(index)
+    }
+    
+ 
     func findScoreOnItems(s: Student) -> [String:Double] {
         var result: [String:Double] = [:]
         for score in logic.scores {
@@ -362,23 +380,33 @@ struct ELOmodel {
         }
         for (_, node) in primGraphData!.nodes {
             var s: [NodeItem] = []
-            for item in node.items {
-                if !logic.studentMode || item.executable {
-                    if !itemScores.isEmpty {
-                        //                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
-                        if let itemScore = itemScores[item.name] {
-                            s.append(NodeItem(name: item.name, color: itemScore, recommended: false))
+            node.halo = false
+            if selectedGroup != .students || !studentKeys.isEmpty {
+                for item in node.items {
+                    if !logic.studentMode || item.executable {
+                        if !itemScores.isEmpty {
+                            //                    s.append(NodeItem(name: item.name, color: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                            if let itemScore = itemScores[item.name] {
+                                s.append(NodeItem(name: item.name, color: itemScore, recommended: false))
+                            } else {
+                                let recommended = itemScore(item: item, student: logic.students[studentKeys[selected!]]!)
+                                s.append(NodeItem(name: item.name, color: nil, recommended: recommended ))
+                                if recommended { node.halo = true }
+//                                s.append(NodeItem(name: item.name, color: nil, recommended: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                            }
                         } else {
-                            s.append(NodeItem(name: item.name, color: nil, recommended: itemScore(item: item, student: logic.students[studentKeys[selected!]]!)))
+                            s.append(NodeItem(name: item.name, color: nil, recommended: false))
                         }
-                    } else {
-                        s.append(NodeItem(name: item.name, color: nil, recommended: false))
                     }
                 }
             }
             var nodeScore: Double? = 0.0
             if selectedGroup == .students && selected != nil && !studentKeys.isEmpty {
-                nodeScore = averageScore(s: logic.students[studentKeys[selected!]]!, items: node.items)
+                if logic.studentMode {
+                    nodeScore = averageNodeScore(s: logic.students[studentKeys[selected!]]!, items: node.items)
+                } else {
+                    nodeScore = averageScore(s: logic.students[studentKeys[selected!]]!, items: node.items)
+                }
             }
             graphData!.nodes.append(
                 ViewNode(x: node.x,
@@ -420,9 +448,9 @@ struct ELOmodel {
         }
     }
     
-    mutating func scoreSheet(itemInfo: ItemInfo, answers: [String]) {
+    mutating func scoreSheet(itemInfo: ItemInfo, answers: [String], forced: Bool? = nil) {
         guard selectedGroup == .students && selected != nil else {return}
-        let score = logic.scoreSheet(itemInfo: itemInfo, answers: answers, student: studentKeys[selected!])
+        let score = logic.scoreSheet(itemInfo: itemInfo, answers: answers, student: studentKeys[selected!], forced: forced)
         addToTrace(s: "Score on item \(itemInfo.name) is \(score).")
         update()
         updatePrimViewData()

@@ -251,6 +251,77 @@ struct ELOmodel {
             return
         }
     }
+    
+    func splitArrayInTwo<T>(_ array: [T]) -> ([T], [T]) {
+        // Shuffle the array randomly
+        let shuffledArray = array.shuffled()
+        
+        // Calculate the midpoint
+        let midIndex = (array.count + 1) / 2
+        
+        // Split the array into two halves
+        let firstHalf = Array(shuffledArray[..<midIndex])
+        let secondHalf = Array(shuffledArray[midIndex...])
+        
+        return (firstHalf, secondHalf)
+    }
+    
+    mutating func splitHalf(url: URL) {
+        guard !logic.scores.isEmpty else {
+            addToTrace(s: "No data loaded to split.")
+            return
+        }
+        var testHalf: [Score] = []
+        (logic.scores, testHalf) = splitArrayInTwo(logic.scores)
+        
+        logic.calculateModelForBatch(time: 0)
+        selected = 0
+        
+        var avgItem: [String:(Double,Double)] = [:]
+        var avgStudent: [String:(Double,Double)] = [:]
+        for (student,_) in logic.students {
+            avgStudent[student] = (0,0)
+        }
+        for (item,_) in logic.items {
+            avgItem[item] = (0,0)
+        }
+        for score in testHalf {
+            avgStudent[score.student] = (avgStudent[score.student]!.0 + score.score, avgStudent[score.student]!.1 + 1)
+            avgItem[score.item] = (avgItem[score.item]!.0 + score.score, avgItem[score.item]!.1 + 1)
+        }
+        var output = "item, student, score, "
+        for i in 1...logic.nSkills {
+            output += "i\(i), "
+        }
+        for i in 1...logic.nSkills {
+            output += "s\(i), "
+        }
+        output += "avgitem, avgstudent, expscore\n"
+        for score in testHalf {
+            output += score.item + "," + score.student + ", \(score.score), "
+            let item = logic.items[score.item]!
+            for i in 0..<logic.nSkills {
+                output += "\(item.skills[i]), "
+            }
+            let student = logic.students[score.student]!
+            for i in 0..<logic.nSkills {
+                output += "\(student.skills[i]), "
+            }
+            output += "\(avgItem[score.item]!.1 != 0 ? avgItem[score.item]!.0 / avgItem[score.item]!.1 : 0.5), "
+            output += "\(avgStudent[score.student]!.1 != 0 ? avgStudent[score.student]!.0 / avgStudent[score.student]!.1 : 0.5), "
+            output += "\(logic.expectedScore(s: student, it: item))\n"
+        }
+        
+        do {
+            try output.write(to: url, atomically: true, encoding: .utf8)
+            addToTrace(s: "Saving data to file \(url.pathComponents.last!)")
+        }
+        catch let error as NSError {
+            addToTrace(s: "Ooops! Something went wrong: \(error)")
+            return
+        }
+        
+    }
 
         
     mutating func update() {
@@ -302,7 +373,7 @@ struct ELOmodel {
         update()
     }
     
-    mutating func run(time: Int?) {
+    mutating func run(time: Int? = nil) {
             logic.calculateModel(time: time)
             selected = 0
         

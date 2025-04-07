@@ -136,6 +136,20 @@ class ELOViewModel: ObservableObject {
         studentMode = true
     }
     
+    func splitHalf() {
+        let savePanel = NSSavePanel()
+        savePanel.title = "Write Output to File"
+        savePanel.nameFieldLabel = "File Name:"
+        savePanel.begin { (result: NSApplication.ModalResponse) -> Void in
+            if result == NSApplication.ModalResponse.OK {
+                    if let panelURL = savePanel.url {
+                        self.model.splitHalf(url:  panelURL)
+                    }
+                }
+            
+        }
+    }
+    
     func loadData(add: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false

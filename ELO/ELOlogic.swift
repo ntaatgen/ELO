@@ -426,7 +426,7 @@ class ELOlogic: Codable {
         for score in scores {
             if !showLastLoadedStudents || lastLoadedStudents.contains(score.student) {
 
-                error += pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!),2)
+                error += sqrt(pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!),2))
                 
                 count += 1
             }
@@ -594,5 +594,6 @@ class ELOlogic: Codable {
         lineCounter += 1
         return score
     }
+
 
 }

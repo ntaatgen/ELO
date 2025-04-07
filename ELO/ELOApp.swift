@@ -29,6 +29,9 @@ struct ELOApp: App {
                 Button("Run script...") {
                     model.runScript()
                 }
+                Button("Split half analysis") {
+                    model.splitHalf()
+                }
                 Divider()
                 Button("Synthetic data full graph") {
                     model.generateData(set: 0)

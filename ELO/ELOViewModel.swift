@@ -363,6 +363,10 @@ class ELOViewModel: ObservableObject {
             setImageToCurrentProblem()
         }
         disableRun = false
+        if model.splitHalfURL != nil {
+            model.finishSplitHalf()
+            model.splitHalfURL = nil
+        }
     }
     
     var results: [ModelData] {

@@ -37,6 +37,8 @@ struct ELOmodel {
     var timeList: [Int] = [0]
     var alpha: Double = ELOlogic.alphaDefault
     var trace: String = "Starting ELO         \n"
+    var splitHalfURL: URL?
+    var testHalf: [Score] = []
     
     mutating func createNewStudent(name: String = "NewStudent") {
         let newStudent = Student(name: name, nSkills: logic.nSkills)
@@ -271,10 +273,13 @@ struct ELOmodel {
             addToTrace(s: "No data loaded to split.")
             return
         }
-        var testHalf: [Score] = []
+        splitHalfURL = url
         (logic.scores, testHalf) = splitArrayInTwo(logic.scores)
         
-        logic.calculateModelForBatch(time: 0)
+        logic.calculateModel(time: 0)
+    }
+    
+    mutating func finishSplitHalf() {
         selected = 0
         
         var avgItem: [String:(Double,Double)] = [:]
@@ -313,8 +318,8 @@ struct ELOmodel {
         }
         
         do {
-            try output.write(to: url, atomically: true, encoding: .utf8)
-            addToTrace(s: "Saving data to file \(url.pathComponents.last!)")
+            try output.write(to: splitHalfURL!, atomically: true, encoding: .utf8)
+            addToTrace(s: "Saving data to file \(splitHalfURL!.pathComponents.last!)")
         }
         catch let error as NSError {
             addToTrace(s: "Ooops! Something went wrong: \(error)")

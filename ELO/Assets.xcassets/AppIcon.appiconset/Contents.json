@@ -16,13 +16,11 @@
       "size" : "32x32"
     },
     {
-      "filename" : "Unknown 1.jpeg",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "32x32"
     },
     {
-      "filename" : "Unknown.jpeg",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
@@ -48,6 +46,7 @@
       "size" : "512x512"
     },
     {
+      "filename" : "ChatGPT Image Aug 9, 2025 at 10_10_36 PM.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

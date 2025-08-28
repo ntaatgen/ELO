@@ -16,6 +16,7 @@
 		B84755022BCFF9180048ADD6 /* FruchtermanReingold.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */; };
 		B84A06502B99EC95003C06A8 /* ELOmodel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84A064F2B99EC95003C06A8 /* ELOmodel.swift */; };
 		B84A06522B99ECC3003C06A8 /* ELOlogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84A06512B99ECC3003C06A8 /* ELOlogic.swift */; };
+		B86C263A2E55F0C8004A929C /* ParametersPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86C26392E55F0C8004A929C /* ParametersPanel.swift */; };
 		B89E070D2B987B0E00B52111 /* ELOApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E070C2B987B0E00B52111 /* ELOApp.swift */; };
 		B89E070F2B987B0E00B52111 /* ELOMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E070E2B987B0E00B52111 /* ELOMainView.swift */; };
 		B89E07112B987B0F00B52111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B89E07102B987B0F00B52111 /* Assets.xcassets */; };
@@ -34,6 +35,7 @@
 		B84755012BCFF9180048ADD6 /* FruchtermanReingold.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FruchtermanReingold.swift; path = ELO/FruchtermanReingold.swift; sourceTree = "<group>"; };
 		B84A064F2B99EC95003C06A8 /* ELOmodel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOmodel.swift; sourceTree = "<group>"; };
 		B84A06512B99ECC3003C06A8 /* ELOlogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOlogic.swift; sourceTree = "<group>"; };
+		B86C26392E55F0C8004A929C /* ParametersPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParametersPanel.swift; sourceTree = "<group>"; };
 		B87EFC772BFDF99300165F1E /* oldcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = oldcode.swift; sourceTree = "<group>"; };
 		B89E07092B987B0E00B52111 /* ELO.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ELO.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B89E070C2B987B0E00B52111 /* ELOApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOApp.swift; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 				B89E070E2B987B0E00B52111 /* ELOMainView.swift */,
 				B8FD1B942CA6E6DF00142692 /* ItemView.swift */,
 				B89E071B2B987C0100B52111 /* ELOViewModel.swift */,
+				B86C26392E55F0C8004A929C /* ParametersPanel.swift */,
 				B84A064F2B99EC95003C06A8 /* ELOmodel.swift */,
 				B89E070C2B987B0E00B52111 /* ELOApp.swift */,
 				B84A06512B99ECC3003C06A8 /* ELOlogic.swift */,
@@ -190,6 +193,7 @@
 				B84754FF2BCFF6690048ADD6 /* GraphNodeShape.swift in Sources */,
 				B89E070F2B987B0E00B52111 /* ELOMainView.swift in Sources */,
 				B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */,
+				B86C263A2E55F0C8004A929C /* ParametersPanel.swift in Sources */,
 				B84A06502B99EC95003C06A8 /* ELOmodel.swift in Sources */,
 				B8FD1B952CA6E6DF00142692 /* ItemView.swift in Sources */,
 				B84755022BCFF9180048ADD6 /* FruchtermanReingold.swift in Sources */,
@@ -330,7 +334,7 @@
 				CODE_SIGN_ENTITLEMENTS = ELO/ELO.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"ELO/Preview Content\"";
 				DEVELOPMENT_TEAM = YD3HPRU5U8;
@@ -359,7 +363,7 @@
 				CODE_SIGN_ENTITLEMENTS = ELO/ELO.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"ELO/Preview Content\"";
 				DEVELOPMENT_TEAM = YD3HPRU5U8;

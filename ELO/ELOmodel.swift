@@ -20,6 +20,41 @@ enum SelectedGraph {
     }
 }
 
+
+enum ParameterType {
+    case int
+    case double
+    case bool
+}
+
+enum ParameterID {
+    case alpha
+    case studentAlpha
+    case skills
+    case threshold
+    case decay
+    case base_alpha
+}
+
+struct Parameter: Identifiable {
+    let id : ParameterID
+    var name: String
+    var shortname: String // To be used in the script to set a parameter
+    var type: ParameterType
+    var value: String   // numeric as string, bool as "true"/"false"
+    
+    func parsedValue() -> Any {
+        switch type {
+        case .int:
+            return Int(value) ?? 0
+        case .double:
+            return Double(value) ?? 0.0
+        case .bool:
+            return Bool(value) ?? false
+        }
+    }
+}
+
 struct ELOmodel {
     internal var logic = ELOlogic()
     
@@ -39,6 +74,85 @@ struct ELOmodel {
     var trace: String = "Starting ELO         \n"
     var splitHalfURL: URL?
     var testHalf: [Score] = []
+    var settingParameters: Bool = true
+    
+    static let defaultParameters: [Parameter] = [
+        Parameter(id: .alpha, name: "Learning Rate", shortname: "alpha", type: .double, value: "0.0005"),
+        Parameter(id: .studentAlpha, name: "Student Learning Rate", shortname: "student-alpha", type: .double, value: "0.0"),
+        Parameter(id: .skills, name: "Number of skills", shortname: "skills", type: .int, value: "4"),
+        Parameter(id: .threshold, name: "Graphing Threshold", shortname: "threshold", type: .double, value: "3.0"),
+        Parameter(id: .decay, name: "Decaying Learning Rate", shortname: "decaying-alpha", type: .bool, value: "false"),
+        Parameter(id: .base_alpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0")]
+    
+    var parameters: [Parameter] = ELOmodel.defaultParameters
+     { didSet {
+         if settingParameters {
+             logic.nSkills = parameterIntValue(for: .skills) ?? 4
+             logic.alpha = parameterDoubleValue(for: .alpha) ?? 0.05
+             logic.studentAlpha = parameterDoubleValue(for: .studentAlpha) ?? 0.0
+             logic.alphaHebb = parameterDoubleValue(for: .threshold) ?? 3.0
+             logic.decayingAlpha = parameterBoolValue(for: .decay) ?? false
+             logic.baseAlpha = parameterDoubleValue(for: .base_alpha) ?? 0.0
+         }
+    }}
+    
+    mutating func parametersFromModel() {
+        settingParameters = false
+        parameterSetInt(logic.nSkills, for: .skills)
+        parameterSetDouble(logic.alpha, for: .alpha)
+        parameterSetDouble(logic.studentAlpha, for: .studentAlpha)
+        parameterSetDouble(logic.alphaHebb, for: .threshold)
+        parameterSetBool(logic.decayingAlpha, for: .decay)
+        parameterSetDouble(logic.baseAlpha, for: .base_alpha)
+        settingParameters = true
+    }
+    
+    func parameterIntValue(for name: ParameterID) -> Int? {
+        guard let p = parameters.first(where: { $0.id == name }),
+              p.type == .int else { return nil }
+        return Int(p.value)
+    }
+    
+    func parameterDoubleValue(for name: ParameterID) -> Double? {
+        guard let p = parameters.first(where: { $0.id == name }),
+              p.type == .double else { return nil }
+        return Double(p.value)
+    }
+    
+    func parameterBoolValue(for name: ParameterID) -> Bool? {
+        guard let p = parameters.first(where: { $0.id == name }),
+              p.type == .bool else { return nil }
+        return Bool(p.value)
+    }
+    
+    func findParameter(for name: String) -> Parameter? {
+        let s = parameters.first(where: { $0.shortname == name })
+        return s
+    }
+    
+    mutating func parameterSetInt(_ newValue: Int, for name: ParameterID) {
+        if let index = parameters.firstIndex(where: { $0.id == name && $0.type == .int }) {
+            var updated = parameters[index]
+            updated.value = String(newValue)
+            parameters[index] = updated
+        }
+    }
+    
+    mutating func parameterSetDouble(_ newValue: Double, for name: ParameterID) {
+        if let index = parameters.firstIndex(where: { $0.id == name && $0.type == .double }) {
+            var updated = parameters[index]
+            updated.value = String(newValue)
+            parameters[index] = updated
+        }
+    }
+    
+    mutating func parameterSetBool(_ newValue: Bool, for name: ParameterID) {
+        if let index = parameters.firstIndex(where: { $0.id == name && $0.type == .bool }) {
+            var updated = parameters[index]
+            updated.value = newValue ? "true" : "false"
+            parameters[index] = updated
+        }
+    }
     
     mutating func createNewStudent(name: String = "NewStudent") {
         let newStudent = Student(name: name, nSkills: logic.nSkills)
@@ -60,6 +174,7 @@ struct ELOmodel {
     }
     
     mutating func runScript(filePath: URL) {
+        reset()
         let script = try? String(contentsOf: filePath, encoding: String.Encoding.utf8)
         guard script != nil else {
             addToTrace(s: "Failed to load script")
@@ -98,6 +213,8 @@ struct ELOmodel {
                 do {
                     let data = try Data(contentsOf: url)
                     logic = try JSONDecoder().decode(ELOlogic.self, from: data)
+                    print("Value of decaying alpha: \(logic.decayingAlpha)")
+                    parametersFromModel()
                     addToTrace(s: "Loading model from \(url.pathComponents.last!)")
                     selected = 0
                     primViewCalculateGraph()
@@ -166,30 +283,37 @@ struct ELOmodel {
                     } else {
                         addToTrace(s: "Invalid number for set epochs")
                     }
-                case "alpha","alpha-items":
-                    if let num = Double(parts[2]) {
-                        setAlpha(value: num)
-                    } else {
-                        addToTrace(s: "Invalid number for set alpha-items")
-                    }
-//                case "alpha-students":
+//                case "alpha","alpha-items":
 //                    if let num = Double(parts[2]) {
-//                        setASubjects(value: num)
+//                        parameterSetDouble(num, for: .alpha)
+////                        setAlpha(value: num)
 //                    } else {
-//                        addToTrace(s: "Invalid number for set alpha-students")
+//                        addToTrace(s: "Invalid number for set alpha-items")
 //                    }
-                case "alpha-hebb":
-                    if let num = Double(parts[2]) {
-                        setAHebb(value: num)
-                    } else {
-                        addToTrace(s: "Invalid number for set alpha-hebb")
-                    }
-                case "skills":
-                    if let num = Int(parts[2]) {
-                        setSkills(value: num)
-                    } else {
-                        addToTrace(s: "Invalid number for set skills")
-                    }
+////                case "alpha-students":
+////                    if let num = Double(parts[2]) {
+////                        setASubjects(value: num)
+////                    } else {
+////                        addToTrace(s: "Invalid number for set alpha-students")
+////                    }
+//                case "alpha-hebb":
+//                    if let num = Double(parts[2]) {
+//                        parameterSetDouble(num, for: .threshold)
+////                        setAHebb(value: num)
+//                    } else {
+//                        addToTrace(s: "Invalid number for set alpha-hebb")
+//                    }
+//                case "skills":
+//                    if let num = Int(parts[2]) {
+////                        setSkills(value: num)
+//                        parameterSetInt(num, for: .skills)
+//                    } else {
+//                        addToTrace(s: "Invalid number for set skills")
+//                    }
+//                case "decaying-alpha":
+//                    if let value = Bool(parts[2]) {
+//                        parameterSetBool(value, for: .decay)
+//                    }
                 case "show-last-students":
                     if parts[2].lowercased() == "true" || parts[2].lowercased() == "t" {
                         logic.showLastLoadedStudents = true
@@ -198,7 +322,23 @@ struct ELOmodel {
                     } else {
                         addToTrace(s: "Invalid value for set show-last-students")
                     }
-                default: addToTrace(s: "Invalid parameter name \(parts[1])")
+                default:
+                    guard let parameter = findParameter(for: parts[1]) else {
+                        addToTrace(s: "Invlaid parameter name \(parts[1])")
+                        return
+                    }
+                    switch parameter.type {
+                    case .int: parameterSetInt(Int(parts[2]) ?? 0, for: parameter.id)
+                    case .double: parameterSetDouble(Double(parts[2]) ?? 0.0, for: parameter.id)
+                    case .bool:
+                        if parts[2].lowercased() == "true" || parts[2].lowercased() == "t" {
+                            parameterSetBool(true, for: parameter.id)
+                        } else if parts[2].lowercased() == "false" || parts[2].lowercased() == "f" {
+                            parameterSetBool(false, for: parameter.id)
+                        } else {
+                            addToTrace(s: "Invalid value for set show-last-students")
+                        }
+                    }
                 }
             default: addToTrace(s: "Unknown command \(parts[0])")
             }
@@ -346,18 +486,18 @@ struct ELOmodel {
         logic.nEpochs = value
     }
     
-    mutating func setAlpha(value: Double) {
-        alpha = value
-        logic.alpha = value
-    }
+//    mutating func setAlpha(value: Double) {
+//        alpha = value
+//        logic.alpha = value
+//    }
     
 //    func setASubjects(value: Double) {
 //        logic.alphaStudents = value
 //    }
     
-    func setAHebb(value: Double) {
-        logic.alphaHebb = value
-    }
+//    func setAHebb(value: Double) {
+//        logic.alphaHebb = value
+//    }
     
     func setThreshold(value: Double) {
         logic.skillThreshold = value
@@ -369,6 +509,7 @@ struct ELOmodel {
     
     mutating func reset() {
         logic = ELOlogic()
+        parameters = ELOmodel.defaultParameters
 //        logic.resetModel()
         resetGraph()
         timeList = [0]

@@ -12,7 +12,8 @@ import Charts
 struct ELOMainView: View {
     @ObservedObject var model: ELOViewModel
     @State private var pickedTime: Int = 0
-    
+    @Environment(\.openWindow) private var openWindow
+
     func pickerContent() -> some View {
         VStack {
             ForEach(model.timeList, id:\.self) {
@@ -56,6 +57,9 @@ struct ELOMainView: View {
                         Label("Reset", systemImage: "eraser")
                     }
                     .padding()
+                    Button(action: {openWindow(id: "parameters")}) {
+                        Label("Parameters", systemImage: "list.bullet.clipboard")
+                    }
                     Picker("Time: ", selection: $pickedTime) {
                         ForEach(model.timeList, id:\.self) {
                             Text(String($0))
@@ -64,6 +68,9 @@ struct ELOMainView: View {
                     }
                     .pickerStyle(.automatic)
                     .padding()
+                    Text("Epochs:")
+                    TextField("Epochs", text: $model.nEpochsV)
+                        .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
                     Button(action: { model.run(time: pickedTime) }){
                         Label("Run", systemImage: "play")
                     }
@@ -75,24 +82,22 @@ struct ELOMainView: View {
                     .disabled(model.disableRun)
                     .padding()
                 }
-                HStack {
-                    Text("Epochs:")
-                    TextField("Epochs", text: $model.nEpochsV)
-                        .onChange(of: model.nEpochsV) { model.nEpochsV = model.changeEpochs(model.nEpochsV) }
-                    Text("Alpha:")
-                    TextField("aItems", text: $model.alphaV)
-                        .onChange(of: model.alphaV) { model.alphaV = model.changeAlpha(model.alphaV) }
-                    //                    Text("alphaSubjects:")
-                    //                    TextField("aSubs", text: $model.alphaStudentV)
-                    //                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
-                    Text("Threshold:")
-                    TextField("aHebb", text: $model.alphaHebbV)
-                        .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}
-                    Text("# Skills:")
-                    TextField("nSkills", text: $model.nSkillsV)
-                        .onChange(of: model.nSkillsV) { model.nSkillsV = model.changeNSkills(model.nSkillsV)}
-                    Spacer()
-                }
+//                HStack {
+//
+//                    Text("Alpha:")
+//                    TextField("aItems", text: $model.alphaV)
+//                        .onChange(of: model.alphaV) { model.alphaV = model.changeAlpha(model.alphaV) }
+//                    //                    Text("alphaSubjects:")
+//                    //                    TextField("aSubs", text: $model.alphaStudentV)
+//                    //                        .onChange(of: model.alphaStudentV) { model.alphaStudentV = model.changeASubjects(model.alphaStudentV)}
+//                    Text("Threshold:")
+//                    TextField("aHebb", text: $model.alphaHebbV)
+//                        .onChange(of: model.alphaHebbV) { model.alphaHebbV = model.changeAHebb(model.alphaHebbV)}
+//                    Text("# Skills:")
+//                    TextField("nSkills", text: $model.nSkillsV)
+//                        .onChange(of: model.nSkillsV) { model.nSkillsV = model.changeNSkills(model.nSkillsV)}
+//                    Spacer()
+//                }
                 
                 HSplitView {
                     VSplitView {

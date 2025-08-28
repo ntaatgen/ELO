@@ -69,8 +69,10 @@ struct ModelData: Identifiable, Codable {
     var y: Double
 }
 
+
 class ELOlogic: Codable {
-    static let alphaDefault = 0.0005
+//    static let alphaDefault = 0.0005
+    static let alphaDefault = 0.05
     static let nSkillsDefault = 4
 //    static let alphaStudentsDefault = 0.05
     static let alphaHebbDefault = 3.0
@@ -102,6 +104,10 @@ class ELOlogic: Codable {
     var showLastLoadedStudents = false
     var feedback: [Bool] = []
     var studentMode: Bool = false
+    var decayingAlpha = false
+    var baseAlpha: Double = 0.0
+    var studentAlpha: Double = 0.0
+    var studentAlphaActual: Double { studentAlpha == 0.0 ? alpha : studentAlpha }
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -375,7 +381,7 @@ class ELOlogic: Codable {
     ///   - beta2: The beta2 parameter for Adam, 0.99 by default
     ///   - epsilon: The epsilon parameter, 1e-8 by default
     ///   - alphaHebb: Learning multiplier (with alpha) to control the Hebbian learning.
-    func oneItemAdam(score: Score, alpha: Double = 0.001, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8, alphaHebb: Double = 1.0) {
+    func oneItemAdam(score: Score,  beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8) {
         let s = students[score.student]!
         let it = items[score.item]!
         let error = score.score - expectedScore(s: s, it: it)
@@ -402,10 +408,22 @@ class ELOlogic: Codable {
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
             if !studentMode {
-                it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
-                s.skills[i] = boundedAdd(s.skills[i],  -alpha * mhatS / (sqrt(vhatS) + epsilon))
+                if decayingAlpha {
+                    it.skills[i] = boundedAdd(it.skills[i], -(alpha / sqrt(Double(it.t)) ) * mhatI / (sqrt(vhatI) + epsilon))
+                    let sAdjust = -mhatS / (sqrt(vhatS) + epsilon)
+                    s.skills[i] = boundedAdd(s.skills[i],  ((sAdjust > 0 ? baseAlpha : 0.0) + studentAlphaActual/sqrt(Double(s.t))) * sAdjust)
+//                    s.skills[i] = boundedAdd(s.skills[i],  -(studentAlphaActual / sqrt(Double(s.t)) ) * mhatS / (sqrt(vhatS) + epsilon))
+                } else {
+                    it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+                    s.skills[i] = boundedAdd(s.skills[i],  -studentAlphaActual * mhatS / (sqrt(vhatS) + epsilon))
+                }
+//                s.skills[i] = boundedAdd(s.skills[i],  -0.0002 * mhatS / (sqrt(vhatS) + epsilon))
             } else {
-                s.skills[i] = boundedAdd(s.skills[i], -alpha * sGradient)
+                if decayingAlpha {
+                    s.skills[i] = boundedAdd(s.skills[i], -(studentAlphaActual / sqrt(Double(s.t))) * sGradient)
+                } else {
+                    s.skills[i] = boundedAdd(s.skills[i], -studentAlphaActual * sGradient)
+                }
             }
 
         }
@@ -464,7 +482,7 @@ class ELOlogic: Codable {
 
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
-                            oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                            oneItemAdam(score: scores[order[i]])
                     }
                 }
                 if j % 100 == 0 {
@@ -521,7 +539,7 @@ class ELOlogic: Codable {
             
             for i in 0..<order.count {
                 if time == nil || scores[order[i]].time == time! {
-                    oneItemAdam(score: scores[order[i]], alpha: alpha, alphaHebb: alphaHebb)
+                    oneItemAdam(score: scores[order[i]])
                 }
             }
         }
@@ -578,7 +596,7 @@ class ELOlogic: Codable {
         scores.append(newScore)
         print(students[student]!.skills)
         for _ in 0..<10 {
-            oneItemAdam(score: newScore, alpha: alpha) // Uses standard gradient descent, because studentModel == true
+            oneItemAdam(score: newScore) // Uses standard gradient descent, because studentModel == true
         }
         print(students[student]!.skills)
         for skills in 0..<nSkills {

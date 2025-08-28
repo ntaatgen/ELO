@@ -31,6 +31,8 @@ class ELOViewModel: ObservableObject {
     @Published var queryItem: ItemInfo? = nil
     @Published var feedback = [Color](repeating: Color.white, count: 10)
     @Published var disableRun = false
+    @Published var draftParameters: [Parameter] = []
+
     var lastLoadPath: URL? = nil
     var lastClickedNode: UUID? = nil
     let maxImages = 10 // How many item images maximally at the same time
@@ -68,6 +70,10 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    var parameters: [Parameter] {
+        model.parameters
+    }
+    
     var trace: String {
         model.trace
     }
@@ -82,6 +88,19 @@ class ELOViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.updatePrimsGraph(_:)), name: NSNotification.Name(rawValue: "updatePrimsGraph"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.runDone(_:)), name: NSNotification.Name(rawValue: "runDone"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(ELOViewModel.endRun(_:)), name: NSNotification.Name(rawValue: "endRun"), object: nil)
+    }
+    
+    
+    func startEditing() {
+        draftParameters = model.parameters
+    }
+    
+    func confirmChanges() {
+        model.parameters = draftParameters
+    }
+    
+    func cancelChanges() {
+        draftParameters = []
     }
     
     func setImage(name: String, node: UUID) {
@@ -131,7 +150,8 @@ class ELOViewModel: ObservableObject {
     
     func createNewStudent() {
         model.createNewStudent()
-        _ = changeAlpha("0.01")
+        model.parameterSetDouble(0.01, for: .alpha)
+//        _ = changeAlpha("0.01")
         alphaV = "0.01"
         studentMode = true
     }
@@ -266,16 +286,16 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-    func changeAlpha(_ value:String) -> String {
-        if let numval = Double(value) {
-            model.setAlpha(value: numval)
-            model.addToTrace(s: "Changing Alpha  to \(numval)")
-            return value
-        } else {
-            model.addToTrace(s: "Illegal value for Alpha")
-            return String(model.alpha)
-        }
-    }
+//    func changeAlpha(_ value:String) -> String {
+//        if let numval = Double(value) {
+//            model.setAlpha(value: numval)
+//            model.addToTrace(s: "Changing Alpha  to \(numval)")
+//            return value
+//        } else {
+//            model.addToTrace(s: "Illegal value for Alpha")
+//            return String(model.alpha)
+//        }
+//    }
     
 //    func changeASubjects(_ value:String) -> String {
 //        if let numval = Double(value) {
@@ -288,16 +308,16 @@ class ELOViewModel: ObservableObject {
 //        }
 //    }
     
-    func changeAHebb(_ value:String) -> String {
-        if let numval = Double(value) {
-            model.setAHebb(value: numval)
-            model.addToTrace(s: "Changing Alpha Hebb to \(numval)")
-            return value
-        } else {
-            model.addToTrace(s: "Illegal value for Alpha Hebb")
-            return String(model.logic.alphaHebb)
-        }
-    }
+//    func changeAHebb(_ value:String) -> String {
+//        if let numval = Double(value) {
+//            model.setAHebb(value: numval)
+//            model.addToTrace(s: "Changing Alpha Hebb to \(numval)")
+//            return value
+//        } else {
+//            model.addToTrace(s: "Illegal value for Alpha Hebb")
+//            return String(model.logic.alphaHebb)
+//        }
+//    }
     
     
     func changeNSkills(_ value:String) -> String {
@@ -472,12 +492,12 @@ class ELOViewModel: ObservableObject {
     }
     
     func updateParameters() {
-        alphaV = String(model.logic.alpha)
-        nSkillsV = String(model.logic.nSkills)
-//        alphaStudentV = String(model.logic.alphaStudents)
-        alphaHebbV = String(model.logic.alphaHebb)
+//        alphaV = String(model.logic.alpha)
+//        nSkillsV = String(model.logic.nSkills)
+//        alphaHebbV = String(model.logic.alphaHebb)
         nEpochsV = String(model.logic.nEpochs)
         lastLoaded = model.logic.showLastLoadedStudents
+        model.parametersFromModel()
     }
     
     @objc func updatePrimsGraph(_ notification: Notification) {

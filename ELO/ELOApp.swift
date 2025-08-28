@@ -19,16 +19,23 @@ struct ELOApp: App {
                 Button("Load data...") {
                     model.loadData()
                 }
+                .keyboardShortcut("o", modifiers: [.command])
                 Button("Add data...") {
                     model.loadData(add: true)
                 }
                 Divider()
+                Button("Open Parameters Panel") {
+                    openWindow(id: "parameters")  // ✅ tell SwiftUI which window to open
+                }
+                .keyboardShortcut("p", modifiers: [.command])
+                
                 Toggle(isOn: $model.lastLoaded, label: { Text("Last loaded students") })
-//                Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
+                //                Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
                 Divider()
                 Button("Run script...") {
                     model.runScript()
                 }
+                .keyboardShortcut("r", modifiers: [.command])
                 Button("Split half analysis") {
                     model.splitHalf()
                 }
@@ -65,5 +72,9 @@ struct ELOApp: App {
                 Divider()
             }
         }
+        Window("Parameters", id: "parameters") {
+            ParametersPanel(viewModel: model)
+        }
     }
+    @Environment(\.openWindow) private var openWindow
 }

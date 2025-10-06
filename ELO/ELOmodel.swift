@@ -33,7 +33,8 @@ enum ParameterID {
     case skills
     case threshold
     case decay
-    case base_alpha
+    case baseAlpha
+    case studentMode
 }
 
 struct Parameter: Identifiable {
@@ -77,12 +78,13 @@ struct ELOmodel {
     var settingParameters: Bool = true
     
     static let defaultParameters: [Parameter] = [
-        Parameter(id: .alpha, name: "Learning Rate", shortname: "alpha", type: .double, value: "0.0005"),
+        Parameter(id: .alpha, name: "Learning Rate", shortname: "alpha", type: .double, value: "0.1"),
         Parameter(id: .studentAlpha, name: "Student Learning Rate", shortname: "student-alpha", type: .double, value: "0.0"),
         Parameter(id: .skills, name: "Number of skills", shortname: "skills", type: .int, value: "4"),
-        Parameter(id: .threshold, name: "Graphing Threshold", shortname: "threshold", type: .double, value: "3.0"),
-        Parameter(id: .decay, name: "Decaying Learning Rate", shortname: "decaying-alpha", type: .bool, value: "false"),
-        Parameter(id: .base_alpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0")]
+        Parameter(id: .threshold, name: "Graphing Threshold", shortname: "threshold", type: .double, value: "2.0"),
+        Parameter(id: .decay, name: "Decaying Learning Rate", shortname: "decaying-alpha", type: .bool, value: "true"),
+        Parameter(id: .baseAlpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0"),
+        Parameter(id: .studentMode, name: "Student mode", shortname: "student-mode", type: .bool, value: "false")]
     
     var parameters: [Parameter] = ELOmodel.defaultParameters
      { didSet {
@@ -92,7 +94,8 @@ struct ELOmodel {
              logic.studentAlpha = parameterDoubleValue(for: .studentAlpha) ?? 0.0
              logic.alphaHebb = parameterDoubleValue(for: .threshold) ?? 3.0
              logic.decayingAlpha = parameterBoolValue(for: .decay) ?? false
-             logic.baseAlpha = parameterDoubleValue(for: .base_alpha) ?? 0.0
+             logic.baseAlpha = parameterDoubleValue(for: .baseAlpha) ?? 0.0
+             logic.studentMode = parameterBoolValue(for: .studentMode) ?? false
          }
     }}
     
@@ -103,7 +106,8 @@ struct ELOmodel {
         parameterSetDouble(logic.studentAlpha, for: .studentAlpha)
         parameterSetDouble(logic.alphaHebb, for: .threshold)
         parameterSetBool(logic.decayingAlpha, for: .decay)
-        parameterSetDouble(logic.baseAlpha, for: .base_alpha)
+        parameterSetDouble(logic.baseAlpha, for: .baseAlpha)
+        parameterSetBool(logic.studentMode, for: .studentMode)
         settingParameters = true
     }
     
@@ -534,12 +538,15 @@ struct ELOmodel {
     
     
     mutating func primViewCalculateGraph() {
+        if logic.primGraphRecalculate || primGraphData == nil {
         primGraphData = FruchtermanReingold(W: 300.0, H: 300.0)
         primGraphData!.constantC = 0.1
         primGraphData!.orderThreshold = logic.alphaHebb
         primGraphData!.setUpGraph(logic)
-
+        
         primGraphData!.calculate(randomInit: true)
+                }
+        logic.primGraphRecalculate = false
     }
     
     func averageScore(s: Student, items: [Item]) -> Double? {

@@ -150,9 +150,9 @@ class ELOViewModel: ObservableObject {
     
     func createNewStudent() {
         model.createNewStudent()
-        model.parameterSetDouble(0.01, for: .alpha)
+//        model.parameterSetDouble(0.01, for: .alpha)
 //        _ = changeAlpha("0.01")
-        alphaV = "0.01"
+//        alphaV = "0.01"
         studentMode = true
     }
     

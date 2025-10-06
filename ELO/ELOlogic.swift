@@ -18,6 +18,7 @@ class Student: Codable {
         self.name = name
 //        self.skills = (0..<nSkills).map { _ in .random(in: 0.1...0.3) }
         self.skills = (0..<nSkills).map { _ in .random(in: 0.15...0.18) }
+//        self.skills = (0..<nSkills).map { _ in .random(in: 0.5...0.53) }
         self.m = (0..<nSkills).map {_ in 0 }
         self.v = (0..<nSkills).map {_ in 0 }
     }
@@ -81,8 +82,8 @@ class ELOlogic: Codable {
     static let maxSkills = 8
     var nEpochs = ELOlogic.epochsDefault
     var alpha = ELOlogic.alphaDefault
-    var alphaHebb = ELOlogic.alphaHebbDefault
-    var skillThreshold = 0.5
+    var alphaHebb = ELOlogic.alphaHebbDefault  {didSet { if oldValue != alphaHebb { primGraphRecalculate = true }}}
+    var skillThreshold = 0.5 {didSet { if oldValue != alphaHebb { primGraphRecalculate = true }}}
     static let nItems = 16
     static let nStudents = 2000
     var students: [String:Student] = [:]
@@ -104,10 +105,12 @@ class ELOlogic: Codable {
     var showLastLoadedStudents = false
     var feedback: [Bool] = []
     var studentMode: Bool = false
-    var decayingAlpha = false
+    var decayingAlpha = true
     var baseAlpha: Double = 0.0
     var studentAlpha: Double = 0.0
     var studentAlphaActual: Double { studentAlpha == 0.0 ? alpha : studentAlpha }
+    var primGraphRecalculate = true // Do we need to recalculate the primGraph?
+
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -200,6 +203,7 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
+        primGraphRecalculate = true
     }
     
     /// Convert an integer to a binary representation
@@ -238,6 +242,7 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
+        primGraphRecalculate = true
         for i in 0..<ELOlogic.nItems {
             
             let j = Item(name: String(format: "%03d", i), nSkills: nSkills)
@@ -279,6 +284,7 @@ class ELOlogic: Codable {
         synthetic = false
         lineCounter = 0
         counter = 0
+        primGraphRecalculate = true
         let itemSet = [0, 0, 0, 2, 2, 2, 2, 6, 6, 10, 10, 14, 14, 14, 11, 11, 15, 15, 15]
         for i in 0..<itemSet.count {
             let j = Item(name: String(format: "%03d-%03d", i, itemSet[i]), nSkills: nSkills)
@@ -408,6 +414,7 @@ class ELOlogic: Codable {
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
             if !studentMode {
+                primGraphRecalculate = true
                 if decayingAlpha {
                     it.skills[i] = boundedAdd(it.skills[i], -(alpha / sqrt(Double(it.t)) ) * mhatI / (sqrt(vhatI) + epsilon))
                     let sAdjust = -mhatS / (sqrt(vhatS) + epsilon)
@@ -420,7 +427,9 @@ class ELOlogic: Codable {
 //                s.skills[i] = boundedAdd(s.skills[i],  -0.0002 * mhatS / (sqrt(vhatS) + epsilon))
             } else {
                 if decayingAlpha {
-                    s.skills[i] = boundedAdd(s.skills[i], -(studentAlphaActual / sqrt(Double(s.t))) * sGradient)
+                    let sAdjust = -sGradient
+                    s.skills[i] = boundedAdd(s.skills[i],  ((sAdjust > 0 ? baseAlpha : 0.0) + studentAlphaActual/sqrt(Double(s.t))) * sAdjust)
+//                    s.skills[i] = boundedAdd(s.skills[i], -(studentAlphaActual / sqrt(Double(s.t))) * sGradient)
                 } else {
                     s.skills[i] = boundedAdd(s.skills[i], -studentAlphaActual * sGradient)
                 }
@@ -460,6 +469,11 @@ class ELOlogic: Codable {
                 print("epoch", j)
                 var order = Array(0..<scores.count)
                 order.shuffle()
+                for i in 0..<order.count {
+                    if time == nil || scores[order[i]].time == time! {
+                            oneItemAdam(score: scores[order[i]])
+                    }
+                }
                 if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
                     for key in sortedKeys {
                         if items[key]!.experiences > 0 {
@@ -477,14 +491,10 @@ class ELOlogic: Codable {
                     }
                     let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
                     errors.append(dp)
-                    lineCounter += (nEpochs/10)
+//                    lineCounter += (nEpochs/10)
                 }
+                lineCounter += 1
 
-                for i in 0..<order.count {
-                    if time == nil || scores[order[i]].time == time! {
-                            oneItemAdam(score: scores[order[i]])
-                    }
-                }
                 if j % 100 == 0 {
                     DispatchQueue.main.async {
                         self.counter = j
@@ -513,35 +523,38 @@ class ELOlogic: Codable {
     /// Same as calculateModel, except it does not run in the background and does not update the View.
     /// - Parameter time: If set, only process datapoints at that time, if nil process all datapoints
     func calculateModelForBatch(time: Int!) {
+        func updateGraphs() {
+            for key in sortedKeys {
+                if items[key]!.experiences > 0 {
+                    for skills in 0..<nSkills {
+                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                        results.append(dp)
+                    }
+                }
+            }
+            for key in studentKeys {
+                for skills in 0..<nSkills {
+                    let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+                    studentResults.append(dp)
+                }
+            }
+            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+            errors.append(dp)
+        }
+        updateGraphs()
         for j in 0..<nEpochs {
             print("epoch", j)
             var order = Array(0..<scores.count)
             order.shuffle()
-            if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
-                for key in sortedKeys {
-                    if items[key]!.experiences > 0 {
-                        for skills in 0..<nSkills {
-                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                            results.append(dp)
-                        }
-                    }
-                }
-                for key in studentKeys {
-                    for skills in 0..<nSkills {
-                        let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                        studentResults.append(dp)
-                    }
-                }
-                let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-                errors.append(dp)
-                lineCounter += (nEpochs/10)
-            }
-            
             for i in 0..<order.count {
                 if time == nil || scores[order[i]].time == time! {
                     oneItemAdam(score: scores[order[i]])
                 }
             }
+            if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
+                updateGraphs()
+            }
+            lineCounter += 1
         }
                 self.counter = self.nEpochs
     }
@@ -595,9 +608,9 @@ class ELOlogic: Codable {
         let newScore = Score(student: students[student]!, item: items[itemInfo.name]!, score: score, time: 100)
         scores.append(newScore)
         print(students[student]!.skills)
-        for _ in 0..<10 {
+//        for _ in 0..<10 {
             oneItemAdam(score: newScore) // Uses standard gradient descent, because studentModel == true
-        }
+//        }
         print(students[student]!.skills)
         for skills in 0..<nSkills {
             let dp = ModelData(item: itemInfo.name, z: skills, x: lineCounter, y: items[itemInfo.name]!.skills[skills])

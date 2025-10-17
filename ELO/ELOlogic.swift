@@ -39,6 +39,7 @@ class Item: Codable {
     var guessPv: Double = 0
     var mistakePv: Double = 0
     var executable: Bool = false
+    var cluster: Int? = nil
     init(name: String, nSkills: Int) {
         self.name = name
 //        self.skills = (0..<nSkills).map { _ in .random(in: 0.4...0.6) }
@@ -110,7 +111,8 @@ class ELOlogic: Codable {
     var studentAlpha: Double = 0.0
     var studentAlphaActual: Double { studentAlpha == 0.0 ? alpha : studentAlpha }
     var primGraphRecalculate = true // Do we need to recalculate the primGraph?
-
+    var clusters = 10 // Number of clusters for kmeans
+    var showClusters = false // Do we show clusters or the standard graph?
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -390,12 +392,16 @@ class ELOlogic: Codable {
     func oneItemAdam(score: Score,  beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8) {
         let s = students[score.student]!
         let it = items[score.item]!
-        let error = score.score - expectedScore(s: s, it: it)
+        let expected: Double = expectedScore(s: s, it: it)
+        let error: Double = score.score - expected
         var expectedWithoutSkill: [Double] = []
         for i in 0..<nSkills {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
         }
         for i in 0..<nSkills {
+            let errorTerm: Double  = -(score.score/(expected + 0.0001)) + (1.0 - score.score)/(1.0 - expected + 0.0001)
+//            let itGradient = errorTerm * expectedWithoutSkill[i] * (s.skills[i] - 1.0)
+            
             
             let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1)
             it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
@@ -404,6 +410,8 @@ class ELOlogic: Codable {
             
             let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
             let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
+            
+//            let sGradient = errorTerm  * expectedWithoutSkill[i] * it.skills[i]
             
             let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
             s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
@@ -511,6 +519,10 @@ class ELOlogic: Codable {
             for key in sortedKeys {
                 print(key,items[key]!.skills)
             }
+//            print(kMeans(points: items, k: 6))
+//            for (name, item) in items {
+//                print("\(name): \(item.cluster!)")
+//            }
             DispatchQueue.main.async {
                 self.counter = self.nEpochs
                 NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
@@ -518,6 +530,7 @@ class ELOlogic: Codable {
 
             }
         }
+
     }
     
     /// Same as calculateModel, except it does not run in the background and does not update the View.
@@ -625,6 +638,7 @@ class ELOlogic: Codable {
         lineCounter += 1
         return score
     }
+
 
 
 }

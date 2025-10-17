@@ -446,7 +446,17 @@ class ELOViewModel: ObservableObject {
         Color.pink
     ]
     
-
+    func clusterNodes() {
+        model.assignClusters()
+        model.logic.showClusters = true
+        model.logic.primGraphRecalculate = true
+        primViewCalculateGraph()
+        
+    }
+    
+    func findOptimalClusters() {
+        model.findOptimalClusters()
+    }
     
     func primViewCalculateGraph() {
         model.primViewCalculateGraph()

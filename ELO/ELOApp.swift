@@ -62,6 +62,13 @@ struct ELOApp: App {
                 }
             }
             CommandGroup(replacing: CommandGroupPlacement.toolbar) {
+                Button("Find optimal clusters") {
+                    model.findOptimalClusters()
+                }
+                Button("Switch to clustered nodes") {
+                    model.clusterNodes()
+                }
+                Divider()
                 Toggle(isOn: $model.selectableNodeLabels, label: { Text("Selectable node labels")})
                 Divider()
                 Toggle(isOn: $model.studentMode, label: { Text("Student Mode")})

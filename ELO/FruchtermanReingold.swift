@@ -335,7 +335,8 @@ class FruchtermanReingold {
             if item.experiences == 0 {
                 continue
             }
-            let s = itemToSkillString(item: item, model: model)
+            let s = model.showClusters ? String(item.cluster!) : itemToSkillString(item: item, model: model)
+//            let s = itemToSkillString(item: item, model: model)
             if let node = nodes[s] {
                 node.items.append(item)
             } else {

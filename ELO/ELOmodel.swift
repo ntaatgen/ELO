@@ -35,6 +35,7 @@ enum ParameterID {
     case decay
     case baseAlpha
     case studentMode
+    case clusters
 }
 
 struct Parameter: Identifiable {
@@ -84,7 +85,8 @@ struct ELOmodel {
         Parameter(id: .threshold, name: "Graphing Threshold", shortname: "threshold", type: .double, value: "2.0"),
         Parameter(id: .decay, name: "Decaying Learning Rate", shortname: "decaying-alpha", type: .bool, value: "true"),
         Parameter(id: .baseAlpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0"),
-        Parameter(id: .studentMode, name: "Student mode", shortname: "student-mode", type: .bool, value: "false")]
+        Parameter(id: .studentMode, name: "Student mode", shortname: "student-mode", type: .bool, value: "false"),
+        Parameter(id: .clusters, name: "Number of clusters", shortname: "clusters", type: .int, value: "10")]
     
     var parameters: [Parameter] = ELOmodel.defaultParameters
      { didSet {
@@ -96,6 +98,7 @@ struct ELOmodel {
              logic.decayingAlpha = parameterBoolValue(for: .decay) ?? false
              logic.baseAlpha = parameterDoubleValue(for: .baseAlpha) ?? 0.0
              logic.studentMode = parameterBoolValue(for: .studentMode) ?? false
+             logic.clusters = parameterIntValue(for: .clusters) ?? 10
          }
     }}
     
@@ -108,6 +111,7 @@ struct ELOmodel {
         parameterSetBool(logic.decayingAlpha, for: .decay)
         parameterSetDouble(logic.baseAlpha, for: .baseAlpha)
         parameterSetBool(logic.studentMode, for: .studentMode)
+        parameterSetInt(logic.clusters, for: .clusters)
         settingParameters = true
     }
     
@@ -524,6 +528,7 @@ struct ELOmodel {
     }
     
     mutating func run(time: Int? = nil) {
+        logic.showClusters = false
             logic.calculateModel(time: time)
             selected = 0
         
@@ -534,8 +539,25 @@ struct ELOmodel {
         graphData = nil
     }
     
-       
+    mutating func assignClusters() {
+        guard logic.items.count >= logic.clusters else { return }
+        let (clusters, sumss) = kMeans(points: logic.items, k: logic.clusters, dim: logic.nSkills)
+        for i in 0..<clusters.count {
+            var s = "Cluster #\(i) "
+            for value in clusters[i] {
+                s += "\(round(value * 100) / 100), "
+            }
+            addToTrace(s: s)
+        }
+        addToTrace(s: "Total within sum of squares: \(sumss) AIC = \(sumss + Double(logic.nSkills * logic.clusters))")
+    }
     
+    mutating func findOptimalClusters() {
+        for i in 2..<min(50,logic.items.count - 5) {
+            let (_, sumss) = kMeans(points: logic.items, k: i, dim: logic.nSkills)
+            addToTrace(s: "\(i) clusters AIC = \(sumss + Double(logic.nSkills * i))")
+        }
+    }
     
     mutating func primViewCalculateGraph() {
         if logic.primGraphRecalculate || primGraphData == nil {

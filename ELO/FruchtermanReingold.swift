@@ -214,7 +214,7 @@ class FruchtermanReingold {
         guard !nodes.isEmpty else { return }
         var studentToIndex: [String:Int] = [:]
         var nodeToIndex: [String:Int] = [:]
-        var itemToNode: [String:String] = [:]
+        var itemToNode: [String:String] = [:] /// Given an item name, what node is it in
         var n = 0
         for (_, s) in logic.students {
             studentToIndex[s.name] = n
@@ -361,18 +361,31 @@ class FruchtermanReingold {
         
         calculateNodeRelations(logic: model)
         
-        for (_, node1) in nodes {
-            for (_, node2) in nodes {
-                if node1.name != node2.name &&
-                    (itemHigherThan(item1: node1.items[0], item2: node2.items[0], model: model) ||
-                     (node1.relations.contains(node2.name) && !(itemHigherThan(item1: node2.items[0], item2: node1.items[0], model: model))))  {
-                    let newEdge = Edge(from: node2, to: node1)
-                    edges.append(newEdge)
+        if model.showClusters {
+            for (_, node1) in nodes {
+                for (_, node2) in nodes {
+                    if node1.relations.contains(node2.name) {
+                        let newEdge = Edge(from: node2, to: node1)
+                        edges.append(newEdge)
+                    }
                 }
-//                else if itemHigherThan(item1: node.items[0], item2: item, model: model) {
-//                    let newEdge = Edge(from: newNode, to: node)
-//                    edges.append(newEdge)
-//                }
+            }
+            
+        } else {
+            
+            for (_, node1) in nodes {
+                for (_, node2) in nodes {
+                    if node1.name != node2.name &&
+                        (itemHigherThan(item1: node1.items[0], item2: node2.items[0], model: model) ||
+                         (node1.relations.contains(node2.name) && !(itemHigherThan(item1: node2.items[0], item2: node1.items[0], model: model))))  {
+                        let newEdge = Edge(from: node2, to: node1)
+                        edges.append(newEdge)
+                    }
+                    //                else if itemHigherThan(item1: node.items[0], item2: item, model: model) {
+                    //                    let newEdge = Edge(from: newNode, to: node)
+                    //                    edges.append(newEdge)
+                    //                }
+                }
             }
         }
         

@@ -261,6 +261,20 @@ struct ELOmodel {
                 }
                 let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
                 writeDataToFile(url: url, lastonly: true)
+            case "write-log":
+                guard parts.count == 2 else {
+                    addToTrace(s: "Invalid number of arguments in write-log")
+                    return
+                }
+                let url: URL = filePath.deletingLastPathComponent().appendingPathComponent(parts[1])
+                do {
+                    try trace.write(to: url, atomically: true, encoding: .utf8)
+                    addToTrace(s: "Saving data to file \(url.pathComponents.last!)")
+                }
+                catch let error as NSError {
+                    addToTrace(s: "Ooops! Something went wrong: \(error)")
+                    return
+                }
             case "run":
                 guard parts.count <= 2 else {
                     addToTrace(s: "Invalid number of arguments in run")
@@ -273,11 +287,11 @@ struct ELOmodel {
                     if let x = Int(parts[1]) {
                         time = x
                         logic.calculateModelForBatch(time: time)
+                        addToTrace(s: "Model error \(logic.calculateError())")
                     } else {
                         addToTrace(s: "Invalid time argument in run")
                     }
                 }
-                
                 
             case "set":
                 guard parts.count == 3 else {
@@ -348,6 +362,8 @@ struct ELOmodel {
                         }
                     }
                 }
+            case "comment":
+                addToTrace(s: line)
             default: addToTrace(s: "Unknown command \(parts[0])")
             }
             
@@ -372,6 +388,9 @@ struct ELOmodel {
             for j in 0..<item.skills.count {
                 output += ", " + String(item.skills[j])
             }
+            if logic.showClusters {
+                output += ", " + String(item.cluster ?? -1)
+            }
             output += "\n"
         }
         if lastonly {
@@ -381,6 +400,9 @@ struct ELOmodel {
                 for j in 0..<student.skills.count {
                     output += ", " + String(student.skills[j])
                 }
+                if logic.showClusters {
+                    output += ", 0"
+                }
                 output += "\n"
             }
         } else {
@@ -388,6 +410,9 @@ struct ELOmodel {
                 output += "student, " + student.name
                 for j in 0..<student.skills.count {
                     output += ", " + String(student.skills[j])
+                }
+                if logic.showClusters {
+                    output += ", 0"
                 }
                 output += "\n"
             }
@@ -421,6 +446,7 @@ struct ELOmodel {
             addToTrace(s: "No data loaded to split.")
             return
         }
+        selected = 0
         splitHalfURL = url
         (logic.scores, testHalf) = splitArrayInTwo(logic.scores)
         

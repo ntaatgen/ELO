@@ -399,7 +399,7 @@ class ELOlogic: Codable {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
         }
         for i in 0..<nSkills {
-            let errorTerm: Double  = -(score.score/(expected + 0.0001)) + (1.0 - score.score)/(1.0 - expected + 0.0001)
+//            let errorTerm: Double  = -(score.score/(expected + 0.0001)) + (1.0 - score.score)/(1.0 - expected + 0.0001)
 //            let itGradient = errorTerm * expectedWithoutSkill[i] * (s.skills[i] - 1.0)
             
             

@@ -276,9 +276,9 @@ class FruchtermanReingold {
                 let LTGTfraction = (sumLT/sumGT)
                 if LTGTfraction > orderThreshold {
                     nodes[node1]!.relations.insert(node2)
-                    print("Added \(node1) > \(node2)")
+//                    print("Added \(node1) > \(node2)")
                 }
-                print("Similarity between \(node1) and \(node2) is \(sumDiff/count)  GT = \(sumGT/count) LT = \(sumLT/count)" )
+//                print("Similarity between \(node1) and \(node2) is \(sumDiff/count)  GT = \(sumGT/count) LT = \(sumLT/count)" )
             }
         }
         

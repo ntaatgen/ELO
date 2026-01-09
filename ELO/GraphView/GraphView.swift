@@ -23,6 +23,9 @@ struct GraphView: View {
                     Text("Threshold:")
                     TextField("Threshold", text: $thresh) //, onEditingChanged: {changed in model.changeTreshold(thresh)})
                         .onChange(of: thresh) { model.changeTreshold(thresh) }
+                    Button("Pdf") {
+                        try! writePDF(of: GraphViewPDF(model: model))
+                    }
                     Spacer()
                 }
                 GeometryReader { geometry in

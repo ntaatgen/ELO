@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B84120AF2C35E14A00469710 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = B84120AE2C35E14A00469710 /* Credits.rtf */; };
+		B84721BE2F0FC5D00003FF0A /* GraphViewPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84721BD2F0FC5C50003FF0A /* GraphViewPDF.swift */; };
 		B84754FC2BCFF6690048ADD6 /* GraphEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F62BCFF6690048ADD6 /* GraphEdge.swift */; };
 		B84754FD2BCFF6690048ADD6 /* GraphHalo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F72BCFF6690048ADD6 /* GraphHalo.swift */; };
 		B84754FE2BCFF6690048ADD6 /* GraphNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84754F82BCFF6690048ADD6 /* GraphNode.swift */; };
@@ -23,11 +24,13 @@
 		B89E07142B987B0F00B52111 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B89E07132B987B0F00B52111 /* Preview Assets.xcassets */; };
 		B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E071B2B987C0100B52111 /* ELOViewModel.swift */; };
 		B8E7AF542E96B61200ED97F7 /* Cluster.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7AF532E96B61200ED97F7 /* Cluster.swift */; };
+		B8F9BB312F0F9DC8005FBBB3 /* Writepdf.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F9BB302F0F9DC8005FBBB3 /* Writepdf.swift */; };
 		B8FD1B952CA6E6DF00142692 /* ItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD1B942CA6E6DF00142692 /* ItemView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B84120AE2C35E14A00469710 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		B84721BD2F0FC5C50003FF0A /* GraphViewPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphViewPDF.swift; sourceTree = "<group>"; };
 		B84754F62BCFF6690048ADD6 /* GraphEdge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphEdge.swift; sourceTree = "<group>"; };
 		B84754F72BCFF6690048ADD6 /* GraphHalo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphHalo.swift; sourceTree = "<group>"; };
 		B84754F82BCFF6690048ADD6 /* GraphNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphNode.swift; sourceTree = "<group>"; };
@@ -46,6 +49,7 @@
 		B89E07152B987B0F00B52111 /* ELO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ELO.entitlements; sourceTree = "<group>"; };
 		B89E071B2B987C0100B52111 /* ELOViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELOViewModel.swift; sourceTree = "<group>"; };
 		B8E7AF532E96B61200ED97F7 /* Cluster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cluster.swift; sourceTree = "<group>"; };
+		B8F9BB302F0F9DC8005FBBB3 /* Writepdf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Writepdf.swift; sourceTree = "<group>"; };
 		B8FD1B942CA6E6DF00142692 /* ItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -68,6 +72,7 @@
 				B84754F82BCFF6690048ADD6 /* GraphNode.swift */,
 				B84754F92BCFF6690048ADD6 /* GraphNodeShape.swift */,
 				B84754FA2BCFF6690048ADD6 /* GraphView.swift */,
+				B84721BD2F0FC5C50003FF0A /* GraphViewPDF.swift */,
 			);
 			name = GraphView;
 			path = ELO/GraphView;
@@ -104,6 +109,7 @@
 				B84A06512B99ECC3003C06A8 /* ELOlogic.swift */,
 				B8E7AF532E96B61200ED97F7 /* Cluster.swift */,
 				B87EFC772BFDF99300165F1E /* oldcode.swift */,
+				B8F9BB302F0F9DC8005FBBB3 /* Writepdf.swift */,
 				B89E07102B987B0F00B52111 /* Assets.xcassets */,
 				B89E07152B987B0F00B52111 /* ELO.entitlements */,
 				B89E07122B987B0F00B52111 /* Preview Content */,
@@ -194,11 +200,13 @@
 				B84755002BCFF6690048ADD6 /* GraphView.swift in Sources */,
 				B84754FD2BCFF6690048ADD6 /* GraphHalo.swift in Sources */,
 				B84754FF2BCFF6690048ADD6 /* GraphNodeShape.swift in Sources */,
+				B84721BE2F0FC5D00003FF0A /* GraphViewPDF.swift in Sources */,
 				B89E070F2B987B0E00B52111 /* ELOMainView.swift in Sources */,
 				B89E071C2B987C0100B52111 /* ELOViewModel.swift in Sources */,
 				B86C263A2E55F0C8004A929C /* ParametersPanel.swift in Sources */,
 				B84A06502B99EC95003C06A8 /* ELOmodel.swift in Sources */,
 				B8FD1B952CA6E6DF00142692 /* ItemView.swift in Sources */,
+				B8F9BB312F0F9DC8005FBBB3 /* Writepdf.swift in Sources */,
 				B84755022BCFF9180048ADD6 /* FruchtermanReingold.swift in Sources */,
 				B89E070D2B987B0E00B52111 /* ELOApp.swift in Sources */,
 				B8E7AF542E96B61200ED97F7 /* Cluster.swift in Sources */,

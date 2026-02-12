@@ -246,6 +246,7 @@ class FruchtermanReingold {
                 }
             }
         }
+        // studentScore[i][j] is the average score that student j obtained in node i
         for (node1,_) in nodes {
             for (node2,_) in nodes {
                 if node1 == node2 { continue }
@@ -257,8 +258,8 @@ class FruchtermanReingold {
                     if studentScore[nodeToIndex[node1]!][studentToIndex[s]!] != nil &&
                         studentScore[nodeToIndex[node2]!][studentToIndex[s]!] != nil
                     {
-                        sumDiff += abs(studentScore[nodeToIndex[node1]!][studentToIndex[s]!]! -
-                                       studentScore[nodeToIndex[node2]!][studentToIndex[s]!]!)
+//                        sumDiff += abs(studentScore[nodeToIndex[node1]!][studentToIndex[s]!]! -
+//                                       studentScore[nodeToIndex[node2]!][studentToIndex[s]!]!)
                         sumGT += relu(studentScore[nodeToIndex[node1]!][studentToIndex[s]!]! -
                                        studentScore[nodeToIndex[node2]!][studentToIndex[s]!]!)
                         sumLT +=

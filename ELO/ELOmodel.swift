@@ -346,7 +346,7 @@ struct ELOmodel {
                     }
                 default:
                     guard let parameter = findParameter(for: parts[1]) else {
-                        addToTrace(s: "Invlaid parameter name \(parts[1])")
+                        addToTrace(s: "Invalid parameter name \(parts[1])")
                         return
                     }
                     switch parameter.type {

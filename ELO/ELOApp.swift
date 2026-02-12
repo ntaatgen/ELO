@@ -36,7 +36,7 @@ struct ELOApp: App {
                     model.runScript()
                 }
                 .keyboardShortcut("r", modifiers: [.command])
-                Button("Split half analysis") {
+                Button("Split half analysis...") {
                     model.splitHalf()
                 }
                 Divider()

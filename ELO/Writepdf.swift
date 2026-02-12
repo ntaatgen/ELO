@@ -25,8 +25,9 @@ import CoreGraphics
     // 4. Create full file URL
     let url = desktopURL.appendingPathComponent(filename)
     
-    let a4Size = CGSize(width: 595, height: 842)
-    
+//    let a4Size = CGSize(width: 595, height: 842)
+    let a4Size = CGSize(width: 842, height: 595) // Landscape
+
     let renderer = ImageRenderer(
         content: view
             .frame(width: a4Size.width, height: a4Size.height)

@@ -455,71 +455,71 @@ class ELOlogic: Codable {
 
     }
     
-    func twoItemAdam(score: Score, scorePrev: Score, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8) {
-        let s = students[score.student]!
-        let it = items[score.item]!
-        let itPrev = items[scorePrev.item]!
-        let expected: Double = expectedScore(s: s, it: it)
-        let sameness: Double = 0.5 - abs(score.score - scorePrev.score)
-        let error: Double = score.score - expected
-        var expectedWithoutSkill: [Double] = []
-        for i in 0..<nSkills {
-            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
-        }
-        for i in 0..<nSkills {
-//            let errorTerm: Double  = -(score.score/(expected + 0.0001)) + (1.0 - score.score)/(1.0 - expected + 0.0001)
-//            let itGradient = errorTerm * expectedWithoutSkill[i] * (s.skills[i] - 1.0)
-            
-            let deltaSameness: Double = 0.2 * sameness * (it.skills[i] - itPrev.skills[i]) / Double(nSkills)  // 0.2 * sameness * (it.skills[i] > itPrev.skills[i] ? 1 : -1) * (it.skills[i] - itPrev.skills[i] - 1) / Double(nSkills)
-            let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1) + deltaSameness
-//            print("sameness = \(sameness) deltaSame: \(deltaSameness) itGrad: \(itGradient) it score: \(score.score) next score: \(scorePrev.score)")
-//            print("item1: \(it.skills) item2: \(itPrev.skills)")
-            it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
-            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
-            
-            
-            let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
-            let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
-            
-//            let sGradient = errorTerm  * expectedWithoutSkill[i] * it.skills[i]
-            
-            let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
-            s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
-            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
-            //            }
-
-            let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
-            let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
-            
-            if !studentMode {
-                primGraphRecalculate = true
-                if decayingAlpha {
-                    it.skills[i] = boundedAdd(it.skills[i], -(alpha / sqrt(Double(it.t)) ) * mhatI / (sqrt(vhatI) + epsilon))
-                    let sAdjust = -mhatS / (sqrt(vhatS) + epsilon)
-                    s.skills[i] = boundedAdd(s.skills[i],  ((sAdjust > 0 ? baseAlpha : 0.0) + studentAlphaActual/sqrt(Double(s.t))) * sAdjust)
-//                    s.skills[i] = boundedAdd(s.skills[i],  -(studentAlphaActual / sqrt(Double(s.t)) ) * mhatS / (sqrt(vhatS) + epsilon))
-                } else {
-                    it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
-                    s.skills[i] = boundedAdd(s.skills[i],  -studentAlphaActual * mhatS / (sqrt(vhatS) + epsilon))
-                }
-//                s.skills[i] = boundedAdd(s.skills[i],  -0.0002 * mhatS / (sqrt(vhatS) + epsilon))
-            } else {
-                if decayingAlpha {
-                    let sAdjust = -sGradient
-                    s.skills[i] = boundedAdd(s.skills[i],  ((sAdjust > 0 ? baseAlpha : 0.0) + studentAlphaActual/sqrt(Double(s.t))) * sAdjust)
-//                    s.skills[i] = boundedAdd(s.skills[i], -(studentAlphaActual / sqrt(Double(s.t))) * sGradient)
-                } else {
-                    s.skills[i] = boundedAdd(s.skills[i], -studentAlphaActual * sGradient)
-                }
-            }
-
-        }
-        it.t += 1
-        s.t += 1
-
-        it.experiences += 1 // redundant
-
-    }
+//    func twoItemAdam(score: Score, scorePrev: Score, beta1: Double = 0.9, beta2: Double = 0.999, epsilon: Double = 1e-8) {
+//        let s = students[score.student]!
+//        let it = items[score.item]!
+//        let itPrev = items[scorePrev.item]!
+//        let expected: Double = expectedScore(s: s, it: it)
+//        let sameness: Double = 0.5 - abs(score.score - scorePrev.score)
+//        let error: Double = score.score - expected
+//        var expectedWithoutSkill: [Double] = []
+//        for i in 0..<nSkills {
+//            expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
+//        }
+//        for i in 0..<nSkills {
+////            let errorTerm: Double  = -(score.score/(expected + 0.0001)) + (1.0 - score.score)/(1.0 - expected + 0.0001)
+////            let itGradient = errorTerm * expectedWithoutSkill[i] * (s.skills[i] - 1.0)
+//            
+//            let deltaSameness: Double = 0.2 * sameness * (it.skills[i] - itPrev.skills[i]) / Double(nSkills)  // 0.2 * sameness * (it.skills[i] > itPrev.skills[i] ? 1 : -1) * (it.skills[i] - itPrev.skills[i] - 1) / Double(nSkills)
+//            let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1) + deltaSameness
+////            print("sameness = \(sameness) deltaSame: \(deltaSameness) itGrad: \(itGradient) it score: \(score.score) next score: \(scorePrev.score)")
+////            print("item1: \(it.skills) item2: \(itPrev.skills)")
+//            it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
+//            it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
+//            
+//            
+//            let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
+//            let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
+//            
+////            let sGradient = errorTerm  * expectedWithoutSkill[i] * it.skills[i]
+//            
+//            let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
+//            s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
+//            s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
+//            //            }
+//
+//            let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
+//            let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
+//            
+//            if !studentMode {
+//                primGraphRecalculate = true
+//                if decayingAlpha {
+//                    it.skills[i] = boundedAdd(it.skills[i], -(alpha / sqrt(Double(it.t)) ) * mhatI / (sqrt(vhatI) + epsilon))
+//                    let sAdjust = -mhatS / (sqrt(vhatS) + epsilon)
+//                    s.skills[i] = boundedAdd(s.skills[i],  ((sAdjust > 0 ? baseAlpha : 0.0) + studentAlphaActual/sqrt(Double(s.t))) * sAdjust)
+////                    s.skills[i] = boundedAdd(s.skills[i],  -(studentAlphaActual / sqrt(Double(s.t)) ) * mhatS / (sqrt(vhatS) + epsilon))
+//                } else {
+//                    it.skills[i] = boundedAdd(it.skills[i], -alpha * mhatI / (sqrt(vhatI) + epsilon))
+//                    s.skills[i] = boundedAdd(s.skills[i],  -studentAlphaActual * mhatS / (sqrt(vhatS) + epsilon))
+//                }
+////                s.skills[i] = boundedAdd(s.skills[i],  -0.0002 * mhatS / (sqrt(vhatS) + epsilon))
+//            } else {
+//                if decayingAlpha {
+//                    let sAdjust = -sGradient
+//                    s.skills[i] = boundedAdd(s.skills[i],  ((sAdjust > 0 ? baseAlpha : 0.0) + studentAlphaActual/sqrt(Double(s.t))) * sAdjust)
+////                    s.skills[i] = boundedAdd(s.skills[i], -(studentAlphaActual / sqrt(Double(s.t))) * sGradient)
+//                } else {
+//                    s.skills[i] = boundedAdd(s.skills[i], -studentAlphaActual * sGradient)
+//                }
+//            }
+//
+//        }
+//        it.t += 1
+//        s.t += 1
+//
+//        it.experiences += 1 // redundant
+//
+//    }
     
     
     /// Calculate the average error per datapoint, either of the whole dataset, or the last loaded students.
@@ -603,73 +603,73 @@ class ELOlogic: Codable {
     
     /// Update the model for nEpoch epochs.
     /// - Parameter time: If set, only process datapoints at that time, if nil process all datapoints
-    func calculateModelAlt(time: Int?) {
-        DispatchQueue.global().async { [self] () -> Void in
-            for j in 0..<nEpochs {
-                print("epoch", j)
-                var order = Array(0..<scores.count)
-                order.shuffle()
-                for i in 0..<order.count {
-                    if time != nil && scores[order[i]].time != time! {
-                        continue
-                    }
-                    var j = 1
-                    while j < order.count && scores[order[j]].student == scores[order[i]].student {
-                        j += 1
-                    }
-                    if j != order.count {
-                        twoItemAdam(score: scores[order[i]], scorePrev: scores[order[j]])
-                    }
-                }
-                if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
-                    for key in sortedKeys {
-                        if items[key]!.experiences > 0 {
-                            for skills in 0..<nSkills {
-                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
-                                results.append(dp)
-                            }
-                        }
-                    }
-                    for key in studentKeys {
-                        for skills in 0..<nSkills {
-                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
-                            studentResults.append(dp)
-                        }
-                    }
-                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
-                    errors.append(dp)
-//                    lineCounter += (nEpochs/10)
-                }
-                lineCounter += 1
-
-                if j % 100 == 0 {
-                    DispatchQueue.main.async {
-                        self.counter = j
-                        NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
-                    }
-                } else {
-                    DispatchQueue.main.async {
-                        NotificationCenter.default.post(name: Notification.Name(rawValue: "runDone"), object: nil)
-                    }
-                }
-                
-            }
-            
-            for key in sortedKeys {
-                print(key,items[key]!.skills)
-            }
-//            print(kMeans(points: items, k: 6))
-//            for (name, item) in items {
-//                print("\(name): \(item.cluster!)")
+//    func calculateModelAlt(time: Int?) {
+//        DispatchQueue.global().async { [self] () -> Void in
+//            for j in 0..<nEpochs {
+//                print("epoch", j)
+//                var order = Array(0..<scores.count)
+//                order.shuffle()
+//                for i in 0..<order.count {
+//                    if time != nil && scores[order[i]].time != time! {
+//                        continue
+//                    }
+//                    var j = 1
+//                    while j < order.count && scores[order[j]].student == scores[order[i]].student {
+//                        j += 1
+//                    }
+//                    if j != order.count {
+//                        twoItemAdam(score: scores[order[i]], scorePrev: scores[order[j]])
+//                    }
+//                }
+//                if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
+//                    for key in sortedKeys {
+//                        if items[key]!.experiences > 0 {
+//                            for skills in 0..<nSkills {
+//                                let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+//                                results.append(dp)
+//                            }
+//                        }
+//                    }
+//                    for key in studentKeys {
+//                        for skills in 0..<nSkills {
+//                            let dp = ModelData(item: key, z: skills, x: lineCounter, y: students[key]!.skills[skills])
+//                            studentResults.append(dp)
+//                        }
+//                    }
+//                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+//                    errors.append(dp)
+////                    lineCounter += (nEpochs/10)
+//                }
+//                lineCounter += 1
+//
+//                if j % 100 == 0 {
+//                    DispatchQueue.main.async {
+//                        self.counter = j
+//                        NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
+//                    }
+//                } else {
+//                    DispatchQueue.main.async {
+//                        NotificationCenter.default.post(name: Notification.Name(rawValue: "runDone"), object: nil)
+//                    }
+//                }
+//                
 //            }
-            DispatchQueue.main.async {
-                self.counter = self.nEpochs
-                NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
-                NotificationCenter.default.post(name: Notification.Name(rawValue: "endRun"), object: nil)
-
-            }
-        }
-    }
+//            
+//            for key in sortedKeys {
+//                print(key,items[key]!.skills)
+//            }
+////            print(kMeans(points: items, k: 6))
+////            for (name, item) in items {
+////                print("\(name): \(item.cluster!)")
+////            }
+//            DispatchQueue.main.async {
+//                self.counter = self.nEpochs
+//                NotificationCenter.default.post(name: Notification.Name(rawValue: "updateGraph"), object: nil)
+//                NotificationCenter.default.post(name: Notification.Name(rawValue: "endRun"), object: nil)
+//
+//            }
+//        }
+//    }
     
     
     /// Same as calculateModel, except it does not run in the background and does not update the View.

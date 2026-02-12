@@ -36,6 +36,7 @@ enum ParameterID {
     case baseAlpha
     case studentMode
     case clusters
+    case splithalf
 }
 
 struct Parameter: Identifiable {
@@ -77,6 +78,7 @@ struct ELOmodel {
     var splitHalfURL: URL?
     var testHalf: [Score] = []
     var settingParameters: Bool = true
+    var splitHalf: Double = 0.5
     
     static let defaultParameters: [Parameter] = [
         Parameter(id: .alpha, name: "Learning Rate", shortname: "alpha", type: .double, value: "0.1"),
@@ -86,7 +88,8 @@ struct ELOmodel {
         Parameter(id: .decay, name: "Decaying Learning Rate", shortname: "decaying-alpha", type: .bool, value: "true"),
         Parameter(id: .baseAlpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0"),
         Parameter(id: .studentMode, name: "Student mode", shortname: "student-mode", type: .bool, value: "false"),
-        Parameter(id: .clusters, name: "Number of clusters", shortname: "clusters", type: .int, value: "10")]
+        Parameter(id: .clusters, name: "Number of clusters", shortname: "clusters", type: .int, value: "10"),
+        Parameter(id: .splithalf, name: "Proportion of training for split half", shortname: "splithalf", type: .double, value: "0.5")]
     
     var parameters: [Parameter] = ELOmodel.defaultParameters
      { didSet {
@@ -99,6 +102,7 @@ struct ELOmodel {
              logic.baseAlpha = parameterDoubleValue(for: .baseAlpha) ?? 0.0
              logic.studentMode = parameterBoolValue(for: .studentMode) ?? false
              logic.clusters = parameterIntValue(for: .clusters) ?? 10
+             splitHalf = parameterDoubleValue(for: .splithalf) ?? 0.5
          }
     }}
     
@@ -427,12 +431,12 @@ struct ELOmodel {
         }
     }
     
-    func splitArrayInTwo<T>(_ array: [T]) -> ([T], [T]) {
+    func splitArrayInTwo<T>(_ array: [T], proportion: Double) -> ([T], [T]) {
         // Shuffle the array randomly
         let shuffledArray = array.shuffled()
         
         // Calculate the midpoint
-        let midIndex = (array.count + 1) / 2
+        let midIndex = Int(Double(array.count + 1) * proportion)
         
         // Split the array into two halves
         let firstHalf = Array(shuffledArray[..<midIndex])
@@ -446,9 +450,13 @@ struct ELOmodel {
             addToTrace(s: "No data loaded to split.")
             return
         }
+        guard splitHalf >= 0.1 && splitHalf <= 0.9 else {
+            addToTrace(s: "Split half proportion should be at least 0.1 and at most 0.9")
+            return
+        }
         selected = 0
         splitHalfURL = url
-        (logic.scores, testHalf) = splitArrayInTwo(logic.scores)
+        (logic.scores, testHalf) = splitArrayInTwo(logic.scores, proportion: splitHalf)
         
         logic.calculateModel(time: 0)
     }

@@ -33,11 +33,11 @@ class Item: Codable {
     var v: [Double] = []
     var t: Int = 1
     var guessP: Double = 0
-    var mistakeP: Double = 0
+    var slipP: Double = 0
     var guessPm: Double = 0
-    var mistakePm: Double = 0
+    var slipPm: Double = 0
     var guessPv: Double = 0
-    var mistakePv: Double = 0
+    var slipPv: Double = 0
     var executable: Bool = false
     var cluster: Int? = nil
     init(name: String, nSkills: Int) {
@@ -117,6 +117,7 @@ class ELOlogic: Codable {
     var primGraphRecalculate = true // Do we need to recalculate the primGraph?
     var clusters = 10 // Number of clusters for kmeans
     var showClusters = false // Do we show clusters or the standard graph?
+    var useSlip = true // Do we include a probability for making mistakes in items?
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -345,6 +346,9 @@ class ELOlogic: Codable {
                 p = p * skillP
             }
         }
+        if leaveOut == nil && useSlip {
+            p = (1 - it.slipP) * p
+        }
         return p
     }
     
@@ -398,6 +402,7 @@ class ELOlogic: Codable {
         let it = items[score.item]!
         let expected: Double = expectedScore(s: s, it: it)
         let error: Double = score.score - expected
+        let huberDelta = 1.0 /// With a value of 1 it behaves like regular MSE
         var expectedWithoutSkill: [Double] = []
         for i in 0..<nSkills {
             expectedWithoutSkill.append(expectedScore(s: s, it: it, leaveOut: i))
@@ -406,22 +411,25 @@ class ELOlogic: Codable {
 //            let errorTerm: Double  = -(score.score/(expected + 0.0001)) + (1.0 - score.score)/(1.0 - expected + 0.0001)
 //            let itGradient = errorTerm * expectedWithoutSkill[i] * (s.skills[i] - 1.0)
             
-            
-            let itGradient = -2 * error * expectedWithoutSkill[i] * (s.skills[i] - 1)
+            let slipComponent = useSlip ? (1 - it.slipP): 1.0
+            let itGradient = abs(error) < huberDelta ?
+            -2 * error * slipComponent * expectedWithoutSkill[i] * (s.skills[i] - 1) :
+            -2 * sign(error) * slipComponent * huberDelta * expectedWithoutSkill[i] * (s.skills[i] - 1)
             it.m[i] = beta1 * it.m[i] + (1 - beta1) * itGradient
             it.v[i] = beta2 * it.v[i] + (1 - beta2) * pow(itGradient, 2)
-            
-            
+                        
             let mhatI = it.m[i] / (1 - pow(beta1, Double(it.t)))
             let vhatI = it.v[i] / (1 - pow(beta2, Double(it.t)))
             
 //            let sGradient = errorTerm  * expectedWithoutSkill[i] * it.skills[i]
             
-            let sGradient = -2 * error * expectedWithoutSkill[i] * it.skills[i]
+            let sGradient = abs(error) < huberDelta ?
+            -2 * error * slipComponent * expectedWithoutSkill[i] * it.skills[i] :
+            -2 * sign(error) * slipComponent * huberDelta * expectedWithoutSkill[i] * it.skills[i]
             s.m[i] = beta1 * s.m[i] + (1 - beta1) * sGradient
             s.v[i] = beta2 * s.v[i] + (1 - beta2) * pow(sGradient, 2)
             //            }
-
+            
             let mhatS = s.m[i] / (1 - pow(beta1, Double(s.t)))
             let vhatS = s.v[i] / (1 - pow(beta2, Double(s.t)))
             
@@ -447,6 +455,19 @@ class ELOlogic: Codable {
                 }
             }
 
+        }
+        if useSlip && !studentMode {
+            let slipGradient = 2 * error * expected
+            it.slipPm = beta1 * it.slipPm + (1 - beta1) * slipGradient
+            it.slipPv = beta2 * it.slipPv + (1 - beta2) * pow(slipGradient, 2)
+            let mhatSlip = it.slipPm  / (1 - pow(beta1, Double(it.t)))
+            let vhatSlip = it.slipPv / (1 - pow(beta2, Double(it.t)))
+
+            if decayingAlpha {
+                it.slipP = boundedAdd(it.slipP, -(alpha / sqrt(Double(it.t))) * mhatSlip / (sqrt(vhatSlip) + epsilon ))
+            } else {
+                it.slipP = boundedAdd(it.slipP, -alpha * mhatSlip / (sqrt(vhatSlip) + epsilon))
+            }
         }
         it.t += 1
         s.t += 1
@@ -556,6 +577,10 @@ class ELOlogic: Codable {
                         if items[key]!.experiences > 0 {
                             for skills in 0..<nSkills {
                                 let dp = ModelData(item: key, z: skills, x: lineCounter, y: items[key]!.skills[skills])
+                                results.append(dp)
+                            }
+                            if useSlip {
+                                let dp = ModelData(item: key, z: nSkills + 1, x: lineCounter, y: items[key]!.slipP)
                                 results.append(dp)
                             }
                         }

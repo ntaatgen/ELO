@@ -269,6 +269,19 @@ class ELOViewModel: ObservableObject {
         }
     }
     
+    func loadNewItemVectors() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        if panel.runModal() == .OK {
+            for url in panel.urls {
+                model.logic.loadNewItemVectorsWithURL(url)
+                model.addToTrace(s: "Load new item vectors from \(url.pathComponents.last!)")
+            }
+        }
+    }
+
+    
 
     func generateData(set: Int) {
             model.generateData(set: set)

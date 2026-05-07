@@ -31,6 +31,7 @@ enum ParameterID {
     case alpha
     case studentAlpha
     case skills
+    case useSlip
     case threshold
     case decay
     case baseAlpha
@@ -84,6 +85,7 @@ struct ELOmodel {
         Parameter(id: .alpha, name: "Learning Rate", shortname: "alpha", type: .double, value: "0.1"),
         Parameter(id: .studentAlpha, name: "Student Learning Rate", shortname: "student-alpha", type: .double, value: "0.0"),
         Parameter(id: .skills, name: "Number of skills", shortname: "skills", type: .int, value: "4"),
+        Parameter(id: .useSlip, name: "Add Slip probability to items", shortname: "slip", type: .bool, value: "false"),
         Parameter(id: .threshold, name: "Graphing Threshold", shortname: "threshold", type: .double, value: "2.0"),
         Parameter(id: .decay, name: "Decaying Learning Rate", shortname: "decaying-alpha", type: .bool, value: "true"),
         Parameter(id: .baseAlpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0"),
@@ -95,6 +97,7 @@ struct ELOmodel {
      { didSet {
          if settingParameters {
              logic.nSkills = parameterIntValue(for: .skills) ?? 4
+             logic.useSlip = parameterBoolValue(for: .useSlip) ?? false
              logic.alpha = parameterDoubleValue(for: .alpha) ?? 0.05
              logic.studentAlpha = parameterDoubleValue(for: .studentAlpha) ?? 0.0
              logic.alphaHebb = parameterDoubleValue(for: .threshold) ?? 3.0
@@ -109,6 +112,7 @@ struct ELOmodel {
     mutating func parametersFromModel() {
         settingParameters = false
         parameterSetInt(logic.nSkills, for: .skills)
+        parameterSetBool(logic.useSlip, for: .useSlip)
         parameterSetDouble(logic.alpha, for: .alpha)
         parameterSetDouble(logic.studentAlpha, for: .studentAlpha)
         parameterSetDouble(logic.alphaHebb, for: .threshold)

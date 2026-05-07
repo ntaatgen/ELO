@@ -60,6 +60,10 @@ struct ELOApp: App {
                 Button("Write output file, last only...") {
                     model.writeDataFile(lastonly: true)
                 }
+                Divider()
+                Button("Load new item vectors...") {
+                    model.loadNewItemVectors()
+                }
             }
             CommandGroup(replacing: CommandGroupPlacement.toolbar) {
                 Button("Find optimal clusters") {

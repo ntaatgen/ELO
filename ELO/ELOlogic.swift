@@ -117,7 +117,7 @@ class ELOlogic: Codable {
     var primGraphRecalculate = true // Do we need to recalculate the primGraph?
     var clusters = 10 // Number of clusters for kmeans
     var showClusters = false // Do we show clusters or the standard graph?
-    var useSlip = true // Do we include a probability for making mistakes in items?
+    var useSlip = false // Do we include a probability for making mistakes in items?
     
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
@@ -196,6 +196,41 @@ class ELOlogic: Codable {
             studentKeys = Array(Array<String>(lastLoadedStudents).shuffled().prefix(studentSampleSize))
         } else {
             studentKeys = Array(Array<String>(students.keys).shuffled().prefix(studentSampleSize))
+        }
+    }
+    
+    func loadNewItemVectorsWithURL(_ url: URL) {
+        var dataFileContents: String? = nil
+        do {
+            dataFileContents = try String(contentsOf: url, encoding: .utf8)
+        } catch let error as NSError {
+            print("Error \(error) in adding data.")
+        }
+        guard dataFileContents != nil else {
+            print("failed to load data from \(url)")
+            return
+        }
+        let lines:[String] = dataFileContents!.components(separatedBy: "\n")
+        for line in lines {
+            let parts = line.components(separatedBy: ",")
+            if parts.count == 0 {
+                continue
+            }
+            if parts.count != 1 + nSkills && parts.count != 2 + nSkills {
+                print("line with wrong number of items: \(parts)")
+                continue
+            }
+            if items[parts[0]] == nil {
+                print("Item with ID \(parts[0]) not found.")
+                continue
+            }
+            for i in 1..<parts.count {
+                if let value = Double(parts[i]) {
+                    items[parts[0]]!.skills[i-1] = value
+                } else {
+                    print("Non-numeric value \(parts[i]) in \(line)")
+                }
+            }
         }
     }
     

@@ -95,6 +95,7 @@ class ELOlogic: Codable {
     var lastLoadedStudents: [String] = []
     var items: [String:Item] = [:]
     var scores: [Score] = []
+    var testHalf: [Score] = []
     var sortedKeys: [String] { Array(items.keys).sorted(by: <) }
     var studentKeys: [String] = []
     var results: [ModelData] = []
@@ -113,15 +114,19 @@ class ELOlogic: Codable {
     var decayingAlpha = true
     var baseAlpha: Double = 0.0
     var studentAlpha: Double = 0.0
+    var useStudentBaseline: Bool = true
     var studentAlphaActual: Double { studentAlpha == 0.0 ? alpha : studentAlpha }
     var primGraphRecalculate = true // Do we need to recalculate the primGraph?
     var clusters = 10 // Number of clusters for kmeans
     var showClusters = false // Do we show clusters or the standard graph?
     var useSlip = false // Do we include a probability for making mistakes in items?
-    
+    var splitHalf: Double = 0.8 // Proportion in training set
+    var optimalEpoch: Int = 0 // Optimal Epoch when doing validation test
+    var optimalRMSE: Double = 1e10 // Optimal RMSE when doing validation test
+
     /// Reset the model an load data from URL
     /// - Parameter filePath: The file to be loaded
-    func loadDataWithURL(_ filePath: URL) {
+    func loadDataWithURL(_ filePath: URL, split: Bool = false) {
         filename = filePath
         students = [:]
         items = [:]
@@ -132,14 +137,14 @@ class ELOlogic: Codable {
         lineCounter = 0
         counter = 0
         synthetic = false
-        addDataWithURL(filePath)
+        addDataWithURL(filePath, split: split)
     }
     
     
     
     /// Add data to the model from URL
     /// - Parameter filePath: The file to be added
-    func addDataWithURL(_ filePath: URL) {
+    func addDataWithURL(_ filePath: URL, split: Bool = false) {
         var dataFileContents: String? = nil
         do {
             dataFileContents = try String(contentsOf: filePath, encoding: String.Encoding.utf8)
@@ -191,6 +196,11 @@ class ELOlogic: Codable {
                 }
             }
             scores.append(newScore)
+        }
+        if split {
+            (scores, testHalf) = splitArrayInTwo(scores, proportion: splitHalf)
+            optimalEpoch = 0
+            optimalRMSE = 1e10
         }
         if showLastLoadedStudents {
             studentKeys = Array(Array<String>(lastLoadedStudents).shuffled().prefix(studentSampleSize))
@@ -580,18 +590,20 @@ class ELOlogic: Codable {
     
     /// Calculate the average error per datapoint, either of the whole dataset, or the last loaded students.
     ///     /// - Returns: The average error
-    func calculateError() -> Double {
+    func calculateError(scores: [Score], mae: Bool = false) -> Double {
         var error: Double = 0
         var count: Int = 0
         for score in scores {
             if !showLastLoadedStudents || lastLoadedStudents.contains(score.student) {
-
-                error += sqrt(pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!),2))
-                
+                if mae {
+                    error += abs(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!))
+                } else {
+                    error += pow(score.score - expectedScore(s: students[score.student]!, it: items[score.item]!),2)
+                }
                 count += 1
             }
         }
-        return error/Double(count)
+        return mae ? error/Double(count) : sqrt(error/Double(count))
     }
     
     /// Update the model for nEpoch epochs.
@@ -605,6 +617,13 @@ class ELOlogic: Codable {
                 for i in 0..<order.count {
                     if time == nil || scores[order[i]].time == time! {
                             oneItemAdam(score: scores[order[i]])
+                    }
+                }
+                if !testHalf.isEmpty {
+                    let newError = calculateError(scores: testHalf)
+                    if newError < optimalRMSE {
+                        optimalRMSE = newError
+                        optimalEpoch = lineCounter
                     }
                 }
                 if nEpochs < 20 || j % (nEpochs/10) == 0 || j == nEpochs - 1 {
@@ -626,9 +645,12 @@ class ELOlogic: Codable {
                             studentResults.append(dp)
                         }
                     }
-                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+                    let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError(scores: scores))
                     errors.append(dp)
-//                    lineCounter += (nEpochs/10)
+                    if !testHalf.isEmpty {
+                        let dp = ModelData(item: "error", z: 1, x: lineCounter, y: calculateError(scores: testHalf))
+                        errors.append(dp)
+                    }
                 }
                 lineCounter += 1
 
@@ -750,7 +772,7 @@ class ELOlogic: Codable {
                     studentResults.append(dp)
                 }
             }
-            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError())
+            let dp = ModelData(item: "error", z: 0, x: lineCounter, y: calculateError(scores: scores))
             errors.append(dp)
         }
         updateGraphs()

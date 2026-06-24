@@ -8,6 +8,20 @@
 import Foundation
 
 
+func splitArrayInTwo<T>(_ array: [T], proportion: Double) -> ([T], [T]) {
+    // Shuffle the array randomly
+    let shuffledArray = array.shuffled()
+    
+    // Calculate the midpoint
+    let midIndex = Int(Double(array.count + 1) * proportion)
+    
+    // Split the array into two halves
+    let firstHalf = Array(shuffledArray[..<midIndex])
+    let secondHalf = Array(shuffledArray[midIndex...])
+    
+    return (firstHalf, secondHalf)
+}
+
 // Compute Euclidean distance between two points
 func distance(from a: [Double], to b: [Double]) -> Double {
     guard a.count == b.count else {

@@ -114,7 +114,7 @@ struct ELOMainView: View {
                                     Text(model.studentKeys[model.selected!])
                                         .frame(height: 15)
                                 }
-                                case .errors: Text("Final error " + String(model.results.last!.y))
+                                case .errors: Text("Final error " + String(model.results.last != nil ? model.results.last!.y: 0))
                                         .frame(height: 15)
                                 }
                             }

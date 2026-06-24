@@ -20,6 +20,9 @@ struct ELOApp: App {
                     model.loadData()
                 }
                 .keyboardShortcut("o", modifiers: [.command])
+                Button("Load data with test set...") {
+                    model.loadData(add: false, split: true)
+                }
                 Button("Add data...") {
                     model.loadData(add: true)
                 }

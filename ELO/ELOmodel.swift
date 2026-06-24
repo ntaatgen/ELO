@@ -77,9 +77,7 @@ struct ELOmodel {
     var alpha: Double = ELOlogic.alphaDefault
     var trace: String = "Starting ELO         \n"
     var splitHalfURL: URL?
-    var testHalf: [Score] = []
     var settingParameters: Bool = true
-    var splitHalf: Double = 0.5
     
     static let defaultParameters: [Parameter] = [
         Parameter(id: .alpha, name: "Learning Rate", shortname: "alpha", type: .double, value: "0.1"),
@@ -91,7 +89,7 @@ struct ELOmodel {
         Parameter(id: .baseAlpha, name: "Base student alpha", shortname: "base-alpha", type: .double, value: "0.0"),
         Parameter(id: .studentMode, name: "Student mode", shortname: "student-mode", type: .bool, value: "false"),
         Parameter(id: .clusters, name: "Number of clusters", shortname: "clusters", type: .int, value: "10"),
-        Parameter(id: .splithalf, name: "Proportion of training for split half", shortname: "splithalf", type: .double, value: "0.5")]
+        Parameter(id: .splithalf, name: "Proportion of training for split half", shortname: "splithalf", type: .double, value: "0.8")]
     
     var parameters: [Parameter] = ELOmodel.defaultParameters
      { didSet {
@@ -105,7 +103,7 @@ struct ELOmodel {
              logic.baseAlpha = parameterDoubleValue(for: .baseAlpha) ?? 0.0
              logic.studentMode = parameterBoolValue(for: .studentMode) ?? false
              logic.clusters = parameterIntValue(for: .clusters) ?? 10
-             splitHalf = parameterDoubleValue(for: .splithalf) ?? 0.5
+             logic.splitHalf = parameterDoubleValue(for: .splithalf) ?? 0.8
          }
     }}
     
@@ -180,11 +178,15 @@ struct ELOmodel {
         selectedGroup = .students
     }
     
-    mutating func loadData(filePath: URL, add: Bool) {
+    mutating func loadData(filePath: URL, add: Bool, split: Bool = false) {
         if add {
             logic.addDataWithURL(filePath)
         } else {
-            logic.loadDataWithURL(filePath)
+            logic.loadDataWithURL(filePath, split: split)
+            addToTrace(s: "Loaded \(logic.scores.count) scores for \(logic.items.count) items for \(logic.students.count) students.")
+            if split {
+                addToTrace(s: "Kept \(logic.testHalf.count) test scores.")
+            }
         }
         update()
     }
@@ -295,7 +297,7 @@ struct ELOmodel {
                     if let x = Int(parts[1]) {
                         time = x
                         logic.calculateModelForBatch(time: time)
-                        addToTrace(s: "Model error \(logic.calculateError())")
+                        addToTrace(s: "Model error \(logic.calculateError(scores: logic.scores))")
                     } else {
                         addToTrace(s: "Invalid time argument in run")
                     }
@@ -435,32 +437,20 @@ struct ELOmodel {
         }
     }
     
-    func splitArrayInTwo<T>(_ array: [T], proportion: Double) -> ([T], [T]) {
-        // Shuffle the array randomly
-        let shuffledArray = array.shuffled()
-        
-        // Calculate the midpoint
-        let midIndex = Int(Double(array.count + 1) * proportion)
-        
-        // Split the array into two halves
-        let firstHalf = Array(shuffledArray[..<midIndex])
-        let secondHalf = Array(shuffledArray[midIndex...])
-        
-        return (firstHalf, secondHalf)
-    }
+
     
     mutating func splitHalf(url: URL) {
         guard !logic.scores.isEmpty else {
             addToTrace(s: "No data loaded to split.")
             return
         }
-        guard splitHalf >= 0.1 && splitHalf <= 0.9 else {
+        guard logic.splitHalf >= 0.1 && logic.splitHalf <= 0.9 else {
             addToTrace(s: "Split half proportion should be at least 0.1 and at most 0.9")
             return
         }
         selected = 0
         splitHalfURL = url
-        (logic.scores, testHalf) = splitArrayInTwo(logic.scores, proportion: splitHalf)
+        (logic.scores, logic.testHalf) = splitArrayInTwo(logic.scores, proportion: logic.splitHalf)
         
         logic.calculateModel(time: 0)
     }
@@ -476,7 +466,7 @@ struct ELOmodel {
         for (item,_) in logic.items {
             avgItem[item] = (0,0)
         }
-        for score in testHalf {
+        for score in logic.testHalf {
             avgStudent[score.student] = (avgStudent[score.student]!.0 + score.score, avgStudent[score.student]!.1 + 1)
             avgItem[score.item] = (avgItem[score.item]!.0 + score.score, avgItem[score.item]!.1 + 1)
         }
@@ -488,7 +478,7 @@ struct ELOmodel {
             output += "s\(i), "
         }
         output += "avgitem, avgstudent, expscore\n"
-        for score in testHalf {
+        for score in logic.testHalf {
             output += score.item + "," + score.student + ", \(score.score), "
             let item = logic.items[score.item]!
             for i in 0..<logic.nSkills {

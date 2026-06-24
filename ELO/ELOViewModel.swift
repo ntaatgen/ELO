@@ -170,13 +170,13 @@ class ELOViewModel: ObservableObject {
         }
     }
     
-    func loadData(add: Bool = false) {
+    func loadData(add: Bool = false, split: Bool = false) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         if panel.runModal() == .OK {
             for url in panel.urls {
-                model.loadData(filePath: url, add: add)
+                model.loadData(filePath: url, add: add, split: split)
                 model.addToTrace(s: add ? "Adding data \(url.pathComponents.last!)" : "Loading data \(url.pathComponents.last!)")
                 lastLoadPath = url.deletingLastPathComponent()
 //                currentItemImage = NSImage(contentsOf: lastLoadPath!.appendingPathComponent("1_1.png"))
@@ -391,7 +391,12 @@ class ELOViewModel: ObservableObject {
     
     @objc func endRun(_ notification: Notification) {
         model.addToTrace(s: "Done running")
-        model.addToTrace(s: "Avg. error = \(model.logic.calculateError())")
+        model.addToTrace(s: "Avg. error = \(model.logic.calculateError(scores: model.logic.scores))")
+        if !model.logic.testHalf.isEmpty {
+            model.addToTrace(s: "Avg. validation rmse = \(model.logic.calculateError(scores: model.logic.testHalf))")
+            model.addToTrace(s: "Avg. validation mae = \(model.logic.calculateError(scores: model.logic.testHalf, mae: true))")
+            model.addToTrace(s: "Best epoch = \(model.logic.optimalEpoch) with error \(model.logic.optimalRMSE)")
+        }
         if model.selectedGroup == .items {
             setImageToCurrentProblem()
         }
